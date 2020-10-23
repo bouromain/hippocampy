@@ -1,0 +1,55 @@
+import numpy as np
+import bottleneck as bn
+from hippocampy.matrix_utils import remove_small_objects
+
+
+def transientSH(F):
+    """
+    find transient as in Allegra, Posani, Schmidt-Hieber
+
+    “Events” were identified as contiguous regions in the d​ F ​ / ​ F signal exceeding a
+    threshold of mean +2.5 standard deviations of the overall d​ F ​ / ​ F signal, and exceeding an integral
+    above threshold of 7,000 d​ F ​ / ​ F ​ .
+    """
+    F_mean = bn.nanmean(F,axis=1)
+    F_std = bn.nanstd(F,axis=1)
+
+def transientRoy(F , threshold = 2.5 , minSize = 9):
+    """
+    find transient as in Roy 2017
+    Ca 2+ events were detected by applying a threshold (greater than 2 standard
+    deviations from the DF/F signal) at the local maxima of the DF/F signal.
+    Since we employed GCaMP6f, our analysis used a threshold of > = 5 frames (250 ms)    
+    """
+
+    F_mean = bn.nanmean(F,axis=1)
+    F_std = bn.nanstd(F,axis=1)
+
+    # Zscore traces
+    F_z = F - F_mean[:,np.newaxis]
+    F_z = F_z / F_std[:,np.newaxis]
+
+    # threshold trace above 2.5 std 
+    F_t = F_z > threshold
+    # remove small transients
+    F_t = np.apply_along_axis(remove_small_objects, axis =1 ,arr=F_t, min_sz = minSize )
+
+
+
+
+
+# %matplotlib widget
+
+# t = 5
+
+# i = list(range(t,19000))
+# x = F_z[t,i]
+# x_m = F_t[t,i]
+# m = np.array(np.where(x_m))
+
+# plt.figure()
+# plt.plot(x)
+
+# tmp = x[m]
+# plt.plot(m.T, tmp.T ,marker='o', markerfacecolor=(1,0,0,1 ) )
+

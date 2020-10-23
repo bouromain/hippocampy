@@ -1,0 +1,11 @@
+from setuptools import setup
+
+setup(
+    name="hippocampy",
+    version="0.1",
+    description="Tools for data anaylsis in python",
+    author="Bourboulou Romain",
+    author_email="bouromain@gmail.com",
+    packages=["hippocampy"],
+    install_requires=["numpy", "scipy","matplotlib","astropy","scikit-image","bottleneck","suite2p","scanimage-tiff-reader"],
+)
