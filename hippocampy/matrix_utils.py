@@ -81,12 +81,26 @@ def smooth1D(data, kernelHalfWidth=3, kernelType='gauss', padtype='reflect', pre
 
 
 def smooth2D(data, kernelHalfWidth=3, kernelType='gauss', padtype='reflect', preserve_nan_opt=True):
-  # Check Input
+  '''
+  function to smooth 2 dimensional data. 
+  Take: 
+          - data: matrix with your 2D data
+          - kernelHalfWidth: half width of the smoothing kernel
+          - kernelType: way to smooth the data ('gauss': gaussian, 'box': boxcar smoothing)
+          - padtype: the matrix will be padded in order to remove border artefact
+            so we will pad the matrix. 
+            Available option: - symmetric: reflect the vector on the edge 1 2 3 4 [3 2 1]
+                              - reflect: reflect the vector on the edge 1 2 3 4 [4 3 2]
+                              - wrap: circularly wrap opposing edges 
+          - preserve_nan_opt = do we smooth NaN or put them back att the end (default: True)
 
+  '''
+  
+  # Check Input
   if kernelHalfWidth%2 !=1:
-    kernelHalfWidth += 1
     # kernel size has to be odd
- 
+    kernelHalfWidth += 1
+    
   acceptedPad = ['reflect', 'symmetric', 'wrap']
   assert any([i == padtype for i in acceptedPad]) , 'Not Implemented pad type'
 
