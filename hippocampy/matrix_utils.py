@@ -49,7 +49,7 @@ def smooth1D(data, kernelHalfWidth=3, kernelType='gauss', padtype='reflect', pre
   if kernelType == 'box':
     # here bn.movemean seem to be much faster (~10x) than using a convolution as 
     # for the gaussian or ramp kernel. It affect the value of the moving mean to 
-    # the last index in the movinig window, that why the output 'unpading' is 
+    # the last index in the moving window, that why the output 'un pading' is 
     # peculiar
 
     data_c = bn.move_mean(data_p,kernelHalfWidth*2+1, min_count=kernelHalfWidth, axis=1)
@@ -109,7 +109,7 @@ def smooth2D(data, kernelHalfWidth=3, kernelType='gauss', padtype='reflect', pre
   # Normalize kernel to one 
   kernel = kernel/bn.nansum(kernel)
   
-  # Convolve. Astropy seems to deal realy well with nan values
+  # Convolve. Astropy seems to deal really well with nan values
   data_c = convolve(data_p, kernel=kernel, preserve_nan=preserve_nan_opt)
 
   return data_c[kernelHalfWidth:-kernelHalfWidth ,kernelHalfWidth:-kernelHalfWidth]

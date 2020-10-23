@@ -4,7 +4,6 @@ import pytest
 import unittest
 import numpy as np
 #%%
-
 class TestHelper(unittest.TestCase):
     def test_isradians(self):
         a = np.array([-1,2,3])
@@ -16,5 +15,3 @@ class TestHelper(unittest.TestCase):
         self.assertEqual(helper.isradians(c), 0)
 
 
-
-# %%

@@ -33,7 +33,7 @@ def wrap(x, rangeVal = 1):
 def valueCross(x,v=0):
   """
   function finding the crossing point between a vector and a value.
-  Particularly uselful when you want to detect phase inversion of crossing
+  Particularly useful when you want to detect phase inversion of crossing
   were you are not likely to find exactly a value in your vector strictly equal
   to a value
   """

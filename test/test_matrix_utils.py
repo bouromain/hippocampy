@@ -31,14 +31,14 @@ class TestLabel(unittest.TestCase):
         assert all(out== np.array([1,0,2,2,0,3]) ) 
     
     def test_label_nan(self):
-        # test matirx with nan
+        # test matrix with nan
         a = np.array([1,0,np.nan,1,0,1])
         out = matrix_utils.label(a)
         assert all(out== np.array([1,0,2,2,0,3]) ) 
 
 class TestRemoveSmallObject(unittest.TestCase):
     def test_remove_small_objects(self):
-        # test matirx with nan
+        # test matrix with nan
         a = np.array([1,0,np.nan,1,0,1])
         out = matrix_utils.remove_small_objects(a,2)
 
