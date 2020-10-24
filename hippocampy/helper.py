@@ -1,5 +1,4 @@
 #%% utils for various codes 
-# a lot of functions here are inspired from FMAToolbox
 # author RB 06/20
 import numpy as np
 from numpy import pi

@@ -1,8 +1,7 @@
 import numpy as np
 import bottleneck as bn
 from astropy.convolution import convolve
-from skimage import measure
-from skimage import morphology
+from skimage import measure , morphology
 
 def smooth1D(data, kernelHalfWidth=3, kernelType='gauss', padtype='reflect', preserve_nan_opt=True):
   '''
