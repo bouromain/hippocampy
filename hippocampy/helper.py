@@ -2,19 +2,7 @@
 # author RB 06/20
 import numpy as np
 from numpy import pi
-#%% 
-def isradians(x):
-  """
-  verify if input vector is in radians and return warning otherwise
-  """
-  if all(x>=-pi) & all(x<=pi):
-      return 1
-  elif all(x>=0) & all(x<=2*pi):
-      return 2
-  else:
-      # print("Warning, radians not in [-pi,pi] or [0,2pi] range")
-      return 0 
-    
+
 #%% 
 def wrap(x, rangeVal = 1): 
   """
