@@ -46,8 +46,7 @@ def localExtrema(x,method='max'):
           - method: type of extrema to consider [max, min, all] (default: max)
 
   """
-  allMethods = ['max', 'min', 'all']
-  assert any(method == s for s in allMethods), "Invalid Method in localExtrema"
+  assert method in ['max', 'min', 'all'], "Invalid Method in localExtrema"
 
   D = np.diff(x)
   E = np.diff( D /abs(D) )
