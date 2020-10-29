@@ -49,8 +49,14 @@ def valueCross(x,v=0):
 
 # %%
 def localExtrema(x,method='max'):
-  """Find local extrema and return their index
-  method: max, min, all (max or min)
+  """
+  
+  Find local extrema and return their index
+
+  Inputs: 
+          - x: vector
+          - method: type of extrema to consider [max, min, all] (default: max)
+
   """
   allMethods = ['max', 'min', 'all']
   assert any(method == s for s in allMethods), "Invalid Method in localExtrema"

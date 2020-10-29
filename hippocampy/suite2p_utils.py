@@ -8,7 +8,7 @@ import seaborn as sns
 ## DOC: https://github.com/MouseLand/suite2p/blob/master/jupyter/run_pipeline_tiffs_or_batch.ipynb
 
 
-#%% wrapper tho load data more convieniently
+#%% wrapper tho load data more conveniently
 def loadS2p(pathfile , typeF = 'F.npy'):
     data = np.load(  os.path.join(pathfile, typeF) , allow_pickle=True  )
     return data
@@ -29,10 +29,13 @@ def loadAllS2p(pathfile):
 
 #%% preprocessing function utils
 def make_ops():
+    '''
+    make 'custom' ops file for hippocampal 6f recording at 30hz
+    '''
     ops = suite2p.default_ops()
     ops['diameter']= 10
     ops['tau'] = 0.7
-    ops['fs']= 50
+    ops['fs']= 30
     return ops
 
 def run_s2p(pathfile):
@@ -41,7 +44,7 @@ def run_s2p(pathfile):
     suite2p.run_s2p(ops)
 
 
-#%% Miscellanious helpers
+#%% Miscellaneous helpers
     
 def filterCell(iscell,data):
     # could be directly implemented when we load the data
@@ -51,6 +54,4 @@ def filterCell(iscell,data):
         return data[iscell[:,0]==1]
     else:
         return data[iscell[:,0]==1,:]
-#%% Plotting function 
 
-# %%
