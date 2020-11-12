@@ -122,3 +122,58 @@ def corr_cl( x, theta, tail='two-sided'):
     pval = chi2.sf(n * r**2, 2)
     pval = pval / 2 if tail == 'one-sided' else pval
     return r, pval
+
+
+
+########################################################################
+## other    
+########################################################################
+
+def cemd(f,g, domain= 2*pi):
+    ''' 
+    Calculate circular earth mover distance between two histograms
+    of circular distributions 
+
+    References:
+    https://arxiv.org/pdf/0906.5499v2.pdf
+    https://perso.telecom-paristech.fr/gousseau/matching.pdf
+    http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.214.4116&rep=rep1&type=pdf
+
+    see for potential non discret adaptation (around page 150)
+    https://pastel.archives-ouvertes.fr/file/index/docid/472442/filename/these.pdf
+    '''
+    f = np.asarray(f, dtype=float)
+    g = np.asarray(g, dtype=float)
+
+    assert f.size == f.size, 'f and g should have the same length'
+
+    #initialise variables
+    n = len(f)
+    D = np.empty_like(f)
+    idx = np.arange(n)
+    
+    # normalize histograms just in case it was not done before
+    # histograms should be probability distributions such as sum(f) = sum(g) = 1 
+    f /= bn.nansum(f)
+    g /= bn.nansum(g)
+
+    # loop on al the possible starting positions
+    for k in idx:
+        # shift indexes 
+        idx_k = np.roll(idx,k-1)
+
+        # calculate cumulative histograms
+        F_k = np.cumsum(f[idx_k])
+        G_k = np.cumsum(g[idx_k])
+
+        F_k /= bn.nansum(F_k)
+        G_k /= bn.nansum(G_k)
+
+        # calculate sum of distances
+        D[k] = bn.nansum( abs(F_k-G_k) )
+    
+    # divide by n and multiply by "domain" in order to set the max distance 
+    # to this value
+    D = D / n * domain
+
+    return bn.nanmin(D)
