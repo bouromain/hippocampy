@@ -6,3 +6,6 @@ from . import calfunc
 from .stats import info
 from .stats import circ_stats
 
+# DataTypes 
+from.core._interval import Iv
+

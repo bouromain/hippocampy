@@ -22,3 +22,5 @@ class TestHelper(unittest.TestCase):
     def test_circ_r(self):
         theta = [pi , 2*pi , 2*pi + 0.3 , pi + 0.4]
         self.assertAlmostEqual(circ_stats.circ_r(theta), 0.025, places=3)
+
+    

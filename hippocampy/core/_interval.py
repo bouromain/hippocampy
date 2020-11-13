@@ -47,10 +47,10 @@ class Iv:
     return np.array([self.starts, self.stops]).T
 
   def min(self):
-    return bn.min(self.starts)
+    return bn.nanmin(self.starts)
 
   def max(self):
-    return bn.max(self.stops)
+    return bn.nanmax(self.stops)
   
   def length(self):
     return self.stops-self.starts
@@ -60,11 +60,11 @@ class Iv:
     https://scicomp.stackexchange.com/questions/26258/the-easiest-way-to-find-intersection-of-two-intervals
 
     """
-    if isintance(other, type(self)):
+    if isinstance(other, type(self)):
 
-      raise NotImplemented
+      raise NotImplementedError
     else:
-      raise NotImplemented
+      raise NotImplementedError
 
   def sort(self):
     """Sort interval by start time"""
