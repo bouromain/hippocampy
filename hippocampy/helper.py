@@ -36,6 +36,9 @@ def valueCross(x,v=0):
   return up, down
 
 # %%
+
+x = np.array([0,0,1,2,4,2,1, 0 , 2])
+
 def localExtrema(x,method='max'):
   """
   
@@ -52,8 +55,10 @@ def localExtrema(x,method='max'):
   E = np.diff( D /abs(D) )
 
   if method == 'max':
-    return np.nonzero(E==2)
-  elif method == 'min':
     return np.nonzero(E==-2)
+  elif method == 'min':
+    return np.nonzero(E==2)
   else:
     return np.nonzero( np.logical_or(E==2,E==-2) )
+
+# %%

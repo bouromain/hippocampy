@@ -1,0 +1,13 @@
+README.md
+setup.py
+hippocampy/__init__.py
+hippocampy/calfunc.py
+hippocampy/filterSig.py
+hippocampy/helper.py
+hippocampy/matrix_utils.py
+hippocampy/suite2p_utils.py
+hippocampy.egg-info/PKG-INFO
+hippocampy.egg-info/SOURCES.txt
+hippocampy.egg-info/dependency_links.txt
+hippocampy.egg-info/requires.txt
+hippocampy.egg-info/top_level.txt

@@ -1,0 +1,8 @@
+numpy
+scipy
+matplotlib
+astropy
+scikit-image
+bottleneck
+suite2p
+scanimage-tiff-reader

@@ -5,13 +5,10 @@ import unittest
 import numpy as np
 #%%
 class TestHelper(unittest.TestCase):
-    def test_isradians(self):
-        a = np.array([-1,2,3])
-        b = np.array([1,4,5])
-        c = np.array([1,4,24])
+    def test_local_extrema(self):
+        a = np.array([0,0,1,2,3,2,1,0,1])
 
-        self.assertAlmostEqual(helper.isradians(a), 1)
-        self.assertEqual(helper.isradians(b), 2)
-        self.assertEqual(helper.isradians(c), 0)
+        self.assertEqual(helper.localExtrema(a), np.array([3]))
+        self.assertEqual(helper.localExtrema(a, method='min'), np.array([6]))
 
 
