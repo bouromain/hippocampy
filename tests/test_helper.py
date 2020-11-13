@@ -10,5 +10,3 @@ class TestHelper(unittest.TestCase):
 
         self.assertEqual(helper.localExtrema(a), np.array([3]))
         self.assertEqual(helper.localExtrema(a, method='min'), np.array([6]))
-
-
