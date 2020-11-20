@@ -23,4 +23,14 @@ class TestHelper(unittest.TestCase):
         theta = [pi , 2*pi , 2*pi + 0.3 , pi + 0.4]
         self.assertAlmostEqual(circ_stats.circ_r(theta), 0.025, places=3)
 
+    def test_circ_cc(self):
+        x = [0.785, 1.570, 3.141, 3.839, 5.934]
+        y = [0.593, 1.291, 2.879, 3.892, 6.108]
+
+        r , p = circ_stats.corr_cc(x,y)
+        self.assertAlmostEqual(r, 0.942, places=3)
+        self.assertAlmostEqual(p, 0.0658, places=3)
+
+
+
     

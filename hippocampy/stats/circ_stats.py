@@ -25,6 +25,7 @@
 import numpy as np
 import bottleneck as bn
 from numpy import pi
+from scipy.stats import norm
 
 ########################################################################
 ## Helpers
@@ -105,9 +106,56 @@ def circ_std(alpha, weight=None , d=False , dim=0 ):
     return s , s0
 
 
+
+
+
+
 ########################################################################
 ## Test statistics
 ########################################################################
+
+def corr_cc(theta_1, theta_2):
+    '''
+    Function that  compute correlation between two circular variables 
+    Alpha
+
+    References:
+    Topics in circular statistics, S.R. Jammalamadaka et al., p. 176
+    Circular Statistics Toolbox for Matlab, Philipp Berens, 2009
+
+    '''
+    theta_1 = np.asarray(theta_1)
+    theta_2 = np.asarray(theta_2)
+
+    assert theta_1.size == theta_2.size, 'Dimension mismatch'
+
+    # initialise variables 
+    n = theta_1.size
+
+    sin_theta1_z =  np.sin(theta_1 - circ_mean(theta_1) )
+    sin_theta2_z =  np.sin(theta_2 - circ_mean(theta_2) )
+
+    sin_theta1_z_2 = sin_theta1_z**2
+    sin_theta2_z_2 = sin_theta2_z**2
+
+
+    # compute correlation coefficient from p 176 of Ref in description
+    num = bn.nansum( sin_theta1_z * sin_theta2_z  )
+    denom = np.sqrt( bn.nansum( sin_theta1_z_2) * bn.nansum(sin_theta2_z_2  ) )
+
+    rho = num/denom
+
+    # compute pvalue 
+    l20 = bn.nanmean( sin_theta1_z_2 )
+    l02 = bn.nanmean( sin_theta2_z_2 )
+    l22 = bn.nanmean(  sin_theta1_z_2 * sin_theta2_z_2   )
+
+    tstat = np.sqrt( (n * l20 * l02) / l22 ) * rho
+
+    pval = 2 * ( 1 - norm.cdf(abs(tstat)))
+
+    return rho, pval
+
 
 def corr_cl( x, theta, tail='two-sided'):
     '''
