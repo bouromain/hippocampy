@@ -136,6 +136,22 @@ def corr_cc(alpha, beta, tail='two-sided', uniformity_correction=False):
     
     Adapted from Ref[1-3]
 
+    From Ref [3] Jammalamadaka, S. R., & Sengupta, A. (2001). 
+    Topics in circular statistics p. 180
+
+    from hippocampy.stats import circ_stats
+    import numpy as np
+
+    Theta = [356,97,211,232,343,292,157,302,335,302,324,85,324,340,157,238,254,146,232,122,329]
+    Phi = [119,162,221,259,270,29,97,292,40,313,94,45,47,108,221,270,119,248,270,45,23]
+
+    rTheta = np.deg2rad(Theta)
+    rPhi = np.deg2rad(Phi)
+
+    r, pval = circ_stats.corr_cc(rTheta,rPhi)
+    print(round(r, 3), round(pval, 4))
+    0.27 0.2247
+
     '''
     alpha = np.asarray(alpha)
     beta = np.asarray(beta)
