@@ -12,7 +12,10 @@
 # [2]   Vallat, R. (2018). Pingouin: statistics in Python. Journal of Open Source 
 #       Software, 3(31), 1026, https://doi.org/10.21105/joss.01026
 # 
-# [3]   Topics in circular statistics, S.R. Jammalamadaka et al., p. 176
+# [3]   Jammalamadaka, S. R., & Sengupta, A. (2001). Topics in circular
+#       statistics (Vol. 5). world scientific
+#       https://www.google.co.uk/books/edition/Topics_in_Circular_Statistics/sKqWMGqQXQkC?hl=en&gbpv=1&pg=PP1&printsec=frontcover
+#
 # [4]   Rabin, J., Delon, J. & Gousseau, Y. Transportation Distances on the Circle.
 #       J Math Imaging Vis 41, 147 (2011). https://doi.org/10.1007/s10851-011-0284-0
 #       https://arxiv.org/pdf/0906.5499v2.pdf
@@ -116,7 +119,7 @@ def circ_std(alpha, weight=None , d=False , dim=0 ):
 ## Test statistics
 ########################################################################
 
-def corr_cc(alpha, beta, uniformity_correction=False):
+def corr_cc(alpha, beta, tail='two-sided', uniformity_correction=False):
     '''
     Function that  compute correlation between two circular variables 
     Inputs:
@@ -170,6 +173,7 @@ def corr_cc(alpha, beta, uniformity_correction=False):
     tstat = np.sqrt( (n * l20 * l02) / l22 ) * rho
 
     pval = 2 * ( 1 - norm.cdf(abs(tstat)))
+    pval = pval / 2 if tail == 'one-sided' else pval
 
     return rho, pval
 
