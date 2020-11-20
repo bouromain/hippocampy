@@ -127,6 +127,8 @@ def corr_cc(alpha, beta, tail='two-sided', uniformity_correction=False):
                     first vector of circular variables (in radian)
             - beta (1D array): 
                     second vector of circular variables (in radian)
+            - tail (string, default: 'two-sided'):
+                    determine is on or two sided p-value should be returned
             - uniformity_correction (bool, default=False): 
                     Define if a correction for uniform variables 
                     should be used.
