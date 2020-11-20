@@ -6,19 +6,21 @@
 # for circular data
 # 
 # References:
-# Berens, Philipp. 2009. CircStat: A MATLAB Toolbox for Circular Statistics.
-# Journal of Statistical Software, Articles 31 (10): 1–21.
-# Vallat, R. (2018). Pingouin: statistics in Python. Journal of Open Source 
-# Software, 3(31), 1026, https://doi.org/10.21105/joss.01026
+# [1]   Berens, Philipp. 2009. CircStat: A MATLAB Toolbox for Circular Statistics.
+#       Journal of Statistical Software, Articles 31 (10): 1–21.
 # 
-# Rabin, J., Delon, J. & Gousseau, Y. Transportation Distances on the Circle.
-# J Math Imaging Vis 41, 147 (2011). https://doi.org/10.1007/s10851-011-0284-0
-# https://arxiv.org/pdf/0906.5499v2.pdf
+# [2]   Vallat, R. (2018). Pingouin: statistics in Python. Journal of Open Source 
+#       Software, 3(31), 1026, https://doi.org/10.21105/joss.01026
+# 
+# [3]   Topics in circular statistics, S.R. Jammalamadaka et al., p. 176
+# [4]   Rabin, J., Delon, J. & Gousseau, Y. Transportation Distances on the Circle.
+#       J Math Imaging Vis 41, 147 (2011). https://doi.org/10.1007/s10851-011-0284-0
+#       https://arxiv.org/pdf/0906.5499v2.pdf
 #
-# J. Rabin, J. Delon and Y. Gousseau, "Circular Earth Mover’s Distance for the
-# comparison of local features," 2008 19th International Conference on Pattern
-# Recognition, Tampa, FL, 2008, pp. 1-4, doi: 10.1109/ICPR.2008.4761372.
-# http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.214.4116&rep=rep1&type=pdf
+# [5]   J. Rabin, J. Delon and Y. Gousseau, "Circular Earth Mover’s Distance for the
+#       comparison of local features," 2008 19th International Conference on Pattern
+#       Recognition, Tampa, FL, 2008, pp. 1-4, doi: 10.1109/ICPR.2008.4761372.
+#       http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.214.4116&rep=rep1&type=pdf
 #
 # Author: RB 12/11/20
 
@@ -114,41 +116,56 @@ def circ_std(alpha, weight=None , d=False , dim=0 ):
 ## Test statistics
 ########################################################################
 
-def corr_cc(theta_1, theta_2):
+def corr_cc(alpha, beta, uniformity_correction=False):
     '''
     Function that  compute correlation between two circular variables 
-    Alpha
-
-    References:
-    Topics in circular statistics, S.R. Jammalamadaka et al., p. 176
-    Circular Statistics Toolbox for Matlab, Philipp Berens, 2009
+    Inputs:
+            - alpha (1D array): 
+                    first vector of circular variables (in radian)
+            - beta (1D array): 
+                    second vector of circular variables (in radian)
+            - uniformity_correction (bool, default=False): 
+                    Define if a correction for uniform variables 
+                    should be used.
+    Return: 
+            - rho (float): circular correlation coefficient
+            - pval(float): two sided p-value
+    
+    Adapted from Ref[1-3]
 
     '''
-    theta_1 = np.asarray(theta_1)
-    theta_2 = np.asarray(theta_2)
+    alpha = np.asarray(alpha)
+    beta = np.asarray(beta)
 
-    assert theta_1.size == theta_2.size, 'Dimension mismatch'
+    assert alpha.size == beta.size, 'alpha and beta should have the same length'
 
     # initialise variables 
-    n = theta_1.size
+    n = alpha.size
 
-    sin_theta1_z =  np.sin(theta_1 - circ_mean(theta_1) )
-    sin_theta2_z =  np.sin(theta_2 - circ_mean(theta_2) )
+    sin_alpha_z =  np.sin(alpha - circ_mean(alpha) )
+    sin_beta_z =  np.sin(beta - circ_mean(beta) )
 
-    sin_theta1_z_2 = sin_theta1_z**2
-    sin_theta2_z_2 = sin_theta2_z**2
+    sin_alpha_z_2 = sin_alpha_z**2
+    sin_beta_z_2 = sin_beta_z**2
 
+    if not uniformity_correction:
+        # compute correlation coefficient from p 176 of Ref in description
+        num = bn.nansum( sin_alpha_z * sin_beta_z  )
+        denom = np.sqrt( bn.nansum( sin_alpha_z_2) * bn.nansum(sin_beta_z_2  ) )
+        rho = num/denom
+    else:
+        # in case of uniformity of a distribution the formula described p177 
+        # of Ref[3] as in Ref[2]
+        R_plus = np.abs(bn.nansum(np.exp((alpha + beta) * 1j)))
+        R_minus = np.abs(bn.nansum(np.exp((alpha - beta) * 1j)))
+        denom = 2 * np.sqrt( bn.nansum( sin_alpha_z_2 ) * bn.nansum(sin_beta_z_2) )
+        rho = ( R_minus - R_plus ) / denom
 
-    # compute correlation coefficient from p 176 of Ref in description
-    num = bn.nansum( sin_theta1_z * sin_theta2_z  )
-    denom = np.sqrt( bn.nansum( sin_theta1_z_2) * bn.nansum(sin_theta2_z_2  ) )
-
-    rho = num/denom
 
     # compute pvalue 
-    l20 = bn.nanmean( sin_theta1_z_2 )
-    l02 = bn.nanmean( sin_theta2_z_2 )
-    l22 = bn.nanmean(  sin_theta1_z_2 * sin_theta2_z_2   )
+    l20 = bn.nanmean( sin_alpha_z_2 )
+    l02 = bn.nanmean( sin_beta_z_2 )
+    l22 = bn.nanmean(  sin_alpha_z_2 * sin_beta_z_2   )
 
     tstat = np.sqrt( (n * l20 * l02) / l22 ) * rho
 
