@@ -47,6 +47,18 @@ def isradians(x):
       # print("Warning, radians not in [-pi,pi] or [0,2pi] range")
       return 0  
 
+def wrap(x, rangeVal = 1): 
+  """
+  wrap radian values between range [-pi,pi] (range = 1) or [0,2pi] (range = 2)
+  """
+  x = x % (2*pi)
+
+  if rangeVal == 1:
+    underPi = x > pi
+    x[underPi] = x[underPi] - (2*pi)
+  
+  return x 
+
 ########################################################################
 ## Descriptive statistics
 ########################################################################
@@ -279,6 +291,6 @@ def cemd(f,g, period=[0 , 2*pi] ):
     
     # divide by n and multiply by "period" in order to set the max distance 
     # to this value. 
-    D = D / n * np.diff(period)
+    D /= n * np.diff(period)
 
     return bn.nanmin(D)

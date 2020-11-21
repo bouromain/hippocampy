@@ -1,22 +1,7 @@
 #%% utils for various codes 
 # author RB 06/20
 import numpy as np
-from numpy import pi
 
-#%% 
-def wrap(x, rangeVal = 1): 
-  """
-  wrap radian values between range [-pi,pi] (range = 1) or [0,2pi] (range = 2)
-  """
-  x = x % (2*pi)
-
-  if rangeVal == 1:
-    underPi = x > pi
-    x[underPi] = x[underPi] - (2*pi)
-  
-  return x 
-
-#%%
 def valueCross(x,v=0):
   """
   function finding the crossing point between a vector and a value.
@@ -34,10 +19,6 @@ def valueCross(x,v=0):
   down = np.append(down, False)
 
   return up, down
-
-# %%
-
-x = np.array([0,0,1,2,4,2,1, 0 , 2])
 
 def localExtrema(x,method='max'):
   """
@@ -60,5 +41,66 @@ def localExtrema(x,method='max'):
     return np.nonzero(E==2)
   else:
     return np.nonzero( np.logical_or(E==2,E==-2) )
+
+
+def _remove_nan(x, x_mask=None, axis=0):
+    """
+    Remove NaN in a 1D array.
+    adapted from Pinguin _remove_na_single
+    """
+    if x_mask is None:
+       x_mask = _nan_mask(x,axis=axis)
+
+    # Check if missing values are present
+    if ~x_mask.all():
+        ax = 0 if axis == 0 else 1
+        ax = 0 if x.ndim == 1 else ax
+        x = x.compress(x_mask, axis=ax)
+    return x
+
+def _nan_mask(x,axis=0):
+  if x.ndim == 1:
+    # 1D arrays
+    x_mask = ~np.isnan(x)
+  else:
+    # 2D arrays
+    ax = 1 if axis == 0 else 0
+    x_mask = ~np.any(np.isnan(x), axis=ax)
+
+    return x_mask
+
+def remove_nan(x, y=None, paired=False, axis=0):
+  """
+  Helper function to remove nan from 1D or 2D
+  """
+
+  x = np.asarray(x)
+
+  if y is None:
+    return _remove_nan(x,axis=axis)
+  else:
+    y = np.asarray(y)
+
+    if not paired:
+      x_nonan = _remove_nan(x,axis=axis)
+      y_nonan = _remove_nan(y,axis=axis)
+
+      return x_nonan, y_nonan
+
+    else:
+      x_mask = _nan_mask(x,axis=axis)
+      y_mask = _nan_mask(y,axis=axis)
+
+      xy_mask = np.logical_and(x_mask ,y_mask)
+
+      x_nonan = _remove_nan(x,x_mask=xy_mask , axis=axis)
+      y_nonan = _remove_nan(y,y_mask=xy_mask , axis=axis)
+
+      return x_nonan, y_nonan
+
+
+
+  
+
 
 # %%
