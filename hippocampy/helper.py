@@ -82,10 +82,10 @@ def remove_nan(x, y=None, paired=False, axis=0):
     y = np.asarray(y)
 
     if not paired:
-      x_nonan = _remove_nan(x,axis=axis)
-      y_nonan = _remove_nan(y,axis=axis)
+      x = _remove_nan(x,axis=axis)
+      y = _remove_nan(y,axis=axis)
 
-      return x_nonan, y_nonan
+      return x, y
 
     else:
       x_mask = _nan_mask(x,axis=axis)
@@ -93,10 +93,11 @@ def remove_nan(x, y=None, paired=False, axis=0):
 
       xy_mask = np.logical_and(x_mask ,y_mask)
 
-      x_nonan = _remove_nan(x,x_mask=xy_mask , axis=axis)
-      y_nonan = _remove_nan(y,y_mask=xy_mask , axis=axis)
+      if ~np.all(xy_mask):
+        x = _remove_nan(x,x_mask=xy_mask , axis=axis)
+        y = _remove_nan(y,y_mask=xy_mask , axis=axis)
 
-      return x_nonan, y_nonan
+      return x, y
 
 
 
