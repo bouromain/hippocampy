@@ -3,6 +3,18 @@ import bottleneck as bn
 from hippocampy.matrix_utils import remove_small_objects
 
 
+def calcDF(Froi,Fneu):
+    """
+    Here we do the classical neuropil extraction. A more refined version could be done by estimating c for
+    for each cells as in:
+     - Ultrasensitive fluorescent proteins for imaging neuronal activity, 
+     TW Chen TJ Wardill Y Sun SR Pulver SL Renninger A Baohan ER Schreiter RA Kerr MB Orger V Jayaraman LL Looger K Svoboda DS Kim 
+     (2013b)
+    """
+    F = Froi - (0.7 * Fneu)
+    return F
+
+
 def transientSH(F):
     """
     find transient as in Allegra, Posani, Schmidt-Hieber
