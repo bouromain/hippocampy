@@ -31,7 +31,8 @@ def localExtrema(x,method='max'):
 
   """
   assert method in ['max', 'min', 'all'], "Invalid Method in localExtrema"
-
+  
+  x = np.asarray(x, dtype=np.float)
   D = np.diff(x)
   E = np.diff( D /abs(D) )
 

@@ -12,6 +12,9 @@ def calcDF(Froi,Fneu):
      (2013b)
     """
     F = Froi - (0.7 * Fneu)
+
+    # here we should also male local detrend with Dombeck approach (substraction of 8th percentile of a sliding window)
+    # or by using high pass filter, local detrend 
     return F
 
 
