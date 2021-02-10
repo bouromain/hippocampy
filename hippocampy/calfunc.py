@@ -3,20 +3,34 @@ import bottleneck as bn
 from hippocampy.matrix_utils import remove_small_objects
 
 
-def calcDF(Froi,Fneu):
+def calcDF(Froi,Fneu, method=None):
     """
     Here we do the classical neuropil extraction. A more refined version could be done by estimating c for
     for each cells as in:
      - Ultrasensitive fluorescent proteins for imaging neuronal activity, 
      TW Chen TJ Wardill Y Sun SR Pulver SL Renninger A Baohan ER Schreiter RA Kerr MB Orger V Jayaraman LL Looger K Svoboda DS Kim 
      (2013b)
+
+     Note: 
+
+     the last option is performed with rtobust linear regresion function robustfit.m in matlab
+
+     in python we could use cikit learn with different option as descibed here.
+     https://machinelearningmastery.com/robust-regression-for-machine-learning-in-python/
+
+     matlab robustfir use bisquare option by default
     """
-    F = Froi - (0.7 * Fneu)
+
+    if method is None:
+        F = Froi - (0.7 * Fneu)
+
+    else:
+        raise NotImplementedError("Method not implemented")
+
 
     # here we should also male local detrend with Dombeck approach (substraction of 8th percentile of a sliding window)
     # or by using high pass filter, local detrend 
     return F
-
 
 def transientSH(F):
     """

@@ -1,9 +1,6 @@
 from ScanImageTiffReader import ScanImageTiffReader
 import h5py
 
-pfile = "/home/bouromain/Documents/tmpData/2020-03-13_12-20-06/m4368_20200313_00001.tif"
-bfile = "/home/bouromain/Documents/tmpData/2020-03-13_12-20-06/suite2p/plane0/data.bin"
-
 def get_tiff_metadata(pfile:str):
     '''
     Open tiff and return all the metadata
