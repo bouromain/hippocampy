@@ -239,3 +239,47 @@ def moving_win(a, length, overlap=0, axis=None, end='cut', endvalue=0):
         newstrides = a.strides[:axis]+((length-overlap)*s,s) + a.strides[axis+1:]
         return np.ndarray.__new__(np.ndarray,strides=newstrides,shape=newshape,buffer=a,dtype=a.dtype)
 
+
+
+def row_closest_min_to_val(v, zero_val=None):
+  """
+  This function identify the identify the closest index
+  of non-zero element to a given value.
+
+  Input:
+        - v: vector, preferably logical
+        - zero_val: value of the "zero"
+  Returns:
+        - index of the closest index
+  """
+  if zero_val is None:
+      zero_val = v.size/2
+
+  tmp = np.squeeze(np.nonzero(v))
+
+  if tmp.size > 0:
+    return tmp[np.argmin(abs(tmp-zero_val))]
+  else:
+    return np.nan
+
+def find_peak_row(M,zero_idx=None):
+"""
+find_peak_row will find the peak per row that is closest to a 
+particular value.
+
+Input:
+        - M: Matrix of value, this function will by applied
+        over rows
+        - zero_val: value of the "zero"
+  Returns:
+        - index of the closest index
+
+"""
+
+  if zero_idx is None:
+    zero_idx = M.shape[1]/2
+
+  bef = np.hstack((np.atleast_2d(M[:,0]).T , M[:,:-1]))
+  aft = np.hstack((M[:,1:], np.atleast_2d(M[:,-1]).T ))
+  peaks = np.logical_and(M-bef >=0 , M-aft >=0)
+  return np.apply_along_axis(row_closest_min_to_val, axis=1, arr=peaks , zero_val = zero_idx)
