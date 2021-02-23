@@ -263,23 +263,50 @@ def row_closest_min_to_val(v, zero_val=None):
     return np.nan
 
 def find_peak_row(M,zero_idx=None):
-"""
-find_peak_row will find the peak per row that is closest to a 
-particular value.
+  """
+  find_peak_row will find the peak per row that is closest to a 
+  particular value.
 
-Input:
-        - M: Matrix of value, this function will by applied
-        over rows
-        - zero_val: value of the "zero"
-  Returns:
-        - index of the closest index
+  Input:
+          - M: Matrix of value, this function will by applied
+          over rows
+          - zero_val: value of the "zero"
+    Returns:
+          - index of the closest index
 
-"""
+  Example:
+  a = np.array([ [1, 2, 3, 2, 0] [ 4, 8, 9, 12, 1] ])
+  p = 
 
+  """
   if zero_idx is None:
     zero_idx = M.shape[1]/2
 
   bef = np.hstack((np.atleast_2d(M[:,0]).T , M[:,:-1]))
   aft = np.hstack((M[:,1:], np.atleast_2d(M[:,-1]).T ))
   peaks = np.logical_and(M-bef >=0 , M-aft >=0)
+
   return np.apply_along_axis(row_closest_min_to_val, axis=1, arr=peaks , zero_val = zero_idx)
+
+def find_peaks(M, min_amplitude= None):
+  """
+  find peaks over in each rows in a matrix
+  Example:
+  M = np.array([ [1, 2, 3, 2, 0], [ 4, 8, 9, 12, 1] ])
+  [ P, P_idx ] = find_peaks(M)
+  P = array([[False, False,  True, False, False],
+       [False, False, False,  True, False]])
+  P_idx = [array(2), array(3)]
+  """
+
+  bef = np.hstack((np.atleast_2d(M[:,0]).T , M[:,:-1]))
+  aft = np.hstack((M[:,1:], np.atleast_2d(M[:,-1]).T ))
+
+  if min_amplitude is None:
+    peaks = np.logical_and(M-bef >=0 , M-aft >=0)
+  else:
+    peaks = np.logical_and.reduce([M-bef >=0 , M-aft >=0 , M>=min_amplitude])
+
+  peaks_idx = [np.squeeze(np.nonzero(valP)) for itP,valP in enumerate(p) ]
+
+  return peaks,peaks_idx
