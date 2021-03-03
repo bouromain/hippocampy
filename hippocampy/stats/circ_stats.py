@@ -31,6 +31,8 @@ import numpy as np
 import bottleneck as bn
 from numpy import pi
 from scipy.stats import norm
+from scipy.optimize import fminbound
+from math import erf
 
 ########################################################################
 ## Helpers
@@ -236,6 +238,95 @@ def corr_cl( x, theta, tail='two-sided'):
     return r, pval
 
 
+def lin_circ_regress( x, phi, bound=None):
+    """
+    Linear-circular regression as described in Kempter et al 2012
+
+    Parameters:
+                - x: linear variable
+                - phi: circular variable 
+                - bound: bounds to contrains the regression search (eg: if we
+                    know in advance our slope should be negative,...)
+
+    Returns:
+                - rho: Kempter linear-Circular R value
+                - slope: slope best fit
+                - phi0: phase offset (value at x=0)
+                - p_c: p value calculated numerically from Kempter et al 2012 p122
+
+    Example:
+    x = np.asarray([107, 46, 33, 67, 122, 69, 43, 30, 12, 25, 37,
+        69, 5, 83, 68, 38, 21, 1, 71, 60, 71, 71, 57, 53, 38, 70, 7, 48, 7, 21, 27])
+    phi = np.asarray([67, 66, 74, 61, 58, 60, 100, 89, 171, 166, 98, 
+        60, 197, 98, 86, 123, 165, 133, 101, 105, 71, 84, 75, 98, 83, 71, 74, 91, 38, 200, 56])
+    phi = np.deg2rad(phi)
+
+    print(lin_circ_regress( x, phi))
+    (-0.49, -0.012, 2.28, 0.018)
+
+    Acknowledgments:
+    circ_regress_cb by A.  Jeewajee and C. Barry
+    CircularRegression by M. Zugaro
+
+    """
+    x = np.asarray(x, dtype=float)
+    phi = np.asarray(phi, dtype=float)
+
+    # verify inputs
+    assert x.size == phi.size, 'f and g should have the same size'
+    assert isradians(phi) != 0, 'circular variable should be in radian'
+
+    # estimate the slope and constrain it to a particular interval 
+    if bound is None:
+        max_slope = (4 * np.pi) / ( np.max(x) - np.min(x) )
+        bound = [-max_slope, max_slope]
+    else:
+        assert bound.size == 2, 'bound should be in the format [low_bound, high_bound]'
+
+    lambda_resultant_length = lambda a: _resultant_length(a , x, phi)
+    slope = fminbound(lambda_resultant_length, bound[0], bound[1] , disp=False)
+    
+    #estimate the intercept with Kempter 2012 Eq 2
+    C = bn.nansum( np.cos( phi - slope * x ) )
+    S = bn.nansum( np.sin( phi - slope * x ) )
+    phi0 = np.arctan2(S,C) 
+
+    #and compute the circular linear correlation with Kempter 2012 Eq 3
+    # first circularise the linear variable
+    theta = np.mod( np.abs(slope) * x , 2 * np.pi )
+
+    #compute the circular mean of each variables
+    phi_bar = circ_mean(phi)
+    theta_bar = circ_mean(theta)
+
+    # Compute eq 3
+    Num = bn.nansum( np.sin(phi - phi_bar) * np.sin(theta - theta_bar ) )
+    Denum = np.sqrt( bn.nansum( np.sin(phi - phi_bar )**2) * bn.nansum( np.sin(theta - theta_bar)**2) )
+    rho = Num/Denum
+
+    # Now calculate p value according to Kempter equation p122
+    n = phi.size
+    lambda02 = 1/n * bn.nansum(np.sin(phi - phi_bar )**2 )
+    lambda20 = 1/n * bn.nansum(np.sin(theta - theta_bar )**2 )
+    lambda22 = 1/n * bn.nansum(np.sin(phi - phi_bar )**2 * np.sin(theta - theta_bar )**2 )
+
+    z = rho * np.sqrt( (n * lambda02 * lambda20) / lambda22)
+    p_c = 1 - erf( np.abs(z) / np.sqrt(2) )
+
+    return rho, slope, phi0, p_c
+
+
+def _resultant_length(a, x, phi):
+    '''
+    helper function for lin_circ_regress
+    '''
+    n = x.size
+    G = ( 1 / n ) * bn.nansum( np.cos(phi - a * x) )
+    D = ( 1 / n ) * bn.nansum( np.sin(phi - a * x) )
+    # we will return -R as will will then search to minimise the function
+    # minimizing -R == maximinsing R
+    return -np.sqrt(G**2 + D**2)
+
 
 ########################################################################
 ## other    
@@ -262,7 +353,7 @@ def cemd(f,g, period=[0 , 2*pi] ):
     f = np.asarray(f, dtype=float)
     g = np.asarray(g, dtype=float)
 
-    assert f.size == f.size, 'f and g should have the same length'
+    assert f.size == g.size, 'f and g should have the same length'
 
     #initialise variables
     n = len(f)
@@ -294,3 +385,4 @@ def cemd(f,g, period=[0 , 2*pi] ):
     D /= n * np.diff(period)
 
     return bn.nanmin(D)
+

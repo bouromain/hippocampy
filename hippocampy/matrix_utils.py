@@ -307,6 +307,6 @@ def find_peaks(M, min_amplitude= None):
   else:
     peaks = np.logical_and.reduce([M-bef >=0 , M-aft >=0 , M>=min_amplitude])
 
-  peaks_idx = [np.squeeze(np.nonzero(valP)) for itP,valP in enumerate(p) ]
+  peaks_idx = [np.squeeze(np.nonzero(valP)) for itP,valP in enumerate(peaks) ]
 
   return peaks,peaks_idx
