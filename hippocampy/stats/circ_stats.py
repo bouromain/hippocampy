@@ -1,7 +1,3 @@
-# Code heavily inspired from matlab circ_stat toolbox and python package Pinguin
-# by Raphael Vallat. I also addded further function and helpers to work with 
-# circular variables 
-#
 # Provide helper function, descriptive statistics and statistical tests
 # for circular data
 # 
@@ -25,7 +21,7 @@
 #       Recognition, Tampa, FL, 2008, pp. 1-4, doi: 10.1109/ICPR.2008.4761372.
 #       http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.214.4116&rep=rep1&type=pdf
 #
-# Author: RB 12/11/20
+# Author: R Bourboulou 2020-21
 
 import numpy as np
 import bottleneck as bn
@@ -52,6 +48,15 @@ def isradians(x):
 def wrap(x, rangeVal = 1): 
   """
   wrap radian values between range [-pi,pi] (range = 1) or [0,2pi] (range = 2)
+
+  Parameters:
+                - x vector or matrix in radian to convert
+                - range: 1 [-pi,pi]
+                         2 [0, 2pi]
+
+  Returns:
+                - return and element like x of converted values
+
   """
   x = x % (2*pi)
 
@@ -124,13 +129,8 @@ def circ_std(alpha, weight=None , d=False , dim=0 ):
 
     return s , s0
 
-
-
-
-
-
 ########################################################################
-## Test statistics
+## Statistics
 ########################################################################
 
 def corr_cc(alpha, beta, tail='two-sided', uniformity_correction=False):
