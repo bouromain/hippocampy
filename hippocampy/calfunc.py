@@ -21,9 +21,9 @@ def subtract_neuropil(Froi,Fneu, method="fixed", downsample_ratio= 10):
 
     # this reshape is particularly important for the robust method but I put it 
     # here for homogeneity 
-    if Froi.shape[1] < Froi.shape[0] | Fneu.shape[1] < Fneu.shape[0]:
+    if Froi.shape[1] < Froi.shape[0] or Fneu.shape[1] < Fneu.shape[0]:
         raise SyntaxError('Data should be given as [cells, samples]')
-
+    
         return
 
     if method is "fixed":
