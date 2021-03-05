@@ -6,3 +6,5 @@ scikit-image
 bottleneck
 suite2p
 scanimage-tiff-reader
+h5py
+mat73

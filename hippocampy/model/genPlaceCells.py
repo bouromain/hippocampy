@@ -5,7 +5,7 @@ import bottleneck as bn
 def gen_pc_gauss_oi(t,pos, centers, sigma = [1,1], amp =1,omega = 8.1, phi = 0):
     """
     generate a place cells using a gaussian envelope modulated
-     by a oscilatory interference
+    by a oscilatory interference
 
     see methods of Monsalve-Mercado Roudi 2019
     """

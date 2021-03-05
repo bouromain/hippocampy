@@ -21,8 +21,6 @@ def get_tiff_data(pfile:str):
         out = reader.data()
     return out
 
-shapeTiff = get_tiff_shape(pfile)
-
 
 # ## create a normal h5 file without compression
 # hfile = "/home/bouromain/Documents/tmpData/2020-03-13_12-20-06/m4368_20200313_00001.hdf5"

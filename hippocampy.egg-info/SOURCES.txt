@@ -5,7 +5,6 @@ hippocampy/calfunc.py
 hippocampy/filterSig.py
 hippocampy/helper.py
 hippocampy/matrix_utils.py
-hippocampy/suite2p_utils.py
 hippocampy.egg-info/PKG-INFO
 hippocampy.egg-info/SOURCES.txt
 hippocampy.egg-info/dependency_links.txt
