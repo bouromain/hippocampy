@@ -54,9 +54,10 @@ def _remove_nan(x, x_mask=None, axis=0):
 
     # Check if missing values are present
     if ~x_mask.all():
-        ax = 0 if axis == 0 else 1
-        ax = 0 if x.ndim == 1 else ax
-        x = x.compress(x_mask, axis=ax)
+      ax = 0 if axis == 0 else 1
+      ax = 0 if x.ndim == 1 else ax
+      x = x.compress(x_mask, axis=ax)
+    
     return x
 
 def _nan_mask(x,axis=0):
@@ -68,15 +69,13 @@ def _nan_mask(x,axis=0):
     ax = 1 if axis == 0 else 0
     x_mask = ~np.any(np.isnan(x), axis=ax)
 
-    return x_mask
+  return x_mask
 
 def remove_nan(x, y=None, paired=False, axis=0):
   """
   Helper function to remove nan from 1D or 2D
   """
-
   x = np.asarray(x)
-
   if y is None:
     return _remove_nan(x,axis=axis)
   else:
@@ -96,7 +95,7 @@ def remove_nan(x, y=None, paired=False, axis=0):
 
       if ~np.all(xy_mask):
         x = _remove_nan(x,x_mask=xy_mask , axis=axis)
-        y = _remove_nan(y,y_mask=xy_mask , axis=axis)
+        y = _remove_nan(y,x_mask=xy_mask , axis=axis)
 
       return x, y
 

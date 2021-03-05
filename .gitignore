@@ -4,3 +4,5 @@ __pycache__/
 .pytest_cache/
 *.ipynb_checkpoints
 testpy.py
+*.eggs/
+*.egg-info/
