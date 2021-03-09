@@ -105,12 +105,15 @@ def inhomogeneous_poisson_process(rate, time, refractory_period=None):
     rate_max = np.max(rate)
     t_0 = np.min(time)
     t_end = np.max(time)
-    delta_t = bn.median(diff(time))
+    delta_t = bn.median(np.diff(time))
 
-    hpp = homogeneous_poisson_process(rate_max,t_0=t_0, t_end==t_end, delta_t=delta_t)
+    hpp = homogeneous_poisson_process(rate_max,t_0=t_0, t_end=t_end, delta_t=delta_t)
 
+    # find the rate for these values
+    rate_i = np.interp(hpp, time, rate)
+    # generate random distribution 
     uniform = np.random.uniform(size=hpp.size) * rate_max
-    spk_time = time[uniform < hpp]
+    spk_time = hpp[uniform < rate_i]
     
     return spk_time
 
