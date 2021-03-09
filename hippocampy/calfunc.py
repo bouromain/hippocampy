@@ -8,10 +8,24 @@ import tqdm as tqdm
 
 def subtract_neuropil(Froi,Fneu, method="fixed", downsample_ratio= 10):
     """
-    Here we do the classical neuropil extraction with two methods. Either by calculating:
-                F = Froi - (0.7 * Fneu)
-    or by using a robust fit between Froi and Fneu as perfromed in the following paper:
+    This function will perform neuropil substraction from a given fluorescence 
+    trace F = Froi - (c * Fneu). The constant c can be defined as a fixed value 
+    (classically 0.7) or calculated by a bounded robust regression between Froi 
+    and Fneu (see Chen 2013b)
+    
+    Parameters:
+            - Froi: ROI fluorescence vector or matrix given as [cells, samples]
+            - Fneu: Neuropil fluorescence vector or matrix given as [cells, samples]
+            - method: 
+                    - fixed (default) where c = 0.7
+                    - robust: calculation with robust regression
+            - downsample_ratio: downsampling ratio of the data for "robust" method
 
+    Returns:
+            - F: Fluorescence vector or matrix given as [cells, samples] 
+            with Fneu substracted
+
+    Reference:
     - Ultrasensitive fluorescent proteins for imaging neuronal activity, 
     TW Chen TJ Wardill Y Sun SR Pulver SL Renninger A Baohan ER Schreiter
     RA Kerr MB Orger V Jayaraman LL Looger K Svoboda DS Kim  (2013b)
@@ -62,7 +76,7 @@ def transientSH(F):
     F_mean = bn.nanmean(F,axis=1)
     F_std = bn.nanstd(F,axis=1)
 
-def transientRoy(F , threshold = 2.5 , minSize = 9):
+def transientRoy( F , threshold = 2.5 , minSize = 9):
     """
     find transient as in Roy 2017
     Ca 2+ events were detected by applying a threshold (greater than 2 standard
@@ -81,23 +95,3 @@ def transientRoy(F , threshold = 2.5 , minSize = 9):
     F_t = F_z > threshold
     # remove small transients
     F_t = np.apply_along_axis(remove_small_objects, axis =1 ,arr=F_t, min_sz = minSize )
-
-
-
-
-
-# %matplotlib widget
-
-# t = 5
-
-# i = list(range(t,19000))
-# x = F_z[t,i]
-# x_m = F_t[t,i]
-# m = np.array(np.where(x_m))
-
-# plt.figure()
-# plt.plot(x)
-
-# tmp = x[m]
-# plt.plot(m.T, tmp.T ,marker='o', markerfacecolor=(1,0,0,1 ) )
-

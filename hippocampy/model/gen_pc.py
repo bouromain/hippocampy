@@ -54,14 +54,33 @@ def gen_lin_path(t_max, v=20, range_x=200,Fs=50,up_down=True):
 
     return x,t
 
-def spk_from_if(rate,refractory_period=None):
+
+def homogeneous_poisson_process( lam, size, refractory_period=None):
+    '''
+    '''
+
+    np.random.poisson(lam,size)
+
+    if refractory_period is not None:
+        
+
+
+def inhomogeneous_poisson_process(rate,refractory_period=None):
     '''
     https://elephant.readthedocs.io/en/latest/_modules/elephant/spike_train_generation.html
+    https://github.com/NeuralEnsemble/elephant/blob/master/elephant/spike_train_generation.py
+    around line 500
     see function:
     inhomogeneous_poisson_process
     '''
-    avg_prob = 1 - np.exp(-rate)
-    rand_var = np.random.uniform(size=rate.size)
 
-    return avg_prob >= rand_var
+    max_rate = np.max(rate)
+
+    avg_prob = 1 - np.exp(-rate)
+    rand_var = np.random.uniform(size=rate.size) * max_rate
+    spikes = avg_prob >= rand_var
+
+    return spikes
+
+
 
