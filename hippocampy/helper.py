@@ -1,19 +1,24 @@
-#%% utils for various codes 
-# author RB 06/20
 import numpy as np
 
-def valueCross(x,v=0):
+def valueCross(x,threshold=0):
   """
-  function finding the crossing point between a vector and a value.
-  Particularly useful when you want to detect phase inversion of crossing
-  were you are not likely to find exactly a value in your vector strictly equal
-  to a value
+  Function finding the crossing point between a vector and a value.
+  Particularly useful when you want to detect crossing of a threshold
+  were you are not likely to find exactly a value in your input vector.
+
+  Parameters:
+            - x: vector of data
+            - threshold: threshold to cross
+
+  Returns:
+            - up: logical vector with True value for up crossing
+            - down: logical vector with True value for down crossing
   """
   before = np.array(x[:-1]) 
   after = np.array(x[1:])
 
-  up = np.logical_and(before<v, after>v)
-  down = np.logical_and(before>v, after<v)
+  up = np.logical_and(before<threshold, after>threshold)
+  down = np.logical_and(before>threshold, after<threshold)
 
   up = np.append(up, False)
   down = np.append(down, False)
@@ -22,12 +27,14 @@ def valueCross(x,v=0):
 
 def localExtrema(x,method='max'):
   """
-  
   Find local extrema and return their index
 
-  Inputs: 
+  Parameters: 
           - x: vector
           - method: type of extrema to consider [max, min, all] (default: max)
+
+  Returns: 
+          - index of the local extrema as defined by the parameter 'method'
 
   """
   assert method in ['max', 'min', 'all'], "Invalid Method in localExtrema"
@@ -74,6 +81,16 @@ def _nan_mask(x,axis=0):
 def remove_nan(x, y=None, paired=False, axis=0):
   """
   Helper function to remove nan from 1D or 2D
+
+  Parameters:
+          - x: vector or matrix with nans
+          - y: vector or matrix with nans
+          - paired: should we pair the removal of nan values in x and y 
+          - axis: axis to operate on
+
+  Returns:
+          - x (and y) without nan values 
+
   """
   x = np.asarray(x)
   if y is None:
@@ -99,9 +116,3 @@ def remove_nan(x, y=None, paired=False, axis=0):
 
       return x, y
 
-
-
-  
-
-
-# %%
