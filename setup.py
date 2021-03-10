@@ -7,6 +7,18 @@ setup(
     author="Bourboulou Romain",
     author_email="bouromain@gmail.com",
     packages=["hippocampy"],
-    install_requires=["numpy", "scipy","matplotlib","astropy",
-    "scikit-image","bottleneck","suite2p","scanimage-tiff-reader","h5py","mat73","sklearn","tqdm"]
+    install_requires=[
+        "numpy",
+        "scipy",
+        "matplotlib",
+        "astropy",
+        "scikit-image",
+        "bottleneck",
+        "suite2p",
+        "scanimage-tiff-reader",
+        "h5py",
+        "mat73",
+        "sklearn",
+        "tqdm",
+    ],
 )

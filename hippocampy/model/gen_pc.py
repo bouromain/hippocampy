@@ -1,19 +1,46 @@
 import numpy as np
 import bottleneck as bn
+import hippocampy as hp
 
 
-def gen_pc_gauss_oi(t, pos, centers, sigma=10, amplitude=1, omega=8.1, phi=0):
+def gen_pc_gauss_oi(t, pos, centers, sigma=10, amplitude=1, omega_theta=8):
     """
     generate a place cells using a gaussian envelope modulated
-    by a oscilatory interference
+    by a oscillatory interference
 
-    see methods of Monsalve-Mercado Roudi 2019
+    see methods of
+    Monsalve-Mercado Roudi 2017
+    Leibold 2017
+
     """
 
+    # first define the gaussian envelope of the place field
     G = gaussian_envelope(pos, centers, sigma=sigma)
 
-    # make the oscilation
-    L = np.cos((omega * 2 * np.pi) * t + phi) + 1 / 2
+    theta = np.cos((omega_theta * 2 * np.pi) * t)
+    theta_p, _ = hp.filterSig.hilbertPhase(theta)
+
+    # calculate variables
+    R = sigma * np.sqrt(2 * np.log(10))  # distance from place field center where
+    # firing decrased to 10%
+    delta_t = bn.nanmedian(np.diff(t))
+    delta_x = bn.nanmedian(np.diff(pos))
+    speed = np.abs(delta_x / delta_t)
+    # omega_cell = omega_theta + (np.pi / R) * speed
+    omega_cell = 1 / (1 / 1 / omega_theta * (1 - 0.06 * (20 / sigma)))
+
+    # now find the indexes of entries in the fields
+    idx_entries = G >= np.max(G) * 0.1
+    idx_entries = np.hstack((0, np.diff(idx_entries.astype(int)) == 1))
+    entries_cum = np.cumsum(idx_entries)
+
+    delta_phase = theta_p[idx_entries.astype(bool)]
+    phase_offset = np.ones_like(t)
+
+    for it, val in enumerate(delta_phase):
+        phase_offset[entries_cum == it] = -val
+
+    L = (np.cos((omega_cell * 2 * np.pi) * t + phase_offset) + 1) / 2
 
     return amplitude * G * L
 
@@ -37,12 +64,23 @@ def gaussian_envelope(pos, centers, sigma=10, amplitude=1):
     return amplitude * np.exp(-bn.nansum(expo, 0))
 
 
-def gen_lin_path(t_max, v=20, range_x=200, Fs=50, up_down=True):
+def gen_lin_path(time_max, v=20, range_x=200, Fs=50, up_down=True):
     """
-    generate
+    Generate synthetic linear path
+
+    Parameters:
+            - time_max: max time of the path
+            - v: constant speed
+            - range_x: length of the linear track
+            - Fs: sampling rate of the path
+            - up_down: does the animal goes only up or up and down
+
+    Returns:
+            -x: synthetic path
+            -t: time vector for the synthetic path
     """
 
-    t = np.linspace(0, t_max, t_max * Fs)
+    t = np.linspace(0, time_max, time_max * Fs)
     d = v * t
 
     if up_down:
@@ -62,7 +100,7 @@ def _remove_refractory_period(spike_time, refractory_period):
     spike_time_diff = np.diff(spike_time)
     m = np.hstack((True, spike_time_diff > refractory_period))
 
-    return s[m]
+    return spike_time[m]
 
 
 def homogeneous_poisson_process(

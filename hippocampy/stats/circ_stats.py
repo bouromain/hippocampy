@@ -266,7 +266,7 @@ def lin_circ_regress(x, phi, bound=None):
     (-0.49, -0.012, 2.28, 0.018)
 
     Acknowledgments:
-    circ_regress_cb by A.  Jeewajee and C. Barry
+    circ_regress_cb by A. Jeewajee and C. Barry
     CircularRegression by M. Zugaro
 
     """
@@ -353,9 +353,6 @@ def cemd(f, g, period=[0, 2 * pi]):
 
     References:
     Rabin et al 2011
-
-    see for potential non discret adaptation (around page 150)
-    https://pastel.archives-ouvertes.fr/file/index/docid/472442/filename/these.pdf
     """
     f = np.asarray(f, dtype=float)
     g = np.asarray(g, dtype=float)
