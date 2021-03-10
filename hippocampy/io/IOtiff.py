@@ -1,22 +1,24 @@
 from ScanImageTiffReader import ScanImageTiffReader
 import h5py
 
-def get_tiff_metadata(pfile:str):
-    '''
+
+def get_tiff_metadata(pfile: str):
+    """
     Open tiff and return all the metadata
     input
-    '''
+    """
     with ScanImageTiffReader(pfile) as reader:
         out = reader.metadata()
     return out
 
-def get_tiff_shape(pfile:str):
+
+def get_tiff_shape(pfile: str):
     with ScanImageTiffReader(pfile) as reader:
         out = reader.shape()
     return out
 
 
-def get_tiff_data(pfile:str):
+def get_tiff_data(pfile: str):
     with ScanImageTiffReader(pfile) as reader:
         out = reader.data()
     return out
@@ -45,5 +47,3 @@ def get_tiff_data(pfile:str):
 # dataTiff = get_tiff_data(pfile)
 # out = f.create_dataset('/x', data=dataTiff, compression="lzf", shuffle=True, chunks= True)
 # f.close()
-
-
