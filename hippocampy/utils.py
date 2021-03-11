@@ -47,11 +47,11 @@ def localExtrema(x, method="max"):
     E = np.diff(D / abs(D))
 
     if method == "max":
-        return np.nonzero(E == -2)
+        return np.nonzero(E == -2)[0] + 1
     elif method == "min":
-        return np.nonzero(E == 2)
+        return np.nonzero(E == 2)[0] + 1
     else:
-        return np.nonzero(np.logical_or(E == 2, E == -2))
+        return np.nonzero(np.logical_or(E == 2, E == -2))[0] + 1
 
 
 def _remove_nan(x, x_mask=None, axis=0):
