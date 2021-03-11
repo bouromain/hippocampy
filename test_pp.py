@@ -63,13 +63,13 @@ theta = np.cos((omega_theta * 2 * np.pi) * t)
 theta_p, _ = hp.filterSig.hilbertPhase(theta)
 
 # calculate variables
-R = sigma * np.sqrt(2 * np.log(10))  # distance from place field center where
 # firing decrased to 10%
 delta_t = bn.nanmedian(np.diff(t))
 delta_x = bn.nanmedian(np.diff(pos))
 speed = np.abs(delta_x / delta_t)
+# R = sigma * np.sqrt(2 * np.log(10))  # distance from place field center where
 # omega_cell = omega_theta + (np.pi / R) * speed
-omega_cell = 1 / (1 / 1 / omega_theta * (1 - 0.06 * (20 / sigma)))
+omega_cell = omega_theta / (1 - 0.06 * (20 / sigma))  # should be 0.06
 
 # now find the indexes of entries in the fields
 idx_entries = G >= np.max(G) * 0.1
@@ -79,19 +79,35 @@ entries_cum = np.cumsum(idx_entries)
 L = np.cos((omega_cell * 2 * np.pi) * t + 0)
 L_phase, _ = hp.filterSig.hilbertPhase(L)
 
-delta_phase = L_phase[idx_entries.astype(bool)] - theta_p[idx_entries.astype(bool)]
+delta_phase = (
+    theta_p[idx_entries.astype(bool)] - L_phase[idx_entries.astype(bool)]
+)  # theta_p[idx_entries.astype(bool)]
+delta_phase = np.mod(delta_phase, 2 * np.pi)
+
 
 phase_offset = np.ones_like(t)
 
 for it, val in enumerate(delta_phase):
-    phase_offset[entries_cum == it] = -val
+    phase_offset[entries_cum == it] = val
 
-# L = (np.cos((omega_cell * 2 * np.pi) * t + phase_offset) + 1 ) / 2
+L = (
+    np.cos((omega_cell * 2 * np.pi) * t - (2 * np.pi * omega_cell / phase_offset)) + 1
+) / 2
 
+
+plt.plot(t, (theta + 1) * 0.5, "k")
+plt.plot(t, L)
+plt.plot(t, G)
+plt.plot(t, entries_cum * 0.1, "r")
+plt.xlim((14, 15))
+
+
+plt.xlim((44, 46))
+plt.xlim((54, 56))
+plt.xlim((64, 66))
+
+
+##
 plt.plot(t, G * L)
 plt.xlim((54, 56))
 plt.plot(t, theta)
-
-plt.plot(t, theta)
-plt.plot(t, L)
-plt.xlim((54, 55))
