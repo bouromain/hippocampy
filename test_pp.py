@@ -6,11 +6,11 @@ import bottleneck as bn
 
 x_pos, t = mdpc.gen_lin_path(500, Fs=100)
 
-c1 = mdpc.gen_pc_gauss_oi(t, x_pos, 75, amplitude=12)
-s1 = mdpc.inhomogeneous_poisson_process(c1, t)
+c1 = mdpc.gen_pc_gauss_oi(t, x_pos, 75, sigma=15, amplitude=2)
+s1 = mdpc.inhomogeneous_poisson_process(c1, t, method="exponential")
 
-c2 = mdpc.gen_pc_gauss_oi(t, x_pos, 70, amplitude=12)
-s2 = mdpc.inhomogeneous_poisson_process(c2, t)
+c2 = mdpc.gen_pc_gauss_oi(t, x_pos, 70, sigma=15, amplitude=2)
+s2 = mdpc.inhomogeneous_poisson_process(c2, t, method="exponential")
 
 # generate theta
 omega = 8  # theta frequency
@@ -31,3 +31,8 @@ plt.plot(
     [x_pos[s2_idx], x_pos[s2_idx]], [theta_p[s2_idx], theta_p[s2_idx] + 2 * np.pi], ".k"
 )
 plt.xlim((60, 80))
+
+
+c, e = hp.ccg.ccg(s1, s2, max_lag=100)
+plt.figure()
+plt.plot(e[1:], c)

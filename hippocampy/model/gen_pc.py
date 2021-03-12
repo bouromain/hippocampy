@@ -138,7 +138,7 @@ def homogeneous_poisson_process(
     return spk_time
 
 
-def inhomogeneous_poisson_process(rate, time, refractory_period=None):
+def inhomogeneous_poisson_process(rate, time, refractory_period=None, method="uniform"):
     """
     This function will simulate an inhomogeneous Poisson Process with a
     time varying firing rate. This inhomogeneous Poisson process with intensity
@@ -168,7 +168,9 @@ def inhomogeneous_poisson_process(rate, time, refractory_period=None):
     t_end = np.max(time)
     delta_t = bn.median(np.diff(time))
 
-    hpp = homogeneous_poisson_process(rate_max, t_0=t_0, t_end=t_end, delta_t=delta_t)
+    hpp = homogeneous_poisson_process(
+        rate_max, t_0=t_0, t_end=t_end, delta_t=delta_t, method=method
+    )
 
     # find the rate for these values
     rate_i = np.interp(hpp, time, rate)
