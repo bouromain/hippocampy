@@ -6,7 +6,7 @@ def ccg(spikes1, spikes2, binsize=1e-3, max_lag=1000e-3):
     """
     Compute cross-correlograms between two spike trains
     BNot the fastest option right now, but I wil improve it after
-    Time shoudl be given in sec
+    Time should be given in sec
     """
 
     spikes1 = np.asarray(spikes1)
@@ -33,9 +33,8 @@ def continuous_ccg(spikes1, spikes2, tau=10e-3, max_lag=100e-3):
     http://www.memming.com/codes/ccc.m.html
     http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.121.8458&rep=rep1&type=pdf
 
-
     """
-    raise NotImplementedError, "This should be tested"
+    raise NotImplementedError("This should be tested")
 
     spikes1 = np.random.uniform(0, 1, 100)
     spikes2 = np.random.uniform(0, 1, 100)
