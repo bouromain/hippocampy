@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.signal import filtfilt, butter, cheby2
+from scipy.signal import filtfilt, butter, cheby2, sosfilt
 from scipy.signal.signaltools import hilbert
 from scipy.fftpack import next_fast_len
 
@@ -7,12 +7,27 @@ from scipy.fftpack import next_fast_len
 def bandpassSig(sig, fRange, fs, method="cheby2", order=4):
     """
     Filter a signal in a certain frequency band and with a particular filter type
+    Parameters
+            - sig: signal to filter
+            - fRange: frequency band to filter with eg [5 12]
+            - fs: sampling frequency
+            - method: filter method. Either Chebyshev Type II (cheby2, default)
+                or Butterworth (butter)
+            - order: order of the filter
+    Returns:
+            - filtered signal
+
+    To do:
+    implement sosfilter
     """
 
     allMethods = ["butter", "cheby2"]
     assert any(method == s for s in allMethods), "Invalid Method in bandpassSig"
 
     sig = np.asarray(sig)
+    fRange = np.asarray(fRange)
+    assert max(fRange.shape) == 2, "fRange should be given in the format [low, high]"
+
     nyquist = 0.5 * fs
 
     if method == "butter":
@@ -23,9 +38,8 @@ def bandpassSig(sig, fRange, fs, method="cheby2", order=4):
         )
     else:
         raise NotImplementedError
-    sig_f = filtfilt(b, a, sig)
 
-    return sig_f
+    return filtfilt(b, a, sig)
 
 
 def hilbertPhase(sig, method="hilbert"):

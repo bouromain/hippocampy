@@ -26,9 +26,7 @@ def get_tiff_data(pfile: str):
     return out
 
 
-pfile = "/home/bouromain/Documents/tmpData/compressionTest/m4466_20201203/m4453-20201203_00001.tif"
-
-
+# pfile = "/home/bouromain/Documents/tmpData/compressionTest/m4466_20201203/20201218_m4453_00001.tif"
 def tiff2h5(
     pfile: str,
     compression_type="gzip",
@@ -99,3 +97,7 @@ def tiff2h5(
 
     tiff_f.close()
     h5_f.close()
+
+
+# pfile = '/home/bouromain/Documents/tmpData/compressionTest/m4466_20201203/20201218_m4453_00001.tif'
+# tiff2h5(pfile)
