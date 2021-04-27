@@ -95,3 +95,4 @@ def transientRoy(F, threshold=2.5, minSize=9):
     F_t = F_z > threshold
     # remove small transients
     F_t = np.apply_along_axis(remove_small_objects, axis=1, arr=F_t, min_sz=minSize)
+    return F_t

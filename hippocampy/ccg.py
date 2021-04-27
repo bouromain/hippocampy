@@ -15,15 +15,47 @@ def ccg(spikes1, spikes2, binsize=1e-3, max_lag=1000e-3):
     # calculate all lags
     all_delta = spikes1[None, :] - spikes2[:, None]
 
-    # make the bin egdes
-    max_lag_corrected = max_lag - binsize / 2
-    n_bins = int(np.ceil(max_lag / binsize) * 2 + 1)
-    bin_edges = np.linspace(-max_lag_corrected, max_lag_corrected, n_bins)
+    # create edges and ensure that they are odd
+    winsize_bins = 2 * int(max_lag / binsize)
+    if winsize_bins % 2 != 1:
+        winsize_bins += 1
+        max_lag += binsize / 2
+
+    E = np.linspace(-max_lag, max_lag, winsize_bins + 1)
 
     # make the ccg
-    c, _ = np.histogram(all_delta, bin_edges)
+    c, _ = np.histogram(all_delta, E)
 
-    return c, bin_edges
+    return c, E
+
+
+# from numba import jit
+# @jit(nopython=True)
+# def ccg2(spikes1, spikes2, binsize=1e-3, max_lag=1000e-3):
+#     """
+#     Fast crossCorr
+#     """
+#     # create edges and ensure that they are odd
+#     winsize_bins = 2 * int(max_lag / binsize)
+
+#     if winsize_bins % 2 != 1:
+#         winsize_bins += 1
+#         max_lag += binsize / 2
+
+#     # Make edges (seem faster than np.linspace)
+#     E = np.zeros(winsize_bins + 1)
+#     for i in range(winsize_bins + 1):
+#         E[i] = -max_lag + i * binsize
+
+#     # initialise CCG
+#     C = np.zeros(winsize_bins - 1)
+#     # loop over spikes
+#     for i in spikes1:
+#         for j in spikes2:
+#             d = i - j
+#             if -max_lag < d < max_lag:
+#                 C[np.searchsorted(E, d, side="left") - 1] += 1
+#     return C, E
 
 
 def continuous_ccg(spikes1, spikes2, tau=10e-3, max_lag=100e-3):
