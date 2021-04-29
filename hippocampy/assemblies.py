@@ -1,47 +1,104 @@
 import numpy as np
 import bottleneck as bn
+from sklearn.decomposition import FastICA
 
 
-def calc_template(a):
+"""
+See also
+https://elifesciences.org/articles/19428
+
+"""
+
+
+def calc_template(spike_count, method="ICA"):
     """
-
+    method: PCA, ICA
     https://github.com/tortlab/Cell-Assembly-Detection/blob/master/assembly_patterns.m
     https://github.com/tortlab/Cell-Assembly-Detection/blob/master/assembly_activity.m
 
     todo:
 
-    Check it and inplement ica cf sklearn fast ica
+    Check it and implement ica cf sklearn fast ica
 
     """
+    assert method in ["PCA", "ICA"], "Method not recognized"
 
-    a = np.asarray(a)
-    [n_cells, n_bins] = a.shape
+    spike_count = np.asarray(spike_count)
+    [n_cells, n_bins] = spike_count.shape
 
-    # compute correlation matrix of binned spikes matrix a
-    c = corr_mat(a)
-    # compute eigenvalue/vectors and sort them in descending order
-    eigvals, eigvecs = np.linalg.eig(c)
+    # compute correlation matrix of binned spikes matrix
+    spike_count_z = (spike_count - bn.nanmean(spike_count)[:, None]) / bn.nanstd(
+        spike_count, ddof=1
+    )[:, None]
+
+    correlation_matrix = (1 / (n_bins - 1)) * (spike_count_z @ spike_count_z.T)
+
+    # compute eigenvalues/vectors and sort them in descending order
+    eigvals, eigvecs = np.linalg.eig(correlation_matrix)
     i_sort = eigvals.argsort()
     eigvals = eigvals[i_sort][::-1]
     eigvecs = eigvecs[:, i_sort][::-1]
 
     # calculate lambda max using Marchenko-Pastur
-
     q = n_cells / n_bins
-    assert q < 1, "Number or time bins should be higher than the number of neurons"
-
+    assert q < 1, "Number or time bins should be greater than the number of neurons"
     lambda_max = (1 + np.sqrt(1 / q)) ** 2
     significant_vals = eigvals > lambda_max
 
-    n_assemblies = 4  # np.sum(significant_vals)
-    eigvecs = eigvecs[:, n_assemblies - 1]
+    n_assemblies = np.sum(significant_vals)
 
-    template = np.zeros((n_cells, n_cells, n_assemblies))
+    if method == "PCA":
+        template = eigvecs[:, n_assemblies - 1]
+
+    elif method == "ICA":
+        ica = FastICA(n_components=n_assemblies)
+        S = ica.fit_transform(spike_count_z)
+        template = ica.mixing_
+    else:
+        raise NotImplementedError("Method not implented")
+
+    return template, correlation_matrix
+
+
+def calc_activity(spike_count, template,kernsize):
+    """
+    see
+    https://github.com/tortlab/Cell-Assembly-Detection/blob/master/assembly_activity.m
+    see also fig S2 of van de ven 2016
+    """
+
+    spike_count = np.asarray(spike_count)
+    [n_cells, n_samples] = spike_count.shape
+
+    template = np.asarray(template)
+    [n_cells, n_components] = template.shape
+
+    # compute correlation matrix of binned spikes matrix
+    spike_count_z = (spike_count - bn.nanmean(spike_count)[:, None]) / bn.nanstd(
+        spike_count, ddof=1
+    )[:, None]
+
+    
+    activity = np.zeros(n_components,n_samples)
     for i, t in enumerate(eigvecs.T):
-        template[:, :, i] = np.outer(t.T, t)
-        np.fill_diagonal(template[:, :, i], 0)
 
-    return (template,)
+        # generate projector matrix
+        projector = np.outer(template.T, template)
+        # set diag to zeros so only co-activations of neurons 
+        # will contribute to the assembly pattern
+        np.fill_diagonal(projector, 0)
+
+        for t_bin in spike_count_z:
+
+
+    # calculate assembly pattern expression strength
+    # as defined in Lopez-dos-Santos 2013 R(b)= Z(b).T * P * Z(b)
+
+    # here we could convolve the spike_count_z with a gaussian
+    # cf Van de Ven 2016
+
+
+    return time_projection
 
 
 def corr_mat(a, axis=1):
