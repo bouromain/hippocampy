@@ -202,7 +202,7 @@ def moving_win(a, length, overlap=0, axis=None, end="cut", endvalue=0):
     https://scipy-cookbook.readthedocs.io/_static/items/attachments/SegmentAxis/segmentaxis.py
 
     Note:
-    We could implement symetric padding
+    We could implement symmetric padding
 
     """
 

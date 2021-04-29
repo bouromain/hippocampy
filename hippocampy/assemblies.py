@@ -1,6 +1,7 @@
 import numpy as np
 import bottleneck as bn
 from sklearn.decomposition import FastICA
+from hippocampy.matrix_utils import smooth1D
 
 
 """
@@ -60,7 +61,7 @@ def calc_template(spike_count, method="ICA"):
     return template, correlation_matrix
 
 
-def calc_activity(spike_count, template,kernsize):
+def calc_activity(spike_count, template, kernsize):
     """
     see
     https://github.com/tortlab/Cell-Assembly-Detection/blob/master/assembly_activity.m
@@ -78,18 +79,18 @@ def calc_activity(spike_count, template,kernsize):
         spike_count, ddof=1
     )[:, None]
 
-    
-    activity = np.zeros(n_components,n_samples)
-    for i, t in enumerate(eigvecs.T):
+    activity = np.zeros(n_components, n_samples)
+    for i, template_i in enumerate(template):
 
         # generate projector matrix
-        projector = np.outer(template.T, template)
-        # set diag to zeros so only co-activations of neurons 
+        projector = np.outer(template_i.T, template_i)
+        # set diag to zeros so only co-activations of neurons
         # will contribute to the assembly pattern
         np.fill_diagonal(projector, 0)
 
-        for t_bin in spike_count_z:
-
+        activity[i, :] = bn.nansum(
+            spike_count_z.T.dot(projector) * spike_count_z.T, axis=1
+        )
 
     # calculate assembly pattern expression strength
     # as defined in Lopez-dos-Santos 2013 R(b)= Z(b).T * P * Z(b)
@@ -97,8 +98,7 @@ def calc_activity(spike_count, template,kernsize):
     # here we could convolve the spike_count_z with a gaussian
     # cf Van de Ven 2016
 
-
-    return time_projection
+    return activity
 
 
 def corr_mat(a, axis=1):
@@ -137,3 +137,30 @@ def zscore(matrix, ax=1):
             matrix, axis=ax, ddof=1
         )[None, :]
     return z
+
+
+def sim_assemblies(
+    n_neurons=10,
+    n_bins=100,
+    neuron_assembly=[[1, 2, 3, 4], [3, 6, 7]],
+    n_act=[30, 30],
+    act_lambda=[10, 10],
+):
+    """
+    Generate reactivation pattern to test other function form this module
+
+    Parameters:
+                - n_neurons: number of neurons
+
+    """
+
+    spikes_binned = np.random.poisson(1, (n_neurons, n_bins))
+
+    for it, curr_neuron in enumerate(neuron_assembly):
+        n_neu_ass = len(curr_neuron)
+        r_rdx = np.random.random_integers(0, n_bins - 1, n_act[it])
+
+        spikes_binned[curr_neuron, :][:, r_rdx] = np.random.poisson(
+            act_lambda[it], (n_neu_ass, n_act[it])
+        )
+    return spikes_binned
