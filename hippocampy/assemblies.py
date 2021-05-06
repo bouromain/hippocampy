@@ -5,7 +5,8 @@ from hippocampy.matrix_utils import smooth1D
 
 
 """
-See also
+For other methods see also:
+
 https://elifesciences.org/articles/19428
 
 """
@@ -15,11 +16,9 @@ def calc_template(spike_count, method="ICA"):
     """
     method: PCA, ICA
     https://github.com/tortlab/Cell-Assembly-Detection/blob/master/assembly_patterns.m
-    https://github.com/tortlab/Cell-Assembly-Detection/blob/master/assembly_activity.m
 
     todo:
 
-    Check it and implement ica cf sklearn fast ica
 
     """
     assert method in ["PCA", "ICA"], "Method not recognized"
@@ -28,9 +27,9 @@ def calc_template(spike_count, method="ICA"):
     [n_cells, n_bins] = spike_count.shape
 
     # compute correlation matrix of binned spikes matrix
-    spike_count_z = (spike_count - bn.nanmean(spike_count)[:, None]) / bn.nanstd(
-        spike_count, ddof=1
-    )[:, None]
+    spike_count_z = (
+        spike_count - bn.nanmean(spike_count, axis=1)[:, None]
+    ) / bn.nanstd(spike_count, ddof=1, axis=1)[:, None]
 
     correlation_matrix = (1 / (n_bins - 1)) * (spike_count_z @ spike_count_z.T)
 
@@ -40,20 +39,22 @@ def calc_template(spike_count, method="ICA"):
     eigvals = eigvals[i_sort][::-1]
     eigvecs = eigvecs[:, i_sort][::-1]
 
-    # calculate lambda max using Marchenko-Pastur
-    q = n_cells / n_bins
-    assert q < 1, "Number or time bins should be greater than the number of neurons"
+    # define significant assemblies as assemblie having a eigenvalue greater
+    # than a threshold, lambda max, defined using Marchenko-Pastur law
+    q = n_bins / n_cells
+    assert q > 1, "Number or time bins should be greater than the number of neurons"
     lambda_max = (1 + np.sqrt(1 / q)) ** 2
     significant_vals = eigvals > lambda_max
 
     n_assemblies = np.sum(significant_vals)
 
     if method == "PCA":
-        template = eigvecs[:, n_assemblies - 1]
+        template = eigvecs[:, :n_assemblies]
 
     elif method == "ICA":
         ica = FastICA(n_components=n_assemblies)
-        S = ica.fit_transform(spike_count_z)
+        # ica take X with shape (n_samples, n_features)
+        ica.fit_transform(spike_count_z.T)
         template = ica.mixing_
     else:
         raise NotImplementedError("Method not implented")
@@ -61,7 +62,7 @@ def calc_template(spike_count, method="ICA"):
     return template, correlation_matrix
 
 
-def calc_activity(spike_count, template, kernsize):
+def calc_activity(spike_count, template, kernel_half_width=None):
     """
     see
     https://github.com/tortlab/Cell-Assembly-Detection/blob/master/assembly_activity.m
@@ -69,34 +70,36 @@ def calc_activity(spike_count, template, kernsize):
     """
 
     spike_count = np.asarray(spike_count)
-    [n_cells, n_samples] = spike_count.shape
+    [_, n_samples] = spike_count.shape
 
     template = np.asarray(template)
-    [n_cells, n_components] = template.shape
+    [_, n_components] = template.shape
 
     # compute correlation matrix of binned spikes matrix
-    spike_count_z = (spike_count - bn.nanmean(spike_count)[:, None]) / bn.nanstd(
-        spike_count, ddof=1
-    )[:, None]
+    spike_count_z = (
+        spike_count - bn.nanmean(spike_count, axis=1)[:, None]
+    ) / bn.nanstd(spike_count, ddof=1, axis=1)[:, None]
 
-    activity = np.zeros(n_components, n_samples)
-    for i, template_i in enumerate(template):
-
+    activity = np.zeros((n_components, n_samples))
+    for i, template_i in enumerate(template.T):
         # generate projector matrix
         projector = np.outer(template_i.T, template_i)
         # set diag to zeros so only co-activations of neurons
         # will contribute to the assembly pattern
         np.fill_diagonal(projector, 0)
 
+        # calculate assembly pattern expression strength
+        # as defined in Lopez-dos-Santos 2013 R(b)= Z(b).T * P * Z(b)
         activity[i, :] = bn.nansum(
             spike_count_z.T.dot(projector) * spike_count_z.T, axis=1
         )
 
-    # calculate assembly pattern expression strength
-    # as defined in Lopez-dos-Santos 2013 R(b)= Z(b).T * P * Z(b)
-
     # here we could convolve the spike_count_z with a gaussian
     # cf Van de Ven 2016
+    if kernel_half_width is not None:
+        activity = smooth1D(
+            activity, kernel_half_width=kernel_half_width, kernel_type="gauss"
+        )
 
     return activity
 
@@ -140,11 +143,11 @@ def zscore(matrix, ax=1):
 
 
 def sim_assemblies(
-    n_neurons=10,
-    n_bins=100,
+    n_neurons=20,
+    n_bins=10000,
     neuron_assembly=[[1, 2, 3, 4], [3, 6, 7]],
-    n_act=[30, 30],
-    act_lambda=[10, 10],
+    n_act=[300, 300],
+    act_lambda=[3, 3],
 ):
     """
     Generate reactivation pattern to test other function form this module
@@ -160,7 +163,7 @@ def sim_assemblies(
         n_neu_ass = len(curr_neuron)
         r_rdx = np.random.random_integers(0, n_bins - 1, n_act[it])
 
-        spikes_binned[curr_neuron, :][:, r_rdx] = np.random.poisson(
+        spikes_binned[np.array(curr_neuron)[:, None], r_rdx] = np.random.poisson(
             act_lambda[it], (n_neu_ass, n_act[it])
         )
     return spikes_binned

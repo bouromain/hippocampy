@@ -7,8 +7,8 @@ from skimage import measure, morphology
 
 def smooth1D(
     data,
-    kernelHalfWidth=3,
-    kernelType="gauss",
+    kernel_half_width=3,
+    kernel_type="gauss",
     padtype="reflect",
     preserve_nan_opt=True,
 ):
@@ -37,8 +37,8 @@ def smooth1D(
     """
     # Check Input
 
-    if kernelHalfWidth % 2 != 1:
-        kernelHalfWidth += 1
+    if kernel_half_width % 2 != 1:
+        kernel_half_width += 1
         # kernel size has to be odd
 
     if len(data.shape) == 1:
@@ -49,22 +49,22 @@ def smooth1D(
 
     acceptedType = ["gauss", "box", "ramp"]
     assert any(
-        [i == kernelType for i in acceptedType]
+        [i == kernel_type for i in acceptedType]
     ), "Not Implemented smoothing kernel type"
 
     # pad the data
-    data_p = np.pad(data, ((0, 0), (kernelHalfWidth, kernelHalfWidth)), padtype)
+    data_p = np.pad(data, ((0, 0), (kernel_half_width, kernel_half_width)), padtype)
 
-    if kernelType == "box":
+    if kernel_type == "box":
         # here bn.movemean seem to be much faster (~10x) than using a convolution as
         # for the gaussian or ramp kernel. It affect the value of the moving mean to
         # the last index in the moving window, that why the output 'un pading' is
         # peculiar
 
         data_c = bn.move_mean(
-            data_p, kernelHalfWidth * 2 + 1, min_count=kernelHalfWidth, axis=1
+            data_p, kernel_half_width * 2 + 1, min_count=kernel_half_width, axis=1
         )
-        data_c = data_c[:, kernelHalfWidth * 2 :]
+        data_c = data_c[:, kernel_half_width * 2 :]
 
         if preserve_nan_opt:
             data_c[:, np.isnan(data)] = np.nan
@@ -73,14 +73,16 @@ def smooth1D(
 
     else:
         # Make convolution kernel
-        kernel = np.zeros(kernelHalfWidth * 2 + 1)
+        kernel = np.zeros(kernel_half_width * 2 + 1)
 
-        if kernelType == "gauss":
-            kernel = np.arange(0, kernelHalfWidth) - (kernelHalfWidth - 1.0) / 2.0
-            kernel = np.exp(-(kernel ** 2) / (2 * kernelHalfWidth * kernelHalfWidth))
+        if kernel_type == "gauss":
+            kernel = np.arange(0, kernel_half_width) - (kernel_half_width - 1.0) / 2.0
+            kernel = np.exp(
+                -(kernel ** 2) / (2 * kernel_half_width * kernel_half_width)
+            )
 
-        elif kernelType == "ramp":
-            kernel = np.linspace(1, kernelHalfWidth + 1, kernelHalfWidth + 1)
+        elif kernel_type == "ramp":
+            kernel = np.linspace(1, kernel_half_width + 1, kernel_half_width + 1)
             kernel = np.hstack((kernel, kernel[-2::-1]))
 
         # Normalize kernel to one
@@ -90,13 +92,13 @@ def smooth1D(
             convolve, axis=1, arr=data_p, kernel=kernel, preserve_nan=preserve_nan_opt
         )
 
-        return data_c[:, kernelHalfWidth:-kernelHalfWidth]
+        return data_c[:, kernel_half_width:-kernel_half_width]
 
 
 def smooth2D(
     data,
-    kernelHalfWidth=3,
-    kernelType="gauss",
+    kernel_half_width=3,
+    kernel_type="gauss",
     padtype="reflect",
     preserve_nan_opt=True,
 ):
@@ -104,8 +106,8 @@ def smooth2D(
     function to smooth 2 dimensional data.
     Take:
             - data: matrix with your 2D data
-            - kernelHalfWidth: half width of the smoothing kernel
-            - kernelType: way to smooth the data ('gauss': gaussian, 'box': boxcar smoothing)
+            - kernel_half_width: half width of the smoothing kernel
+            - kernel_type: way to smooth the data ('gauss': gaussian, 'box': boxcar smoothing)
             - padtype: the matrix will be padded in order to remove border artefact
               so we will pad the matrix.
               Available option: - symmetric: reflect the vector on the edge 1 2 3 4 [3 2 1]
@@ -116,29 +118,31 @@ def smooth2D(
     """
 
     # Check Input
-    if kernelHalfWidth % 2 != 1:
+    if kernel_half_width % 2 != 1:
         # kernel size has to be odd
-        kernelHalfWidth += 1
+        kernel_half_width += 1
 
     acceptedPad = ["reflect", "symmetric", "wrap"]
     assert any([i == padtype for i in acceptedPad]), "Not Implemented pad type"
 
     acceptedType = ["gauss", "box"]
     assert any(
-        [i == kernelType for i in acceptedType]
+        [i == kernel_type for i in acceptedType]
     ), "Not Implemented smoothing kernel type"
 
     # pad the data
-    data_p = np.pad(data, ((kernelHalfWidth, kernelHalfWidth)), padtype)
+    data_p = np.pad(data, ((kernel_half_width, kernel_half_width)), padtype)
 
     # Initialize convolution kernel
-    kernel = np.zeros((kernelHalfWidth * 2 + 1, kernelHalfWidth * 2 + 1))
+    kernel = np.zeros((kernel_half_width * 2 + 1, kernel_half_width * 2 + 1))
 
-    if kernelType == "box":
-        kernel = np.ones((kernelHalfWidth * 2 + 1, kernelHalfWidth * 2 + 1))
-    elif kernelType == "gauss":
-        kernel_1D = np.arange(0, kernelHalfWidth) - (kernelHalfWidth - 1.0) / 2.0
-        kernel_1D = np.exp(-(kernel_1D ** 2) / (2 * kernelHalfWidth * kernelHalfWidth))
+    if kernel_type == "box":
+        kernel = np.ones((kernel_half_width * 2 + 1, kernel_half_width * 2 + 1))
+    elif kernel_type == "gauss":
+        kernel_1D = np.arange(0, kernel_half_width) - (kernel_half_width - 1.0) / 2.0
+        kernel_1D = np.exp(
+            -(kernel_1D ** 2) / (2 * kernel_half_width * kernel_half_width)
+        )
         kernel = np.outer(kernel_1D, kernel_1D)
 
     # Normalize kernel to one
@@ -147,7 +151,9 @@ def smooth2D(
     # Convolve. Astropy seems to deal really well with nan values
     data_c = convolve(data_p, kernel=kernel, preserve_nan=preserve_nan_opt)
 
-    return data_c[kernelHalfWidth:-kernelHalfWidth, kernelHalfWidth:-kernelHalfWidth]
+    return data_c[
+        kernel_half_width:-kernel_half_width, kernel_half_width:-kernel_half_width
+    ]
 
 
 def label(M):
