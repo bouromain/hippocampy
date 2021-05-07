@@ -19,6 +19,13 @@ def ccg(spikes1, spikes2, binsize=1e-3, max_lag=1000e-3, normalization="count"):
                         - probability: sum to one
                         - brillinger: as defined in Brillinger 1976
     """
+    assert normalization in [
+        "count",
+        "conditional",
+        "probability",
+        "brillinger",
+    ], "Method not recognized"
+
     C, E = ccg_heart(spikes1, spikes2, binsize=1e-3, max_lag=1000e-3)
 
     if normalization is "conditional":
@@ -48,14 +55,6 @@ def ccg_heart(spikes1, spikes2, binsize=1e-3, max_lag=1000e-3):
     G. Viejo crossCorr function
     M. Zugaro CCGEngine.c
     """
-
-    assert normalization in [
-        "count",
-        "conditional",
-        "probability",
-        "brillinger",
-    ], "Method not recognized"
-
     # create edges and ensure that they are odd
     winsize_bins = 2 * int(max_lag / binsize)
 
