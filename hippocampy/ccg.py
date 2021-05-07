@@ -30,23 +30,59 @@ def ccg(spikes1, spikes2, binsize=1e-3, max_lag=1000e-3):
     return c, E
 
 
+def ccg(spikes1, spikes2, binsize=1e-3, max_lag=1000e-3, normalization="count"):
+    """
+    Fast crosscorrelation code:
+    Assume that the spike trains are sorted
+
+    Parameters:
+                - spikes1
+                - spikes2
+                - binsize
+                - max_lag
+                - normalisation:
+                        - count: no normalisation
+                        - conditional: probability of spk2 knowing spk1
+                        - probability: sum to one
+                        - brillinger: as defined in Brillinger 1976
+    """
+    C, E = ccg_heart(spikes1, spikes2, binsize=1e-3, max_lag=1000e-3)
+
+    if normalization is "conditional":
+        ...
+    elif normalization is "probability":
+        ...
+    elif normalization is "brillinger":
+        ...
+
+    return C, E
+
+
 @jit(nopython=True)
 def ccg_heart(spikes1, spikes2, binsize=1e-3, max_lag=1000e-3):
     """
     Fast crosscorrelation code:
     Assume that the spike trains are sorted
 
-    i could potentially calculate the length of the spike
-    trains and loop over the smaller one. In this case the CCG
-    should be reversed at the end
+    Parameters:
+                - spikes1
+                - spikes2
+                - binsize
+                - max_lag
+
 
     Adapted from:
     G. Viejo crossCorr function
     M. Zugaro CCGEngine.c
     """
 
-    sz1 = len(spikes1)
-    sz2 = len(spikes2)
+    assert normalization in [
+        "count",
+        "conditional",
+        "probability",
+        "brillinger",
+    ], "Method not recognized"
+
     # create edges and ensure that they are odd
     winsize_bins = 2 * int(max_lag / binsize)
 
@@ -66,23 +102,50 @@ def ccg_heart(spikes1, spikes2, binsize=1e-3, max_lag=1000e-3):
 
     # loop over spikes
     idx2 = 0
-    for idx1 in range(sz1):
-        # define the window around the spike of interest
-        l_bound = spikes1[idx1] - max_lag
-        H_bound = spikes1[idx1] + max_lag
+    sz1 = len(spikes1)
+    sz2 = len(spikes2)
 
-        # search for the max index in spike 2 in window:
-        while idx2 < sz2 and spikes2[idx2] < l_bound:
-            idx2 += 1
-        while idx2 > 1 and spikes2[idx2 - 1] > l_bound:
-            idx2 -= 1
-        # now we have this index we can accumulate value
-        # in the ccg as long as we are in the window
-        idx2_H = idx2
-        while idx2_H < sz2 and spikes2[idx2_H] < H_bound:
-            idx_C = halfbin + int(0.5 + (spikes2[idx2_H] - spikes1[idx1]) / binsize)
-            C[idx_C] += 1
-            idx2_H += 1
+    if sz1 < sz2:
+        # if the first spike train is smaller we iterate over it
+        for idx1 in range(sz1):
+            # define the window around the spike of interest
+            l_bound = spikes1[idx1] - max_lag
+            H_bound = spikes1[idx1] + max_lag
+
+            # search for the max index in spike 2 in window:
+            while idx2 < sz2 and spikes2[idx2] < l_bound:
+                idx2 += 1
+            while idx2 > 1 and spikes2[idx2 - 1] > l_bound:
+                idx2 -= 1
+            # now we have this index we can accumulate value
+            # in the ccg as long as we are in the window
+            idx2_H = idx2
+            while idx2_H < sz2 and spikes2[idx2_H] < H_bound:
+                idx_C = halfbin + int(0.5 + (spikes2[idx2_H] - spikes1[idx1]) / binsize)
+                C[idx_C] += 1
+                idx2_H += 1
+    else:
+        # if the second spike train is smaller we iterate over it but CCG
+        # is flipped at the end to be consistent with the input
+        for idx1 in range(sz2):
+            # define the window around the spike of interest
+            l_bound = spikes2[idx1] - max_lag
+            H_bound = spikes2[idx1] + max_lag
+
+            # search for the max index in spike 2 in window:
+            while idx2 < sz1 and spikes1[idx2] < l_bound:
+                idx2 += 1
+            while idx2 > 1 and spikes1[idx2 - 1] > l_bound:
+                idx2 -= 1
+            # now we have this index we can accumulate value
+            # in the ccg as long as we are in the window
+            idx2_H = idx2
+            while idx2_H < sz1 and spikes1[idx2_H] < H_bound:
+                idx_C = halfbin + int(0.5 + (spikes1[idx2_H] - spikes2[idx1]) / binsize)
+                # instead of flipping the CCG take the "flipped" index here
+                idx_C = winsize_bins - idx_C
+                C[idx_C] += 1
+                idx2_H += 1
 
     return C, E
 
