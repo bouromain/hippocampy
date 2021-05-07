@@ -4,7 +4,7 @@ import warnings
 from astropy.convolution import convolve
 from skimage import measure, morphology
 
-
+#%% SMOOTH
 def smooth1D(
     data,
     kernel_half_width=3,
@@ -156,6 +156,46 @@ def smooth2D(
     ]
 
 
+#%% STATISTICS
+def corr_mat(a, axis=1):
+    """
+    Compute correlation between all the rows (or column) of a given matrix
+
+    Parameters:
+            - Matrix for example [unit, samples]
+            - axis on which we want to work on
+    Returns:
+            - correlation matrix
+
+    https://en.wikipedia.org/wiki/Pearson_correlation_coefficient
+    """
+    a = np.asarray(a)
+
+    a_z = zscore(a, axis)
+    n = a.shape[axis]
+
+    if axis == 0:
+        return (1 / (n - 1)) * (a_z.T @ a_z)
+    else:
+        return (1 / (n - 1)) * (a_z @ a_z.T)
+
+
+def zscore(matrix, ax=1):
+    """
+    Compute zscores along one axis.
+    """
+    if ax == 1:
+        z = (matrix - bn.nanmean(matrix, axis=ax)[:, None]) / bn.nanstd(
+            matrix, axis=ax, ddof=1
+        )[:, None]
+    else:
+        z = (matrix - bn.nanmean(matrix, axis=ax)[None, :]) / bn.nanstd(
+            matrix, axis=ax, ddof=1
+        )[None, :]
+    return z
+
+
+#%% OTHER
 def label(M):
     # the following line ensure we feed a boolean data to the label
     # function. Its helps with

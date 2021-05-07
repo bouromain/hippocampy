@@ -1,24 +1,39 @@
-import numpy as np
-import bottleneck as bn
-from sklearn.decomposition import FastICA
-from hippocampy.matrix_utils import smooth1D
-
-
 """
-For other methods see also:
+Various method to extra neuronal assemblies in the activity of a population of neurons.
 
+
+References:
+Lopes-dos-Santos V, Ribeiro S, Tort ABL Detecting cell assemblies 
+in large neuronal populations,(2013) Journal of Neuroscience Methods.
+
+
+TO DO:
 https://elifesciences.org/articles/19428
 
 """
 
+import numpy as np
+import bottleneck as bn
+from sklearn.decomposition import FastICA
+from hippocampy.matrix_utils import smooth1D, corr_mat, zscore
+
 
 def calc_template(spike_count, method="ICA"):
     """
-    method: PCA, ICA
-    https://github.com/tortlab/Cell-Assembly-Detection/blob/master/assembly_patterns.m
+    Calculate assemblies pattern as described in Lopes-dos-Santos V,
+    Ribeiro S, Tort ABL Detecting cell assemblies in large neuronal populations,
+    (2013) Journal of Neuroscience Methods.
 
-    todo:
+    Parameters:
+                - spike_count = matrix of size (n_cells,n_samples)
+                - method = Method to extract pattern (PCA, ICA) ICA is better
+                as it will take into account neurons that can be in multiple
+                assemblies
 
+
+    Return:
+                - template: number of significant templates (n_cells,n_patterns)
+                - correlation_matrix (n_cells,n_cells)
 
     """
     assert method in ["PCA", "ICA"], "Method not recognized"
@@ -64,9 +79,18 @@ def calc_template(spike_count, method="ICA"):
 
 def calc_activity(spike_count, template, kernel_half_width=None):
     """
-    see
-    https://github.com/tortlab/Cell-Assembly-Detection/blob/master/assembly_activity.m
-    see also fig S2 of van de ven 2016
+    Calculate the activity in time of given assemblies (templates)
+
+    Parameters:
+                - spike_count = matrix of size (n_cells,n_samples)
+                - template: number of significant templates (n_cells,n_patterns)
+                - kernel_half_width = size of the half window size of
+                the gaussian kernel used to smooth the activity profile
+
+    Returns:
+                - activity = matrix of size (n_template,n_samples)
+
+    For a nice visual explanation see also fig S2 of van de Ven et al 2016
     """
 
     spike_count = np.asarray(spike_count)
@@ -102,44 +126,6 @@ def calc_activity(spike_count, template, kernel_half_width=None):
         )
 
     return activity
-
-
-def corr_mat(a, axis=1):
-    """
-    Compute correlation between all the rows (or collunm) of a given matrix
-
-    Parameters:
-            - Matrix for example [unit, samples]
-            - axis on wich we want to work on
-    Returns:
-            - correlation matrix
-
-    https://en.wikipedia.org/wiki/Pearson_correlation_coefficient
-    """
-    a = np.asarray(a)
-
-    a_z = zscore(a, axis)
-    n = a.shape[axis]
-
-    if axis == 0:
-        return (1 / (n - 1)) * (a_z.T @ a_z)
-    else:
-        return (1 / (n - 1)) * (a_z @ a_z.T)
-
-
-def zscore(matrix, ax=1):
-    """
-    Compute zscores along one axis.
-    """
-    if ax == 1:
-        z = (matrix - bn.nanmean(matrix, axis=ax)[:, None]) / bn.nanstd(
-            matrix, axis=ax, ddof=1
-        )[:, None]
-    else:
-        z = (matrix - bn.nanmean(matrix, axis=ax)[None, :]) / bn.nanstd(
-            matrix, axis=ax, ddof=1
-        )[None, :]
-    return z
 
 
 def sim_assemblies(
