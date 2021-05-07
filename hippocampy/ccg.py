@@ -3,33 +3,6 @@ import bottleneck as bn
 from numba import jit
 
 
-def ccg(spikes1, spikes2, binsize=1e-3, max_lag=1000e-3):
-    """
-    Compute cross-correlograms between two spike trains
-    BNot the fastest option right now, but I wil improve it after
-    Time should be given in sec
-    """
-
-    spikes1 = np.asarray(spikes1)
-    spikes2 = np.asarray(spikes2)
-
-    # calculate all lags
-    all_delta = spikes1[None, :] - spikes2[:, None]
-
-    # create edges and ensure that they are odd
-    winsize_bins = 2 * int(max_lag / binsize)
-    if winsize_bins % 2 != 1:
-        winsize_bins += 1
-        max_lag += binsize / 2
-
-    E = np.linspace(-max_lag, max_lag, winsize_bins + 1)
-
-    # make the ccg
-    c, _ = np.histogram(all_delta, E)
-
-    return c, E
-
-
 def ccg(spikes1, spikes2, binsize=1e-3, max_lag=1000e-3, normalization="count"):
     """
     Fast crosscorrelation code:
@@ -149,6 +122,32 @@ def ccg_heart(spikes1, spikes2, binsize=1e-3, max_lag=1000e-3):
 
     return C, E
 
+
+# def ccg_slow(spikes1, spikes2, binsize=1e-3, max_lag=1000e-3):
+#     """
+#     Compute cross-correlograms between two spike trains
+#     BNot the fastest option right now, but I wil improve it after
+#     Time should be given in sec
+#     """
+
+#     spikes1 = np.asarray(spikes1)
+#     spikes2 = np.asarray(spikes2)
+
+#     # calculate all lags
+#     all_delta = spikes1[None, :] - spikes2[:, None]
+
+#     # create edges and ensure that they are odd
+#     winsize_bins = 2 * int(max_lag / binsize)
+#     if winsize_bins % 2 != 1:
+#         winsize_bins += 1
+#         max_lag += binsize / 2
+
+#     E = np.linspace(-max_lag, max_lag, winsize_bins + 1)
+
+#     # make the ccg
+#     c, _ = np.histogram(all_delta, E)
+
+#     return c, E
 
 # def continuous_ccg(spikes1, spikes2, tau=10e-3, max_lag=100e-3):
 #     """
