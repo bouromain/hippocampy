@@ -133,17 +133,6 @@ def ccg_heart(spikes1, spikes2, binsize=1e-3, max_lag=1000e-3):
     return C
 
 
-a = np.array([10, 20, 30, 40, 50])
-b = np.array([12, *a])
-
-c = ccg(b, a, 1, 5)
-
-import matplotlib.pyplot as plt
-
-plt.plot(np.linspace(-10, 10, 21), c)
-plt.xlim(-4, 4)
-
-
 # def continuous_ccg(spikes1, spikes2, tau=10e-3, max_lag=100e-3):
 #     """
 
