@@ -3,7 +3,9 @@ import bottleneck as bn
 from numba import jit
 
 
-def ccg(spikes1, spikes2, binsize=1e-3, max_lag=1000e-3, normalization="count"):
+def ccg(
+    spikes1, spikes2, binsize=1e-3, max_lag=1000e-3, normalization="count", safe=False
+):
     """
     Fast crosscorrelation code:
     Assume that the spike trains are sorted
@@ -17,25 +19,26 @@ def ccg(spikes1, spikes2, binsize=1e-3, max_lag=1000e-3, normalization="count"):
                         - count: no normalisation
                         - conditional: probability of spk2 knowing spk1
                         - probability: sum to one
-                        - brillinger: as defined in Brillinger 1976
     """
     assert normalization in [
         "count",
         "conditional",
         "probability",
-        "brillinger",
     ], "Method not recognized"
 
-    C, E = ccg_heart(spikes1, spikes2, binsize=1e-3, max_lag=1000e-3)
+    if safe:
+        spikes1 = np.asarray(spikes1).sort()
+        spikes2 = np.asarray(spikes2).sort()
+
+    C = ccg_heart(spikes1, spikes2, binsize=binsize, max_lag=max_lag)
 
     if normalization is "conditional":
-        ...
+        sz1 = len(spikes1)
+        C = C / sz1
     elif normalization is "probability":
-        ...
-    elif normalization is "brillinger":
-        ...
+        C = C / bn.nansum(C)
 
-    return C, E
+    return C
 
 
 @jit(nopython=True)
@@ -45,11 +48,18 @@ def ccg_heart(spikes1, spikes2, binsize=1e-3, max_lag=1000e-3):
     Assume that the spike trains are sorted
 
     Parameters:
-                - spikes1
-                - spikes2
-                - binsize
-                - max_lag
+                - spikes1: first time serie of spikes
+                - spikes2: second time serie of spikes
+                - binsize: size of one bin
+                - max_lag: size of the half window
 
+    Return:
+                - C: Cross-correlogram
+                - E: Edges of the Cross-correlogram
+
+    To Do:
+    this code could be slightly faster by storing the
+    high bound in the last loop
 
     Adapted from:
     G. Viejo crossCorr function
@@ -77,7 +87,7 @@ def ccg_heart(spikes1, spikes2, binsize=1e-3, max_lag=1000e-3):
     sz1 = len(spikes1)
     sz2 = len(spikes2)
 
-    if sz1 < sz2:
+    if sz1 <= sz2:
         # if the first spike train is smaller we iterate over it
         for idx1 in range(sz1):
             # define the window around the spike of interest
@@ -94,9 +104,11 @@ def ccg_heart(spikes1, spikes2, binsize=1e-3, max_lag=1000e-3):
             idx2_H = idx2
             while idx2_H < sz2 and spikes2[idx2_H] < H_bound:
                 idx_C = halfbin + int(0.5 + (spikes2[idx2_H] - spikes1[idx1]) / binsize)
+                idx_C = idx_C - 1  # to make it zero indexed
                 C[idx_C] += 1
                 idx2_H += 1
     else:
+        print("yo")
         # if the second spike train is smaller we iterate over it but CCG
         # is flipped at the end to be consistent with the input
         for idx1 in range(sz2):
@@ -115,38 +127,22 @@ def ccg_heart(spikes1, spikes2, binsize=1e-3, max_lag=1000e-3):
             while idx2_H < sz1 and spikes1[idx2_H] < H_bound:
                 idx_C = halfbin + int(0.5 + (spikes1[idx2_H] - spikes2[idx1]) / binsize)
                 # instead of flipping the CCG take the "flipped" index here
-                idx_C = winsize_bins - idx_C
+                idx_C = winsize_bins - (idx_C - 1) + 1
                 C[idx_C] += 1
                 idx2_H += 1
+    return C
 
-    return C, E
 
+a = np.array([10, 20, 30, 40, 50])
+b = np.array([12, *a])
 
-# def ccg_slow(spikes1, spikes2, binsize=1e-3, max_lag=1000e-3):
-#     """
-#     Compute cross-correlograms between two spike trains
-#     BNot the fastest option right now, but I wil improve it after
-#     Time should be given in sec
-#     """
+c = ccg(b, a, 1, 5)
 
-#     spikes1 = np.asarray(spikes1)
-#     spikes2 = np.asarray(spikes2)
+import matplotlib.pyplot as plt
 
-#     # calculate all lags
-#     all_delta = spikes1[None, :] - spikes2[:, None]
+plt.plot(np.linspace(-10, 10, 21), c)
+plt.xlim(-4, 4)
 
-#     # create edges and ensure that they are odd
-#     winsize_bins = 2 * int(max_lag / binsize)
-#     if winsize_bins % 2 != 1:
-#         winsize_bins += 1
-#         max_lag += binsize / 2
-
-#     E = np.linspace(-max_lag, max_lag, winsize_bins + 1)
-
-#     # make the ccg
-#     c, _ = np.histogram(all_delta, E)
-
-#     return c, E
 
 # def continuous_ccg(spikes1, spikes2, tau=10e-3, max_lag=100e-3):
 #     """
