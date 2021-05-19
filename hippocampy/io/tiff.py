@@ -4,24 +4,41 @@ import os
 import gc
 
 
-def get_tiff_metadata(pfile: str):
+def get_tiff_metadata(file_path: str):
     """
     Open tiff and return all the metadata
     input
     """
-    with ScanImageTiffReader(pfile) as reader:
+    # to avoid some bugs
+    file_path = os.path.expanduser(file_path)
+    if os.path.exists(file_path):
+        raise FileNotFoundError
+
+    with ScanImageTiffReader(file_path) as reader:
         out = reader.metadata()
     return out
 
 
-def get_tiff_shape(pfile: str):
-    with ScanImageTiffReader(pfile) as reader:
+def get_tiff_shape(file_path: str):
+    # to avoid some bugs
+    file_path = os.path.expanduser(file_path)
+
+    if os.path.exists(file_path):
+        raise FileNotFoundError
+
+    with ScanImageTiffReader(file_path) as reader:
         out = reader.shape()
     return out
 
 
-def get_tiff_data(pfile: str):
-    with ScanImageTiffReader(pfile) as reader:
+def get_tiff_data(file_path: str):
+
+    # to avoid some bugs
+    file_path = os.path.expanduser(file_path)
+    if os.path.exists(file_path):
+        raise FileNotFoundError
+
+    with ScanImageTiffReader(file_path) as reader:
         out = reader.data()
     return out
 

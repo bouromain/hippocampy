@@ -108,7 +108,6 @@ def ccg_heart(spikes1, spikes2, binsize=1e-3, max_lag=1000e-3):
                 C[idx_C] += 1
                 idx2_H += 1
     else:
-        print("yo")
         # if the second spike train is smaller we iterate over it but CCG
         # is flipped at the end to be consistent with the input
         for idx1 in range(sz2):

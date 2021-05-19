@@ -13,19 +13,22 @@ def subtract_neuropil(Froi, Fneu, method="fixed", downsample_ratio=10):
     (classically 0.7) or calculated by a bounded robust regression between Froi
     and Fneu (see Chen 2013b)
 
-    Parameters:
-            - Froi: ROI fluorescence vector or matrix given as [cells, samples]
-            - Fneu: Neuropil fluorescence vector or matrix given as [cells, samples]
-            - method:
-                    - fixed (default) where c = 0.7
-                    - robust: calculation with robust regression
-            - downsample_ratio: downsampling ratio of the data for "robust" method
+    Parameters
+    ----------
+    - Froi: ROI fluorescence vector or matrix given as [cells, samples]
+    - Fneu: Neuropil fluorescence vector or matrix given as [cells, samples]
+    - method:
+            - fixed (default) where c = 0.7
+            - robust: calculation with robust regression
+    - downsample_ratio: downsampling ratio of the data for "robust" method
 
-    Returns:
-            - F: Fluorescence vector or matrix given as [cells, samples]
-            with Fneu substracted
+    Returns
+    -------
+    - F: Fluorescence vector or matrix given as [cells, samples]
+        with Fneu substracted
 
-    Reference:
+    Reference
+    ---------
     - Ultrasensitive fluorescent proteins for imaging neuronal activity,
     TW Chen TJ Wardill Y Sun SR Pulver SL Renninger A Baohan ER Schreiter
     RA Kerr MB Orger V Jayaraman LL Looger K Svoboda DS Kim  (2013b)

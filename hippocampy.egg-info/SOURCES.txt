@@ -1,10 +1,12 @@
 README.md
 setup.py
 hippocampy/__init__.py
+hippocampy/assemblies.py
 hippocampy/calfunc.py
+hippocampy/ccg.py
 hippocampy/filterSig.py
-hippocampy/helper.py
 hippocampy/matrix_utils.py
+hippocampy/utils.py
 hippocampy.egg-info/PKG-INFO
 hippocampy.egg-info/SOURCES.txt
 hippocampy.egg-info/dependency_links.txt
