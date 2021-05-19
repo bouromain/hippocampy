@@ -1,6 +1,6 @@
-import numpy as np
 import bottleneck as bn
 import hippocampy as hp
+import numpy as np
 
 
 def gen_pc_gauss_oi(t, pos, centers, sigma=10, amplitude=1, omega_theta=8):
@@ -47,8 +47,8 @@ def gen_pc_gauss_oi(t, pos, centers, sigma=10, amplitude=1, omega_theta=8):
 
 def gaussian_envelope(pos, centers, sigma=10, amplitude=1):
     """
-    f(x,y) =
-    A\exp(- (\frac{(x(t)-x_{0})^{2}}{2\sigma_{x}^{2}} + \frac{(y(t)-y_{0})^{2}}{2\sigma_{y}^{2}}) )
+    generate intensity function with a gaussian envelope
+    with given centers and sigma
     """
 
     # prepare variables

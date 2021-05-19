@@ -12,10 +12,11 @@ https://elifesciences.org/articles/19428
 
 """
 
-import numpy as np
 import bottleneck as bn
+import numpy as np
 from sklearn.decomposition import FastICA
-from hippocampy.matrix_utils import smooth1D, corr_mat, zscore
+
+from hippocampy.matrix_utils import corr_mat, smooth1D, zscore
 
 
 def calc_template(spike_count, method="ICA"):
@@ -24,16 +25,22 @@ def calc_template(spike_count, method="ICA"):
     Ribeiro S, Tort ABL Detecting cell assemblies in large neuronal populations,
     (2013) Journal of Neuroscience Methods.
 
-    Parameters:
-                - spike_count = matrix of size (n_cells,n_samples)
-                - method = Method to extract pattern (PCA, ICA) ICA is better
-                as it will take into account neurons that can be in multiple
-                assemblies
+    Parameters
+    ----------
+    spike_count
+        matrix of size (n_cells,n_samples)
+    method
+        method to extract pattern (PCA, ICA) ICA is better
+        as it will take into account neurons that can be in multiple
+        assemblies
 
 
-    Return:
-                - template: number of significant templates (n_cells,n_patterns)
-                - correlation_matrix (n_cells,n_cells)
+    Return
+    ------
+    template
+        number of significant templates (n_cells,n_patterns)
+    correlation_matrix
+        (n_cells,n_cells)
 
     """
     assert method in ["PCA", "ICA"], "Method not recognized"
@@ -81,15 +88,23 @@ def calc_activity(spike_count, template, kernel_half_width=None):
     """
     Calculate the activity in time of given assemblies (templates)
 
-    Parameters:
-                - spike_count = matrix of size (n_cells,n_samples)
-                - template: number of significant templates (n_cells,n_patterns)
-                - kernel_half_width = size of the half window size of
-                the gaussian kernel used to smooth the activity profile
+    Parameters
+    ----------
+    spike_count
+        matrix of size (n_cells,n_samples)
+    template
+        number of significant templates (n_cells,n_patterns)
+    kernel_half_width
+        size of the half window size of the gaussian kernel
+        used to smooth the activity profile
 
-    Returns:
-                - activity = matrix of size (n_template,n_samples)
+    Returns
+    -------
+    activity
+        matrix of size (n_template,n_samples)
 
+    Note
+    ----
     For a nice visual explanation see also fig S2 of van de Ven et al 2016
     """
 
@@ -136,11 +151,27 @@ def sim_assemblies(
     act_lambda=[3, 3],
 ):
     """
-    Generate reactivation pattern to test other function form this module
+    Generate reactivation pattern to test other function
+    form this module
 
-    Parameters:
-                - n_neurons: number of neurons
+    Parameters
+    ----------
+    n_neurons: int
+        number of neurons
+    n_bins: int
+        number of sample bins
+    neuron_assembly list of list of int [[list1] , [list2],...]
+        definition of neurons in the differents assemblies.
+    n_act: list of int
+        number of reactivation per asselblies
+    act_lambda: list of int/float
+        value of the lambda during the reactivation, lambda is
+        hardcoded to one outside of the reactivation
 
+    Returns
+    -------
+    spikes_binned: np.array
+        simulated spike binned matrix
     """
 
     spikes_binned = np.random.poisson(1, (n_neurons, n_bins))

@@ -1,5 +1,5 @@
-import numpy as np
 import bottleneck as bn
+import numpy as np
 
 
 def valueCross(x, threshold=0):
@@ -8,13 +8,19 @@ def valueCross(x, threshold=0):
     Particularly useful when you want to detect crossing of a threshold
     were you are not likely to find exactly a value in your input vector.
 
-    Parameters:
-              - x: vector of data
-              - threshold: threshold to cross
+    Parameters
+    ----------
+    x:
+        vector of data
+    threshold:
+        threshold to cross
 
-    Returns:
-              - up: logical vector with True value for up crossing
-              - down: logical vector with True value for down crossing
+    Returns
+    -------
+    up:
+        logical vector with True value for up crossing
+    down:
+        logical vector with True value for down crossing
     """
     before = np.array(x[:-1])
     after = np.array(x[1:])
@@ -32,17 +38,21 @@ def localExtrema(x, method="max"):
     """
     Find local extrema and return their index
 
-    Parameters:
-            - x: vector
-            - method: type of extrema to consider [max, min, all] (default: max)
+    Parameters
+    ----------
+    x:
+        vector
+    method:
+        type of extrema to consider [max, min, all] (default: max)
 
-    Returns:
-            - index of the local extrema as defined by the parameter 'method'
+    Returns
+    -------
+    index of the local extrema as defined by the parameter 'method'
 
     """
     assert method in ["max", "min", "all"], "Invalid Method in localExtrema"
 
-    x = np.asarray(x, dtype=np.float)
+    x = np.asarray(x, dtype=float)
     D = np.diff(x)
     E = np.diff(D / abs(D))
 
@@ -87,15 +97,20 @@ def remove_nan(x, y=None, paired=False, axis=0):
     """
     Helper function to remove nan from 1D or 2D
 
-    Parameters:
-            - x: vector or matrix with nans
-            - y: vector or matrix with nans
-            - paired: should we pair the removal of nan values in x and y
-            - axis: axis to operate on
+    Parameters
+    ----------
+    x:
+        vector or matrix with nans
+    y:
+        vector or matrix with nans
+    paired:
+        should we pair the removal of nan values in x and y
+    axis:
+        axis to operate on
 
-    Returns:
+    Returns
+    -------
             - x (and y) without nan values
-
     """
     x = np.asarray(x)
     if y is None:
@@ -131,13 +146,17 @@ def nearest_idx(array, values, method="sorted"):
             - idx(values < min(array) ) = 0
             - idx(values > max(array) ) = max(array)
 
+    Parameters
+    ----------
+    array:
+        array where you wnt to index values (np.array)
+    values:
+        array or float of values of which you want the index
 
-    Parameters:
-                - array: array where you wnt to index values (np.array)
-                - values: array or float of values of which you want the index
-
-    Returns:
-                - idx: closest indices of values in array
+    Returns
+    -------
+    idx:
+        closest indices of values in array
 
     """
     array = np.asarray(array)

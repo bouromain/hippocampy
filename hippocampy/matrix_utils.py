@@ -1,8 +1,10 @@
-import numpy as np
-import bottleneck as bn
 import warnings
+
+import bottleneck as bn
+import numpy as np
 from astropy.convolution import convolve
 from skimage import measure, morphology
+
 
 #%% SMOOTH
 def smooth1D(
@@ -36,7 +38,6 @@ def smooth1D(
       used to pad the end and the end values are used to pad the beginning.
     """
     # Check Input
-
     if kernel_half_width % 2 != 1:
         kernel_half_width += 1
         # kernel size has to be odd
@@ -104,16 +105,21 @@ def smooth2D(
 ):
     """
     function to smooth 2 dimensional data.
-    Take:
-            - data: matrix with your 2D data
-            - kernel_half_width: half width of the smoothing kernel
-            - kernel_type: way to smooth the data ('gauss': gaussian, 'box': boxcar smoothing)
-            - padtype: the matrix will be padded in order to remove border artefact
-              so we will pad the matrix.
-              Available option: - symmetric: reflect the vector on the edge 1 2 3 4 [3 2 1]
-                                - reflect: reflect the vector on the edge 1 2 3 4 [4 3 2]
-                                - wrap: circularly wrap opposing edges
-            - preserve_nan_opt = do we smooth NaN or put them back att the end (default: True)
+    Parameters
+    ----------
+    - data: matrix with your 2D data
+    - kernel_half_width: half width of the smoothing kernel
+    - kernel_type: way to smooth the data ('gauss': gaussian, 'box': boxcar smoothing)
+    - padtype: the matrix will be padded in order to remove border artefact
+        so we will pad the matrix.
+        Available option:   - symmetric: reflect the vector on the edge 1 2 3 4 [3 2 1]
+                            - reflect: reflect the vector on the edge 1 2 3 4 [4 3 2]
+                            - wrap: circularly wrap opposing edges
+     - preserve_nan_opt = do we smooth NaN or put them back att the end (default: True)
+
+    Returns
+    -------
+    - data_c smoothed version of data
 
     """
 
@@ -161,11 +167,14 @@ def corr_mat(a, axis=1):
     """
     Compute correlation between all the rows (or column) of a given matrix
 
-    Parameters:
-            - Matrix for example [unit, samples]
-            - axis on which we want to work on
-    Returns:
-            - correlation matrix
+    Parameters
+    ----------
+    - Matrix for example [unit, samples]
+    - axis on which we want to work on
+
+    Returns
+    -------
+    - correlation matrix
 
     https://en.wikipedia.org/wiki/Pearson_correlation_coefficient
     """
@@ -183,6 +192,18 @@ def corr_mat(a, axis=1):
 def zscore(matrix, ax=1):
     """
     Compute zscores along one axis.
+
+    Parameters
+    ----------
+    matrix: np.array
+
+    ax: int
+        axis to work along
+
+    Returns
+    -------
+    z: np.array()
+        zscore matrix
     """
     if ax == 1:
         z = (matrix - bn.nanmean(matrix, axis=ax)[:, None]) / bn.nanstd(
@@ -197,6 +218,19 @@ def zscore(matrix, ax=1):
 
 #%% OTHER
 def label(M):
+    """
+    Just a wrapper to scipy.mesure.label . This function is an equivalent to
+    bwlabel in matlab.
+
+    Parameters
+    ----------
+    M: np.array,
+        matrix or array that we want to label
+
+    Return
+    ------
+    np.array of labeled data
+    """
     # the following line ensure we feed a boolean data to the label
     # function. Its helps with
     M_new = np.array(M, dtype=bool)
@@ -205,6 +239,21 @@ def label(M):
 
 
 def remove_small_objects(M, min_sz=3):
+    """
+    remove small non-zero "objects" from a vector
+
+    Parameters
+    ----------
+    M: np.array
+        boolean or zero and non-zero values vector
+    min_sz: int
+        minimum size of the object to keep
+
+    Returns
+    -------
+    np.array only with connected components bigger than min_sz
+
+    """
     M_l = label(M)
     M_l = morphology.remove_small_objects(M_l, min_size=min_sz)
     return np.array(M_l, dtype=bool)
@@ -328,11 +377,17 @@ def row_closest_min_to_val(v, zero_val=None):
     This function identify the identify the closest index
     of non-zero element to a given value.
 
-    Input:
-          - v: vector, preferably logical
-          - zero_val: value of the "zero"
-    Returns:
-          - index of the closest index
+    Parameters
+    ----------
+    v
+        vector, preferably logical
+    zero_val
+        value of the "zero"
+
+    Returns
+    -------
+
+    index of the closest index
     """
     if zero_val is None:
         zero_val = v.size / 2

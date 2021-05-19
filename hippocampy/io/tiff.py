@@ -1,13 +1,22 @@
 from ScanImageTiffReader import ScanImageTiffReader
 import h5py
 import os
-import gc
 
 
 def get_tiff_metadata(file_path: str):
     """
     Open tiff and return all the metadata
     input
+
+    Parameters
+    ----------
+    file_path
+        path of the file to process
+
+    Returns
+    -------
+    data:
+        metadata extracted from the tif file
     """
     # to avoid some bugs
     file_path = os.path.expanduser(file_path)
@@ -20,6 +29,19 @@ def get_tiff_metadata(file_path: str):
 
 
 def get_tiff_shape(file_path: str):
+    """
+    Open tiff and return its shape
+
+    Parameters
+    ----------
+    file_path
+        path of the file to process
+
+    Returns
+    -------
+    data:
+        shape of the data in the tif file
+    """
     # to avoid some bugs
     file_path = os.path.expanduser(file_path)
 
@@ -32,6 +54,19 @@ def get_tiff_shape(file_path: str):
 
 
 def get_tiff_data(file_path: str):
+    """
+    Open tiff and return all its data
+
+    Parameters
+    ----------
+    file_path
+        path of the file to open
+
+    Returns
+    -------
+    data:
+        data extracted from the tif file
+    """
 
     # to avoid some bugs
     file_path = os.path.expanduser(file_path)
@@ -43,7 +78,6 @@ def get_tiff_data(file_path: str):
     return out
 
 
-# pfile = "/home/bouromain/Documents/tmpData/compressionTest/m4466_20201203/20201218_m4453_00001.tif"
 def tiff2h5(
     pfile: str,
     compression_type="gzip",
@@ -54,19 +88,22 @@ def tiff2h5(
     """
     convert a scanImage tiff file and convert is to a h5 file with compression
 
-    Parameters:
-                - pfile: path of the file to process
-                - compression_type: type of compression ["gzip"(default), "lzf"]
-                - compression_lvl: level of compression
-                - overwrite: if should overwrite existing file
-                - n_frblk: number of frames to read per blocks
+    Parameters
+    ----------
+        - pfile: path of the file to process
+        - compression_type: type of compression ["gzip"(default), "lzf"]
+        - compression_lvl: level of compression
+        - overwrite: if should overwrite existing file
+        - n_frblk: number of frames to read per blocks
 
-    TO DO:
+    TO DO
+    -----
+        - better handling of existing file eg erase it
+        - calculate nfr depending of available ram of the system
+        - store metadata of the tiff file
 
-                - better handling of existing file eg erase it
-                - calculate nfr depending of available ram of the system
-                - store metadata of the tiff file
-    References:
+    References
+    ----------
     https://vidriotech.gitlab.io/scanimagetiffreader-python
     https://gitlab.com/vidriotech/scanimagetiffreader-python/-/blob/master/src/ScanImageTiffReader/__init__.py
     https://docs.h5py.org/en/stable/high/dataset.html
@@ -114,7 +151,3 @@ def tiff2h5(
 
     tiff_f.close()
     h5_f.close()
-
-
-# pfile = '/home/bouromain/Documents/tmpData/compressionTest/m4466_20201203/20201218_m4453_00001.tif'
-# tiff2h5(pfile)

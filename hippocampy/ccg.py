@@ -1,5 +1,5 @@
-import numpy as np
 import bottleneck as bn
+import numpy as np
 from numba import jit
 
 
@@ -10,15 +10,21 @@ def ccg(
     Fast crosscorrelation code:
     Assume that the spike trains are sorted
 
-    Parameters:
-                - spikes1
-                - spikes2
-                - binsize
-                - max_lag
-                - normalisation:
-                        - count: no normalisation
-                        - conditional: probability of spk2 knowing spk1
-                        - probability: sum to one
+    Parameters
+    ----------
+    spikes1
+    spikes2
+    binsize
+    max_lag
+    normalisation:
+      - count: no normalisation
+      - conditional: probability of spk2 knowing spk1
+      - probability: sum to one
+
+    Return
+    ------
+    C:
+        cross-correlogram
     """
     assert normalization in [
         "count",
@@ -47,17 +53,26 @@ def ccg_heart(spikes1, spikes2, binsize=1e-3, max_lag=1000e-3):
     Fast crosscorrelation code:
     Assume that the spike trains are sorted
 
-    Parameters:
-                - spikes1: first time serie of spikes
-                - spikes2: second time serie of spikes
-                - binsize: size of one bin
-                - max_lag: size of the half window
+    Parameters
+    ----------
+    spikes1:
+        first time serie of spikes
+    spikes2:
+        second time serie of spikes
+    binsize:
+        size of one bin
+    max_lag:
+        size of the half window
 
-    Return:
-                - C: Cross-correlogram
-                - E: Edges of the Cross-correlogram
+    Returns
+    -------
+    C:
+        Cross-correlogram
+    E:
+        Edges of the Cross-correlogram
 
-    To Do:
+    TO DO
+    -----
     this code could be slightly faster by storing the
     high bound in the last loop
 

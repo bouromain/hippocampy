@@ -1,7 +1,7 @@
 import numpy as np
-from scipy.signal import filtfilt, butter, cheby2, sosfilt
-from scipy.signal.signaltools import hilbert
 from scipy.fftpack import next_fast_len
+from scipy.signal import butter, cheby2, filtfilt, sosfilt
+from scipy.signal.signaltools import hilbert
 
 
 def bandpassSig(sig, fRange, fs, method="cheby2", order=4):

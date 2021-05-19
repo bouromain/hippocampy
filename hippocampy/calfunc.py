@@ -1,9 +1,10 @@
-import numpy as np
 import bottleneck as bn
-from hippocampy.matrix_utils import remove_small_objects
+import numpy as np
+import tqdm as tqdm
 from scipy.stats import siegelslopes
 from sklearn.linear_model import RANSACRegressor
-import tqdm as tqdm
+
+from hippocampy.matrix_utils import remove_small_objects
 
 
 def subtract_neuropil(Froi, Fneu, method="fixed", downsample_ratio=10):
@@ -91,8 +92,8 @@ def transientRoy(F, threshold=2.5, minSize=9):
     F_std = bn.nanstd(F, axis=1)
 
     # Zscore traces
-    F_z = F - F_mean[:, np.newaxis]
-    F_z = F_z / F_std[:, np.newaxis]
+    F_z = F - F_mean[:, None]
+    F_z = F_z / F_std[:, None]
 
     # threshold trace above 2.5 std
     F_t = F_z > threshold

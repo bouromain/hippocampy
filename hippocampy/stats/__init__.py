@@ -1,2 +1,2 @@
-from . import circ_stats
+from . import circular
 from . import info

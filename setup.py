@@ -20,5 +20,6 @@ setup(
         "mat73",
         "sklearn",
         "tqdm",
+        "pytest",
     ],
 )
