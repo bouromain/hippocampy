@@ -1,14 +1,19 @@
 """
-Various method to extra neuronal assemblies in the activity of a population of neurons.
+Various method to extra neuronal assemblies in the activity of 
+a population of neurons.
 
 
-References:
+References
+----------
 Lopes-dos-Santos V, Ribeiro S, Tort ABL Detecting cell assemblies 
 in large neuronal populations,(2013) Journal of Neuroscience Methods.
 
+TO DO
+-----
+https://elifesciences.org/articles/19428 
 
-TO DO:
-https://elifesciences.org/articles/19428
+Latent Ensemble Recruitment from Sparks, Liao, et al., NatComms (2020)
+https://github.com/losonczylab/Sparks_Liao_NatComms2020
 
 """
 
@@ -42,6 +47,11 @@ def calc_template(spike_count, method="ICA"):
     correlation_matrix
         (n_cells,n_cells)
 
+    NB
+    __
+    Some paper threshold the template vector to find the cells of an assembly
+    for exemple van de Ven et al 2016 defines it as 2 std above mean (see fig S2)
+
     """
     assert method in ["PCA", "ICA"], "Method not recognized"
 
@@ -61,7 +71,7 @@ def calc_template(spike_count, method="ICA"):
     eigvals = eigvals[i_sort][::-1]
     eigvecs = eigvecs[:, i_sort][::-1]
 
-    # define significant assemblies as assemblie having a eigenvalue greater
+    # define significant assemblies as an assemblie having a eigenvalue greater
     # than a threshold, lambda max, defined using Marchenko-Pastur law
     q = n_bins / n_cells
     assert q > 1, "Number or time bins should be greater than the number of neurons"
