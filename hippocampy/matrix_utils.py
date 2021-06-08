@@ -46,12 +46,10 @@ def smooth1D(
         data = data[np.newaxis, :]
 
     acceptedPad = ["reflect", "symmetric", "wrap"]
-    assert any([i == padtype for i in acceptedPad]), "Not Implemented pad type"
+    assert padtype in acceptedPad, "Not Implemented pad type"
 
     acceptedType = ["gauss", "box", "ramp"]
-    assert any(
-        [i == kernel_type for i in acceptedType]
-    ), "Not Implemented smoothing kernel type"
+    assert kernel_type in acceptedType, "Not Implemented smoothing kernel type"
 
     # pad the data
     data_p = np.pad(data, ((0, 0), (kernel_half_width, kernel_half_width)), padtype)
@@ -129,12 +127,10 @@ def smooth2D(
         kernel_half_width += 1
 
     acceptedPad = ["reflect", "symmetric", "wrap"]
-    assert any([i == padtype for i in acceptedPad]), "Not Implemented pad type"
+    assert padtype in acceptedPad, "Not Implemented pad type"
 
     acceptedType = ["gauss", "box"]
-    assert any(
-        [i == kernel_type for i in acceptedType]
-    ), "Not Implemented smoothing kernel type"
+    assert kernel_type in acceptedType, "Not Implemented smoothing kernel type"
 
     # pad the data
     data_p = np.pad(data, ((kernel_half_width, kernel_half_width)), padtype)

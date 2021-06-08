@@ -10,3 +10,4 @@ h5py
 mat73
 sklearn
 tqdm
+pytest
