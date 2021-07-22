@@ -7,14 +7,17 @@ from scipy.signal.signaltools import hilbert
 def bandpassSig(sig, fRange, fs, method="cheby2", order=4):
     """
     Filter a signal in a certain frequency band and with a particular filter type
+    
     Parameters
     ----------
     - sig: signal to filter
     - fRange: frequency band to filter with eg [5 12]
     - fs: sampling frequency
-    - method: filter method. Either Chebyshev Type II (cheby2, default)
-        or Butterworth (butter)
+    - method: filter method.
+            - Chebyshev Type II (cheby2, default)
+            - Butterworth (butter)
     - order: order of the filter
+    
     Returns
     -------
     - filtered signal

@@ -38,3 +38,13 @@ def load_dat(path, n_vars=None, dtype="float"):
         data = np.reshape(data, (int(n_sample), n_vars))
 
     return data
+
+
+# def export_data_to_npy(scr_folder_path, dest_folder_path=None):
+#     """
+#     Export and slightly clean the content of a folder containing .data file to npy
+#     """
+
+#     if dest_folder_path is None:
+#         dest_folder_path = scr_folder_path
+

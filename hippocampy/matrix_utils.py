@@ -86,7 +86,7 @@ def smooth1D(
 
         # Normalize kernel to one
         kernel = kernel / bn.nansum(kernel)
-        # Convolve. Astropy  seems to deal realy well with nan values
+        # Convolve. Astropy  seems to deal really well with nan values
         data_c = np.apply_along_axis(
             convolve, axis=1, arr=data_p, kernel=kernel, preserve_nan=preserve_nan_opt
         )
@@ -185,7 +185,7 @@ def corr_mat(a, axis=1):
         return (1 / (n - 1)) * (a_z @ a_z.T)
 
 
-def zscore(matrix, ax=1):
+def zscore(matrix, axis=1):
     """
     Compute zscores along one axis.
 
@@ -202,12 +202,12 @@ def zscore(matrix, ax=1):
         zscore matrix
     """
     if ax == 1:
-        z = (matrix - bn.nanmean(matrix, axis=ax)[:, None]) / bn.nanstd(
-            matrix, axis=ax, ddof=1
+        z = (matrix - bn.nanmean(matrix, axis=axis)[:, None]) / bn.nanstd(
+            matrix, axis=axis, ddof=1
         )[:, None]
     else:
-        z = (matrix - bn.nanmean(matrix, axis=ax)[None, :]) / bn.nanstd(
-            matrix, axis=ax, ddof=1
+        z = (matrix - bn.nanmean(matrix, axis=axis)[None, :]) / bn.nanstd(
+            matrix, axis=axis, ddof=1
         )[None, :]
     return z
 

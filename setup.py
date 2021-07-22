@@ -21,5 +21,8 @@ setup(
         "sklearn",
         "tqdm",
         "pytest",
+        "numba",
+        "cython",
+        "oasis @ git+ssh://git@github.com/j-friedrich/OASIS",
     ],
 )

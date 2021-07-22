@@ -35,14 +35,17 @@ def loadAllS2p(pathfile):
 
 
 #%% preprocessing function utils
-def make_ops():
+def make_ops(fs=None):
     """
     make 'custom' ops file for hippocampal 6f recording at 30hz
     """
     ops = suite2p.default_ops()
     ops["diameter"] = 10
     ops["tau"] = 0.7
-    ops["fs"] = 30
+    if fs is None:
+        ops["fs"] = 30
+    else:
+        ops["fs"] = fs
     return ops
 
 
@@ -57,7 +60,7 @@ def run_s2p(pathfile):
 
 def filterCell(iscell, data):
     """
-    This funciton allow to easily filter data with the iscell variable from suite2p
+    This function allow to easily filter data with the iscell variable from suite2p
 
     """
 

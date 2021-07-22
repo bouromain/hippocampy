@@ -4,7 +4,7 @@ import tqdm as tqdm
 from scipy.stats import siegelslopes
 from sklearn.linear_model import RANSACRegressor
 
-from hippocampy.matrix_utils import remove_small_objects
+from hippocampy.matrix_utils import remove_small_objects, zscore, moving_win
 
 
 def subtract_neuropil(Froi, Fneu, method="fixed", downsample_ratio=10):
@@ -56,7 +56,9 @@ def subtract_neuropil(Froi, Fneu, method="fixed", downsample_ratio=10):
             ransac.fit(x.T, y.T)
             c[itF] = ransac.estimator_.coef_
 
-        # now only select the correct values between 0.5 and 1
+        # Values outside of 0.5 and 1 are considered as
+        # outliers and will be assigned to the median
+        # of the coefficients in range [0.5 < c < 1]
         c_valid = np.logical_and(c > 0.5, c < 1)
         c[np.logical_not(c_valid)] = np.median(c[c_valid])
 
@@ -68,7 +70,7 @@ def subtract_neuropil(Froi, Fneu, method="fixed", downsample_ratio=10):
     return F
 
 
-def transientSH(F):
+def transientSH(F, axis=1):
     """
     find transient as in Allegra, Posani, Schmidt-Hieber
 
@@ -76,27 +78,39 @@ def transientSH(F):
     threshold of mean +2.5 standard deviations of the overall d​ F ​ / ​ F signal, and exceeding an integral
     above threshold of 7,000 d​ F ​ / ​ F ​ .
     """
-    F_mean = bn.nanmean(F, axis=1)
-    F_std = bn.nanstd(F, axis=1)
+    F_mean = bn.nanmean(F, axis=axis)
+    F_std = bn.nanstd(F, axis=axis)
 
 
-def transientRoy(F, threshold=2.5, minSize=9):
+def transientRoy(F, threshold=2.5, min_length=9):
     """
     find transient as in Roy 2017
     Ca 2+ events were detected by applying a threshold (greater than 2 standard
-    deviations from the DF/F signal) at the local maxima of the DF/F signal.
+    deviations from the dF/F signal) at the local maxima of the dF/F signal.
     Since we employed GCaMP6f, our analysis used a threshold of > = 5 frames (250 ms)
     """
 
-    F_mean = bn.nanmean(F, axis=1)
-    F_std = bn.nanstd(F, axis=1)
-
     # Zscore traces
-    F_z = F - F_mean[:, None]
-    F_z = F_z / F_std[:, None]
+    F_z = zscore(F, axis=1)
 
     # threshold trace above 2.5 std
     F_t = F_z > threshold
-    # remove small transients
-    F_t = np.apply_along_axis(remove_small_objects, axis=1, arr=F_t, min_sz=minSize)
+    # remove transients that are shorter than a given threshold
+    F_t = np.apply_along_axis(remove_small_objects, axis=1, arr=F_t, min_sz=min_length)
     return F_t
+
+
+# p = "/home/bouromain/Documents/tmpData/m4550/20210720/1/suite2p/plane0/"
+# from hippocampy.io.suite2p import loadAllS2p
+
+# F, Fneu, spks, stat, ops, iscell = loadAllS2p(p)
+
+# dF = subtract_neuropil(F, Fneu, method="fixed", downsample_ratio=10)
+
+# a = moving_win(dF[0,:] ,15*60, (15*60)-1, end="pad")
+# aa = np.percentile(a , 8, axis=1)
+
+# import matplotlib.pyplot as plt
+# plt.plot(dF[0,:])
+# plt.plot(aa)
+# plt.xlim([391000,394000])
