@@ -4,7 +4,7 @@ import tqdm as tqdm
 from scipy.stats import siegelslopes
 from sklearn.linear_model import RANSACRegressor
 
-from hippocampy.matrix_utils import remove_small_objects, zscore, moving_win
+from hippocampy.matrix_utils import remove_small_objects, zscore, rolling_quantile
 
 
 def subtract_neuropil(Froi, Fneu, method="fixed", downsample_ratio=10):
@@ -100,17 +100,47 @@ def transientRoy(F, threshold=2.5, min_length=9):
     return F_t
 
 
+def detrend_F(F, win_size, quantile=0.08):
+    """
+    Function to remove slow time scale changes in fluorescence traces. It
+    does it as describes in Dombeck 2010. It calculates the 8th percentile in
+    a window of size win_size around each sample time to define a baseline. This
+    baseline can then be substracted from the raw signal to correct it.
+    
+    Parameters
+    ----------
+    -F: fluorescence trace [n_cells, n_samples]
+    -winsize: size of the window in samples
+    -quantile: quantile to substract [0-1] (default 8th)
+
+    Return
+    ------
+    np.array of Fluorescence with the baseline substracted
+
+    Reference
+    ---------
+    Dombeck 2010
+
+    Slow time-scale changes in the fluorescence traces were removed by 
+    examining the distribution of fluorescence in a ~15-s interval around 
+    each sample time point and subtracting the 8% percentile value.
+    """
+    Q = rolling_quantile(F, win_size, quantile)
+    return F - Q
+
+
 # p = "/home/bouromain/Documents/tmpData/m4550/20210720/1/suite2p/plane0/"
-# from hippocampy.io.suite2p import loadAllS2p
+# from hippocampy.io.s2p import loadAllS2p
+# import pandas as pd
 
 # F, Fneu, spks, stat, ops, iscell = loadAllS2p(p)
-
 # dF = subtract_neuropil(F, Fneu, method="fixed", downsample_ratio=10)
 
-# a = moving_win(dF[0,:] ,15*60, (15*60)-1, end="pad")
-# aa = np.percentile(a , 8, axis=1)
+
+# a = detrend_F(dF[0:50, :], 15 * 60, 0.08)
 
 # import matplotlib.pyplot as plt
-# plt.plot(dF[0,:])
-# plt.plot(aa)
-# plt.xlim([391000,394000])
+
+# plt.plot(dF[0, :])
+# plt.plot(a[0, :])
+# plt.xlim()

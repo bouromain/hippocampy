@@ -4,7 +4,7 @@ matplotlib
 astropy
 scikit-image
 bottleneck
-suite2p
+suite2p@ git+ssh://git@github.com/MouseLand/suite2p
 scanimage-tiff-reader
 h5py
 mat73
@@ -13,4 +13,5 @@ tqdm
 pytest
 numba
 cython
+panda
 oasis@ git+ssh://git@github.com/j-friedrich/OASIS

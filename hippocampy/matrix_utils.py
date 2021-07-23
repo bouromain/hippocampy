@@ -4,6 +4,8 @@ import bottleneck as bn
 import numpy as np
 from astropy.convolution import convolve
 from skimage import measure, morphology
+import pandas as pd
+import tqdm as tqdm
 
 
 #%% SMOOTH
@@ -201,7 +203,7 @@ def zscore(matrix, axis=1):
     z: np.array()
         zscore matrix
     """
-    if ax == 1:
+    if axis == 1:
         z = (matrix - bn.nanmean(matrix, axis=axis)[:, None]) / bn.nanstd(
             matrix, axis=axis, ddof=1
         )[:, None]
@@ -294,7 +296,6 @@ def moving_win(a, length, overlap=0, axis=None, end="cut", endvalue=0):
 
     Note:
     We could implement symmetric padding
-
     """
 
     if axis is None:
@@ -368,9 +369,22 @@ def moving_win(a, length, overlap=0, axis=None, end="cut", endvalue=0):
         )
 
 
-def row_closest_min_to_val(v, zero_val=None):
+def rolling_quantile(data, window_len, quantile):
+
+    out = np.empty_like(data)
+    for i, x in tqdm.tqdm(enumerate(data), total=data.shape[0]):
+        out[i, :] = (
+            pd.DataFrame(x)
+            .rolling(window_len, center=True, min_periods=1)
+            .quantile(quantile=quantile)
+            .squeeze()
+        )
+    return out
+
+
+def row_closest_idx_to_val(v, zero_val=None):
     """
-    This function identify the identify the closest index
+    This function identify the closest index
     of non-zero element to a given value.
 
     Parameters
