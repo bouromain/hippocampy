@@ -8,6 +8,7 @@ hippocampy/ccg.py
 hippocampy/filterSig.py
 hippocampy/matrix_utils.py
 hippocampy/utils.py
+hippocampy/wavelet.py
 hippocampy.egg-info/PKG-INFO
 hippocampy.egg-info/SOURCES.txt
 hippocampy.egg-info/dependency_links.txt

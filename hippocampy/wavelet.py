@@ -3,6 +3,89 @@ import pywt
 import bottleneck as bn
 
 
+########################################################################
+## Spectrogram
+########################################################################
+
+
+def cwt_spectrogram(
+    data, scales, Fs, *, window=1, wavelet="morl", method="fft", axis=-1
+):
+    """
+    Compute the wavelet transform of the input signal. 
+
+    Parameters
+    ----------
+    - data: array_like
+        signal to be computed
+    - scales: 
+
+    - Fs: float
+        Sampling frequency in Hertz
+    - window: int
+        size of the temporal window (in samples) to average data into
+    - wavelet: str 
+        type of wavelet to use. available wavelet can be found using:
+            import pywt
+            print(pywt.wavelist())
+    - method: str ( fft / conv)
+        method to compute the cwt, fft will be faster for long input 
+        while conv will be better for small ones
+    - axis: int
+        axis to work along
+
+    Returns
+    -------
+
+    - coeffs: array_like
+        Continuous wavelet transform of the input data for the given 
+        scales and wavelet. The first axis of coeffs corresponds to the 
+        scales and the second is time.
+    
+    - frequencies : array_like
+        frequencies corresponding to the coefficients
+
+
+  """
+    P = 1 / Fs
+    coeffs, freq = pywt.cwt(
+        data, scales, wavelet=wavelet, sampling_period=P, method=method, axis=axis
+    )
+
+    return coeffs, freq
+
+
+# import matplotlib.pyplot as plt
+# import pywt
+# import numpy as np
+# from scipy.signal import decimate
+
+# fpath = "/home/bouromain/Documents/tmpData/m4540_2021-07-30_15-04-15/Record Node 107/experiment_1.nwb"
+
+# data, timestamps = load_nwb_oe(fpath)
+
+# D = decimate(data[:, 14], 10)
+# DD = D[:100000]
+
+# P = 1 / 2000
+# scales = np.arange(2, 200)  ## scales are wrong here
+
+
+# coeffs, freq = pywt.cwt(DD, scales, wavelet="morl", sampling_period=P, method="fft")
+# # calculate power from coefficient
+# pow_c = np.abs(coeffs[:1000]) ** 2
+# # calculate 1/f
+# pow_unbiased = pow_c / freq[:, None]
+
+# plt.imshow(pow_unbiased, aspect="auto")
+# # plt.yticks(pywt.scale2frequency("morl", scales) / P)
+
+
+########################################################################
+## Denoising
+########################################################################
+
+
 def _w_noise_est(dC, n_sample, noise_est_method, axis=-1):
     """
     Compute threshold for noise filtering using various methods
@@ -58,40 +141,6 @@ def _thresh_coeff(coeffs, threshold, threshold_type, axis):
                     cD[:, j], T[j], mode=threshold_type, substitute=0
                 )
     return coeffs_f
-
-
-def swt_denoise(data, *, wavelet_name="sym5", level=None):
-    """
-    swt_denoise is made to mach matlab option 'modwtsqtwolog' in wden.
-    Note that modwt is a synonym of stationay wavelet transform [1]
-
-    Reference
-    ---------
-    [1] https://en.wikipedia.org/wiki/Stationary_wavelet_transform#Synonyms
-    """
-    data = np.array(data, ndmin=2)
-    n_sample = data.shape[-1]
-
-    coeffs = pywt.swt(data, wavelet_name, level=level, trim_approx=True)
-
-    s = [np.sqrt(2) * bn.nanmedian(np.abs(c)) / 0.6745 for c in coeffs[1:]]
-    s = np.array(s)
-
-    n1 = 2 * s ** 2
-    d1 = 2 ** (np.arange(level) + 1)
-    n2 = np.log(n_sample)
-
-    # find threshold
-    threshold = np.sqrt(n1 / d1 * n2)
-
-    # threshold coefficients
-    coeffs_f = coeffs
-    for i, (cD, T) in enumerate(zip(coeffs, threshold)):
-        coeffs_f[i + 1] = pywt.threshold(cD, T, mode="soft", substitute=0)
-    # reconstruct the signal
-    data_rec = pywt.iswt(coeffs_f, wavelet_name)
-
-    return data_rec
 
 
 def _calc_sigma(coeffs, scaling, axis):
@@ -160,8 +209,8 @@ def wden2(
     https://github.com/matthewddavis/lombardi/blob/master/processing/NPS-1.3.2/WDen.py
 
     TODO
-    ----
-    - adapt for aplication along one axis
+    ----application
+    - adapt for application along one axis
     - implement rigsur and eursur from
       https://github.com/holgern/pyyawt/blob/master/pyyawt/denoising.py
     """
@@ -197,4 +246,38 @@ def wden2(
 
     # check if they are the same size
     # get rid of the extended part for wavelet decomposition
+    return data_rec
+
+
+def swt_denoise(data, *, wavelet_name="sym5", level=None):
+    """
+    swt_denoise is made to mach matlab option 'modwtsqtwolog' in wden.
+    Note that modwt is a synonym of stationay wavelet transform [1]
+
+    Reference
+    ---------
+    [1] https://en.wikipedia.org/wiki/Stationary_wavelet_transform#Synonyms
+    """
+    data = np.array(data, ndmin=2)
+    n_sample = data.shape[-1]
+
+    coeffs = pywt.swt(data, wavelet_name, level=level, trim_approx=True)
+
+    s = [np.sqrt(2) * bn.nanmedian(np.abs(c)) / 0.6745 for c in coeffs[1:]]
+    s = np.array(s)
+
+    n1 = 2 * s ** 2
+    d1 = 2 ** (np.arange(level) + 1)
+    n2 = np.log(n_sample)
+
+    # find threshold
+    threshold = np.sqrt(n1 / d1 * n2)
+
+    # threshold coefficients
+    coeffs_f = coeffs
+    for i, (cD, T) in enumerate(zip(coeffs, threshold)):
+        coeffs_f[i + 1] = pywt.threshold(cD, T, mode="soft", substitute=0)
+    # reconstruct the signal
+    data_rec = pywt.iswt(coeffs_f, wavelet_name)
+
     return data_rec

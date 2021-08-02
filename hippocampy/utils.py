@@ -169,3 +169,11 @@ def nearest_idx(array, values, method="sorted"):
         idx = np.array([(np.abs(array - val)).argmin() for val in values], dtype=int)
 
     return idx
+
+
+def calc_dt(t):
+    """
+    Calculate dt from a time vector
+    """
+    return bn.nanmedian(np.diff(t))
+
