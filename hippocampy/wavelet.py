@@ -170,10 +170,10 @@ def wden2(
 
     if axis == 1 or axis == -1:
         n_sample = data.shape[1]
-        n_cell = data.shape[0]
+        # n_cell = data.shape[0]
     elif axis == 0:
         n_sample = data.shape[0]
-        n_cell = data.shape[1]
+        # n_cell = data.shape[1]
     else:
         raise ValueError("Axis should be either [0,1,-1]")
 
