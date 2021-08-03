@@ -1,7 +1,16 @@
 import numpy as np
 from scipy.fftpack import next_fast_len
 from scipy.signal import butter, cheby2, filtfilt, sosfilt
+from scipy.signal import decimate as _decimate
 from scipy.signal.signaltools import hilbert
+
+
+def decimate(sig, decimation_factor):
+    """
+    """
+    if decimation_factor >= 13:
+        raise ValueError("Decimation factor should be smaller than 13")
+    return _decimate(sig, decimation_factor)
 
 
 def bandpassSig(sig, fRange, fs, method="cheby2", order=4):

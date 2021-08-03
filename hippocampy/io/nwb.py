@@ -55,30 +55,3 @@ def load_nwb_oe(fpath):
             raise ValueError("Invalid or empty processor for file = %s" % (fpath))
 
         return data, timestamps
-
-
-# import matplotlib.pyplot as plt
-# import pywt
-# import numpy as np
-# from scipy.signal import decimate
-
-# fpath = "/home/bouromain/Documents/tmpData/m4540_2021-07-30_15-04-15/Record Node 107/experiment_1.nwb"
-
-# data, timestamps = load_nwb_oe(fpath)
-
-# D = decimate(data[:, 14], 10)
-# DD = D[:100000]
-
-# P = 1 / 2000
-# scales = np.arange(2, 200)  ## scales are wrong here
-
-
-# coeffs, freq = pywt.cwt(DD, scales, wavelet="morl", sampling_period=P, method="fft")
-# # calculate power from coefficient
-# pow_c = np.abs(coeffs[:1000]) ** 2
-# # calculate 1/f
-# pow_unbiased = pow_c / freq[:, None]
-
-# plt.imshow(pow_unbiased, aspect="auto")
-# # plt.yticks(pywt.scale2frequency("morl", scales) / P)
-
