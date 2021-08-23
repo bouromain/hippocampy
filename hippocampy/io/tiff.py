@@ -20,7 +20,7 @@ def get_tiff_metadata(file_path: str):
     """
     # to avoid some bugs
     file_path = os.path.expanduser(file_path)
-    if os.path.exists(file_path):
+    if not os.path.exists(file_path):
         raise FileNotFoundError
 
     with ScanImageTiffReader(file_path) as reader:
@@ -45,7 +45,7 @@ def get_tiff_shape(file_path: str):
     # to avoid some bugs
     file_path = os.path.expanduser(file_path)
 
-    if os.path.exists(file_path):
+    if not os.path.exists(file_path):
         raise FileNotFoundError
 
     with ScanImageTiffReader(file_path) as reader:
@@ -70,7 +70,7 @@ def get_tiff_data(file_path: str):
 
     # to avoid some bugs
     file_path = os.path.expanduser(file_path)
-    if os.path.exists(file_path):
+    if not os.path.exists(file_path):
         raise FileNotFoundError
 
     with ScanImageTiffReader(file_path) as reader:
