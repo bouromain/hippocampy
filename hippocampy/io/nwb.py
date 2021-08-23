@@ -27,7 +27,7 @@ def load_nwb_oe(fpath):
 
     # Check inputs
     if not op.exists(fpath):
-        raise FileNotFoundError("File does not exist" % (fpath))
+        raise FileNotFoundError("File does not exist %s " % (fpath))
 
     if not fpath.endswith(".nwb"):
         raise ValueError("File does not seem to be a nwb file")
