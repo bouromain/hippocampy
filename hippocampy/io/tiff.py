@@ -1,6 +1,8 @@
 from ScanImageTiffReader import ScanImageTiffReader
 import h5py
 import os
+import json
+from hippocampy.io.matlab import matlab_string2dict
 
 
 def get_tiff_metadata(file_path: str):
@@ -24,7 +26,10 @@ def get_tiff_metadata(file_path: str):
         raise FileNotFoundError
 
     with ScanImageTiffReader(file_path) as reader:
-        out = reader.metadata()
+        try:
+            out = json.loads(reader.metadata())
+        except:
+            out = matlab_string2dict(reader.metadata())
     return out
 
 
