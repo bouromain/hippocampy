@@ -4,7 +4,7 @@ import os.path as op
 
 def load_nwb_oe(fpath):
     """
-    Load open ephys nwb file
+    Load the non standard open ephys nwb file
 
     Parameter
     ---------
