@@ -9,12 +9,34 @@ import pywt
 ########################################################################
 ## Spectrogram
 ########################################################################
-def spectrogram(data, fs, *, nperseg=258, noverlap=16, axis=-1):
+def spectrogram(data, fs, *, nperseg=256, noverlap=16, axis=-1):
     """
-    ...
+    Compute the fourier spectrogram of a given signal
+    
+    Parameters
+    ----------
+    data: ndarray
+        array of data
+    fs: int/float
+        sampling frequency in Hz
+    nperseg: int
+        number of sample per segment (window)
+    noverlap: int
+        number of overlap between windows
+    axis:
+        axis to compute the spectrogram along
+    
+    Returns
+    -------
+    coefs: ndarray
+        fourier spectrogram of data 
+    time: ndarray
+        Array of sample time
+    frequencies: ndarray
+        Array of sample frequencies
     """
     l = data.shape[axis]
-    coefs, frequencies = sp_spectrogram(
+    frequencies, time, coefs = sp_spectrogram(
         data,
         fs=fs,
         nperseg=nperseg,
@@ -23,7 +45,7 @@ def spectrogram(data, fs, *, nperseg=258, noverlap=16, axis=-1):
         nfft=next_fast_len(l),
     )
 
-    return coefs, frequencies
+    return coefs, time, frequencies
 
 
 def periods2scales(periods, wavelet=None, dt=1.0):
