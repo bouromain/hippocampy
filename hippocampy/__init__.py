@@ -1,5 +1,5 @@
 from . import utils
-from . import signal
+from . import sig_tool
 from . import matrix_utils
 from . import calfunc
 from . import stats
