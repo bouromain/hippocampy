@@ -1,19 +1,68 @@
 import numpy as np
+
 from scipy.fftpack import next_fast_len
 from scipy.signal import butter, cheby2, filtfilt, sosfilt
 from scipy.signal import decimate as _decimate
 from scipy.signal.signaltools import hilbert
 
 
-def decimate(sig, decimation_factor):
-    """
-    """
-    if decimation_factor >= 13:
-        raise ValueError("Decimation factor should be smaller than 13")
-    return _decimate(sig, decimation_factor)
+########################################################################
+## Down and resampling
+########################################################################
 
 
-def bandpassSig(sig, fRange, fs, method="cheby2", order=4):
+def resample(sig, fs, fs_up=None, fs_down=None, method="decimate",axis=-1):
+    """
+    Resample signal avoiding aliasing. This method is particularly 
+    usefull for noisy data. It should be preferred over taking every nth 
+    amples of a signal as it can cause aliasing, artefact in the resulting
+    downsampled signal
+
+    Parameters
+    ----------
+    sig:
+        signal to resample
+    fs:
+        sampling frequency or the input signal in Hz
+    fs_up: 
+        upsampling sampling frequency in Hz, only considered 
+        for the poly method
+    fs_down: 
+        downsampling sampling frequency in Hz
+    method: 
+        decimate or poly
+    axis:
+        axis along which to downsample
+    Returns
+    -------
+    sig_d
+        downsampled signal
+
+    """
+
+    # first check the down sampling factor, if it is an integer and if 
+    # we want to down or upsample
+    
+    # first check the down sampling factor, if it is an integer
+    if not method in ['decimate','poly']:
+        raise ValueError(f'method {method} not found, use \'poly\ or \'decimate\' instead')
+
+    if method is 'poly' and fs_up is None:
+        fs_up = fs
+    
+    
+    if fs//fs_down != 0:
+        raise ValueError('Down')
+
+    return True
+
+
+########################################################################
+## Filtering and phase extraction
+########################################################################
+
+
+def band_filter(sig, fRange, fs, method="cheby2", order=4):
     """
     Filter a signal in a certain frequency band and with a particular filter type
     

@@ -111,7 +111,7 @@ def matlab_string2dict(in_string: str):
     return out
 
 
-def _is_number(s):
+def _is_number(s: str):
     try:
         float(s)
         return True

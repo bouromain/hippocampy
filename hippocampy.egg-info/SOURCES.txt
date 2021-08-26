@@ -1,12 +1,12 @@
-LICENSE
 README.md
 setup.py
 hippocampy/__init__.py
 hippocampy/assemblies.py
 hippocampy/calfunc.py
 hippocampy/ccg.py
-hippocampy/filterSig.py
 hippocampy/matrix_utils.py
+hippocampy/signal.py
+hippocampy/spectral.py
 hippocampy/utils.py
 hippocampy/wavelet.py
 hippocampy.egg-info/PKG-INFO
