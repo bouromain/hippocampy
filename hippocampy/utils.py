@@ -2,7 +2,7 @@ import bottleneck as bn
 import numpy as np
 
 
-def valueCross(x, threshold=0):
+def value_cross(x, threshold=0):
     """
     Function finding the crossing point between a vector and a value.
     Particularly useful when you want to detect crossing of a threshold

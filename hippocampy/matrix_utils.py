@@ -435,7 +435,7 @@ def find_peak_row(M, zero_idx=None):
     peaks = np.logical_and(M - bef >= 0, M - aft >= 0)
 
     return np.apply_along_axis(
-        row_closest_min_to_val, axis=1, arr=peaks, zero_val=zero_idx
+        row_closest_idx_to_val, axis=1, arr=peaks, zero_val=zero_idx
     )
 
 

@@ -2,7 +2,7 @@ import h5py as h5
 import os.path as op
 
 
-def load_nwb_oe(fpath):
+def load_nwb_oe(fpath, verbose=False):
     """
     Load the non standard open ephys nwb file
 
@@ -33,6 +33,9 @@ def load_nwb_oe(fpath):
         raise ValueError("File does not seem to be a nwb file")
 
     # Open the file and extrat data
+    if verbose:
+        print(f"Opening file {fpath}")
+
     with h5.File(fpath, "r") as fio:
         dataset = fio["acquisition"]["timeseries"]["recording1"]["continuous"]
 
@@ -42,6 +45,9 @@ def load_nwb_oe(fpath):
             # here I use a for loop to access the processor more easily
             # however here there will be only one iteration
             for processor in dataset.keys():
+                if verbose:
+                    print(f"Data and timestamps")
+
                 data = dataset[processor]["data"][()]
                 timestamps = dataset[processor]["timestamps"][()]
         elif len(processors) > 1:

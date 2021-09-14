@@ -47,7 +47,7 @@ def resample(
     https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.resample_poly.html#scipy.signal.resample_poly
     https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.decimate.html#scipy.signal.decimate
     """
-    # first check the down sampling factor, if it is an integer
+    # first check the downsampling factor, if it is an integer
     if not method in ["decimate", "poly"]:
         raise ValueError(f"method {method} not found, use 'poly\ or 'decimate' instead")
 

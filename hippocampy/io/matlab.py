@@ -16,7 +16,7 @@ def loadmat(path_file, squeeze_me=True, use_attrdict=True, verbose=False):
         if we need to sueeze the data returned by loadmat
         only for non matlab 7.3 files
     use_attrdict: bool
-        make it possible to access structs like in MATLAB
+        make it possible to access strutures like in MATLAB
         only for matlab 7.3 files
     verbose:bool
         verbose execution
