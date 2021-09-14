@@ -218,3 +218,4 @@ def instantaneousFreq(sig_p: np.ndarray, fs) -> np.ndarray:
 
     sig_p_u = np.unwrap(sig_p)
     return np.diff(sig_p_u) / (2.0 * np.pi) * fs
+
