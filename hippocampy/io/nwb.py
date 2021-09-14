@@ -2,7 +2,7 @@ import h5py as h5
 import os.path as op
 
 
-def load_nwb_oe(fpath, verbose=False):
+def load_nwb_oe(fpath, to_uvolt=False, verbose=False):
     """
     Load the non standard open ephys nwb file
 
@@ -60,4 +60,8 @@ def load_nwb_oe(fpath, verbose=False):
         else:
             raise ValueError("Invalid or empty processor for file = %s" % (fpath))
 
+        # convert data to microvolt
+        # https://groups.google.com/g/open-ephys/c/9CKgVPoEF7M/m/uhWK_7BOAwAJ
+        if to_uvolt:
+            data *= 0.195
         return data, timestamps
