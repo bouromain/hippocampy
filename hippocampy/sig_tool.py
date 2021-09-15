@@ -51,35 +51,38 @@ def resample(
     if not method in ["decimate", "poly"]:
         raise ValueError(f"method {method} not found, use 'poly\ or 'decimate' instead")
 
-    if method == "poly" and fs_up is None:
+    if fs_up is None:
         fs_up = fs
 
     # check the down and up sampling factor are integers
-    if not fs % fs_down != 0:
+    if not fs % fs_down == 0:
         raise ValueError(
             "Downsampling frequency should be a multiple of the original sampling rate"
         )
 
-    if not fs % fs_up != 0:
+    if not fs % fs_up == 0:
         raise ValueError(
             "Upsampling frequency should be a multiple of the original sampling rate"
         )
 
     if method == "poly":
         q_up = fs_up // fs
-        q_down = fs_down // fs
-        [sig_d] = resample_poly(sig, q_up, q_down, axis=axis, padtype="line")
+        q_down = fs // fs_down
+        sig_d = resample_poly(sig, q_up, q_down, axis=axis, padtype="line")
 
     elif method == "decimate":
-        q = fs_down // fs
+        q = fs // fs_down
         # when decimating the downsampling factor should not be bigger than 13
         # otherwise the decimation should be done in steps
         if q > 12:
             q = _limit_q(q, max_mult=12)
 
-        sig_d = sig
-        for down_factor in q:
-            [sig_d] = _decimate(sig_d, down_factor, axis=axis)
+        if isinstance(q, list):
+            sig_d = sig
+            for down_factor in q:
+                sig_d = _decimate(sig_d, down_factor, axis=axis)
+        else:
+            sig_d = _decimate(sig, q, axis=axis)
 
     return sig_d
 
