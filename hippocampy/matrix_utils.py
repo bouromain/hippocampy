@@ -323,6 +323,11 @@ def mean_continuous_val(
 ) -> np.array:
     """
     mean_continuous_val [summary]
+    This is a bad name I should rename it.
+
+    It will mean value in vector vals that are have identical and 
+    consecutive index in vector idx. This is usefull for resampling
+    according to the 2p frame index for example
 
     Parameters
     ----------
