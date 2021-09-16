@@ -1,0 +1,27 @@
+name: hippocampy
+
+dependencies:
+  - python>=3.8,<3.9
+  - pip
+  - mkl
+  - tbb
+  - numpy
+  - numba
+  - matplotlib
+  - scikit-learn
+  - h5py=2.10.0
+  -pip:
+    -scipy
+    -astropy
+    -scikit-image
+    -bottleneck
+    -suite2p @ git+ssh://git@github.com/MouseLand/suite2p
+    -scanimage-tiff-reader
+    -mat73
+    -sklearn
+    -tdqm
+    -pytest
+    -cython
+    -pandas
+    -oasis @ git+ssh://git@github.com/j-friedrich/OASIS
+    -PyWavelets
