@@ -215,10 +215,68 @@ def zscore(matrix, axis=1):
 
 
 #%% OTHER
+def label_continuous_1d(v) -> np.array:
+    """
+    label_continuous_1d 
+    label continuous values in either a bolean or int/float vector
+
+
+    Parameters
+    ----------
+    v : [bool, int, float]
+        input vector
+
+    Returns
+    -------
+    np.array
+        labeled vector
+
+    Raises
+    ------
+    ValueError
+        If the vector is not 1d
+    
+    Reference
+    ---------
+    https://github.com/ml31415/numpy-groupies/blob/master/numpy_groupies/utils_numpy.py
+
+
+    Example
+    -------
+    for bool inputs
+    >>> label_1d(np.array([1,1,1,0,0,0,1,0,0,1],dtype=bool))
+    >>> array([1, 1, 1, 0, 0, 0, 2, 0, 0, 3])
+
+    or for other types 
+    >>> label_1d(np.array([1,1,1,2,2,3,4,5,5,6]))
+    >>> array([1, 1, 1, 2, 2, 3, 4, 5, 5, 6])
+
+    """
+
+    if v.ndim != 1:
+        raise ValueError("Input should be 1 dimensional")
+
+    # initialize output vector
+    st = np.empty_like(v, dtype=bool)
+    st[0] = v[0]
+
+    if v.dtype.kind == "b":
+        st[1:] = ~v[:-1] & v[1:]
+        C = np.cumsum(st)
+        C[~v] = False
+        return C
+    else:
+        mask = v.astype(bool)
+        st[1:] = v[:-1] != v[1:]
+        st[~mask] = False
+        C = np.cumsum(st)
+        C[~mask] = 0
+        return C
+
+
 def label(M):
     """
-    Just a wrapper to scipy.mesure.label . This function is an equivalent to
-    bwlabel in matlab.
+    label input vector or matrix
 
     Parameters
     ----------
@@ -229,11 +287,14 @@ def label(M):
     ------
     np.array of labeled data
     """
-    # the following line ensure we feed a boolean data to the label
-    # function. Its helps with
-    M_new = np.array(M, dtype=bool)
 
-    return measure.label(M_new)
+    if M.ndim == 1:
+        return label_continuous_1d(M)
+    else:
+        # the following line ensure we feed a boolean data to the label
+        # function. Its helps with
+        M_new = np.array(M, dtype=bool)
+        return measure.label(M_new)
 
 
 def remove_small_objects(M, min_sz=3):
@@ -252,9 +313,67 @@ def remove_small_objects(M, min_sz=3):
     np.array only with connected components bigger than min_sz
 
     """
-    M_l = label(M)
+    M_l = label(M.astype(bool))
     M_l = morphology.remove_small_objects(M_l, min_size=min_sz)
     return np.array(M_l, dtype=bool)
+
+
+def mean_continuous_val(
+    idx, vals, fillvalue=np.nan, dtype=np.dtype(np.float64)
+) -> np.array:
+    """
+    mean_continuous_val [summary]
+
+    Parameters
+    ----------
+    idx : [type]
+        index vector, 
+    vals : [type]
+        [description]
+    fillvalue : [type], optional
+        [description], by default np.nan
+    dtype : [type], optional
+        [description], by default None
+
+    Returns
+    -------
+    np.array
+        [description]
+
+    Raises
+    ------
+    ValueError
+        [description]
+    ValueError
+        [description]
+    
+    Reference
+    ---------
+    https://gist.github.com/d1manson/5f78561c0f52d3073fe8
+    """
+
+    if idx.ndim == 0 or vals.ndim == 0:
+        raise ValueError("Inputs should not be scalar")
+    if idx.ndim > 1 or vals.ndim > 1:
+        raise ValueError("Inputs should be have only one dimension")
+    if len(idx) != len(vals):
+        raise ValueError("Inputs should have the same length")
+
+    # to rectify non-zero based indexes
+    m = bn.nanmin(idx)
+    if m != 0:
+        idx = idx - m
+
+    minlen = len(np.unique(idx))
+    count_idx = np.bincount(idx, minlength=minlen)
+    sum_vals = np.bincount(idx, weights=vals, minlength=minlen)
+
+    with np.errstate(divide="ignore"):
+        ret = sum_vals.astype(dtype) / count_idx
+
+    if not np.isnan(fillvalue):
+        ret[count_idx == 0] = fillvalue
+    return ret
 
 
 def moving_win(a, length, overlap=0, axis=None, end="cut", endvalue=0):
