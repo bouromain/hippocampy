@@ -33,6 +33,56 @@ def get_tiff_metadata(file_path: str):
     return out
 
 
+def get_tiff_fs(file_path: str) -> int:
+    """
+    get_tiff_fs deduce tiff sampling rate from the second 
+    frame metadata. It seem to be faster than searching the
+    file metadata on some big files
+
+    Parameters
+    ----------
+    file_path : str
+        path of the file to process
+
+    Returns
+    -------
+    int
+        sampling frequency
+    """
+
+    # to avoid some bugs
+    file_path = os.path.expanduser(file_path)
+    if not os.path.exists(file_path):
+        raise FileNotFoundError
+
+    with ScanImageTiffReader(file_path) as reader:
+        # deduce the frame rate from the second frame only
+        s = reader.description(1)
+        s = s.split("frameTimestamps_sec =")[1]
+        s = s.split("acqTriggerTimestamps_sec")[0]
+
+        return round(1 / float(s.strip()))
+
+
+def get_tiff_aspect_ratio(file_path: str) -> float:
+    """
+    get_tiff_aspect_ratio,
+
+    Parameters
+    ----------
+    file_path : str
+        path of the file to process
+
+    Returns
+    -------
+    aspect_ratio:
+        aspact ratio
+    """
+    _, y, x = get_tiff_shape(file_path)
+
+    return x / y
+
+
 def get_tiff_shape(file_path: str):
     """
     Open tiff and return its shape
