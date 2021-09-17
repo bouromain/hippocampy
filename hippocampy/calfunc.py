@@ -42,10 +42,10 @@ def subtract_neuropil(Froi, Fneu, method="fixed", downsample_ratio=10):
     if Froi.shape[1] < Froi.shape[0] or Fneu.shape[1] < Fneu.shape[0]:
         raise SyntaxError("Data should be given as [cells, samples]")
 
-    if method is "fixed":
+    if method == "fixed":
         F = Froi - (0.7 * Fneu)
 
-    elif method is "robust":
+    elif method == "robust":
         # Robustly fit linear model with RANSAC algorithm
         ransac = RANSACRegressor()
         c = np.empty(Froi.shape[0])

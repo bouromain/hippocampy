@@ -38,10 +38,10 @@ def ccg(
 
     C = ccg_heart(spikes1, spikes2, binsize=binsize, max_lag=max_lag)
 
-    if normalization is "conditional":
+    if normalization == "conditional":
         sz1 = len(spikes1)
         C = C / sz1
-    elif normalization is "probability":
+    elif normalization == "probability":
         C = C / bn.nansum(C)
 
     return C
