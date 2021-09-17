@@ -360,10 +360,10 @@ def mean_at(idx, vals, fillvalue=np.nan, dtype=np.dtype(np.float64)) -> np.array
     if len(idx) != len(vals):
         raise ValueError("Inputs should have the same length")
 
-    # # to rectify non-zero based indexes
-    # m = bn.nanmin(idx)
-    # if m != 0:
-    #     idx = idx - m
+    # to rectify non-zero based indexes
+    m = bn.nanmin(idx)
+    if m != 0:
+        idx = idx - m
 
     minlen = len(np.unique(idx))
     count_idx = np.bincount(idx, minlength=minlen)

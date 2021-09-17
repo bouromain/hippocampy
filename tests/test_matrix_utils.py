@@ -1,6 +1,5 @@
 #%% Import
 from hippocampy import matrix_utils
-import pytest
 import unittest
 import numpy as np
 
@@ -51,4 +50,4 @@ class TestMeanAt(unittest.TestCase):
         i1 = np.array([1, 1, 2, 3, 3, 3, 4, 5, 5])
         v1 = np.array([1, 1, 0.5, 3, 6, 3, 1, 5, 50])
         out = matrix_utils.mean_at(i1, v1)
-        assert all(out == np.array([1.0, 0.5, 4.0, 1.0, 27.5]))
+        assert np.array_equal(out, np.array([1.0, 0.5, 4.0, 1.0, 27.5]))
