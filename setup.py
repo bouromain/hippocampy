@@ -15,7 +15,7 @@ setup(
         "astropy",
         "scikit-image",
         "bottleneck",
-        "suite2p @ git+ssh://git@github.com/MouseLand/suite2p",
+        "suite2p",
         "scanimage-tiff-reader",
         "h5py",
         "mat73",
@@ -25,7 +25,7 @@ setup(
         "numba",
         "cython",
         "pandas",
-        "oasis @ git+ssh://git@github.com/j-friedrich/OASIS",
+        "oasis",
         "PyWavelets",
     ],
 )
