@@ -46,9 +46,9 @@ class TestRemoveSmallObject(unittest.TestCase):
         assert all(out == np.array([False, False, True, True, False, False]))
 
 
-class TestMeanContinuousVal(unittest.TestCase):
-    def test_mean_continuous_val(self):
+class TestMeanAt(unittest.TestCase):
+    def test_mean_at(self):
         i1 = np.array([1, 1, 2, 3, 3, 3, 4, 5, 5])
         v1 = np.array([1, 1, 0.5, 3, 6, 3, 1, 5, 50])
-        out = matrix_utils.mean_continuous_val(i1, v1)
+        out = matrix_utils.mean_at(i1, v1)
         assert all(out == np.array([1.0, 0.5, 4.0, 1.0, 27.5]))
