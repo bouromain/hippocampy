@@ -10,18 +10,18 @@ dependencies:
   - matplotlib
   - scikit-learn
   - h5py=2.10.0
-  -pip:
-    -scipy
-    -astropy
-    -scikit-image
-    -bottleneck
-    -git+ssh://git@github.com/MouseLand/suite2p
-    -scanimage-tiff-reader
-    -mat73
-    -sklearn
-    -tdqm
-    -pytest
-    -cython
-    -pandas
-    -git+ssh://git@github.com/j-friedrich/OASIS
-    -PyWavelets
+  - cython
+  - pip:
+    - scipy
+    - astropy
+    - scikit-image
+    - bottleneck
+    - git+ssh://git@github.com/MouseLand/suite2p
+    - scanimage-tiff-reader
+    - mat73
+    - sklearn
+    - tdqm
+    - pytest
+    - pandas
+    - git+ssh://git@github.com/j-friedrich/OASIS
+    - PyWavelets
