@@ -318,15 +318,11 @@ def remove_small_objects(M, min_sz=3):
     return np.array(M_l, dtype=bool)
 
 
-def mean_continuous_val(
-    idx, vals, fillvalue=np.nan, dtype=np.dtype(np.float64)
-) -> np.array:
+def mean_at(idx, vals, fillvalue=np.nan, dtype=np.dtype(np.float64)) -> np.array:
     """
-    mean_continuous_val [summary]
-    This is a bad name I should rename it.
-
-    It will mean value in vector vals that are have identical and 
-    consecutive index in vector idx. This is usefull for resampling
+    mean_at [summary]
+    It will mean value in vector vals at
+    index in vector idx. This is usefull for resampling
     according to the 2p frame index for example
 
     Parameters
@@ -364,10 +360,10 @@ def mean_continuous_val(
     if len(idx) != len(vals):
         raise ValueError("Inputs should have the same length")
 
-    # to rectify non-zero based indexes
-    m = bn.nanmin(idx)
-    if m != 0:
-        idx = idx - m
+    # # to rectify non-zero based indexes
+    # m = bn.nanmin(idx)
+    # if m != 0:
+    #     idx = idx - m
 
     minlen = len(np.unique(idx))
     count_idx = np.bincount(idx, minlength=minlen)
