@@ -16,12 +16,12 @@ dependencies:
     - astropy
     - scikit-image
     - bottleneck
-    - git+git://git@github.com/MouseLand/suite2p
+    - git+https://github.com/MouseLand/suite2p.git
     - scanimage-tiff-reader
     - mat73
     - sklearn
     - tdqm
     - pytest
     - pandas
-    - git+git://git@github.com/j-friedrich/OASIS
+    - git+https://github.com/j-friedrich/OASIS
     - PyWavelets
