@@ -46,8 +46,25 @@ class TestRemoveSmallObject(unittest.TestCase):
 
 
 class TestMeanAt(unittest.TestCase):
-    def test_mean_at(self):
+    def test_mean_at_non_zero(self):
+        # test for non zero indexing
         i1 = np.array([1, 1, 2, 3, 3, 3, 4, 5, 5])
         v1 = np.array([1, 1, 0.5, 3, 6, 3, 1, 5, 50])
         out = matrix_utils.mean_at(i1, v1)
-        assert np.array_equal(out, np.array([1.0, 0.5, 4.0, 1.0, 27.5]))
+        assert (
+            np.testing.assert_equal(out, np.array([np.nan, 1.0, 0.5, 4.0, 1.0, 27.5]))
+            == None
+        )
+
+    def test_mean_at_missing_index(self):
+        # test for non zero indexing
+        i1 = np.array([1, 1, 2, 3, 3, 3, 4, 8, 8])
+        v1 = np.array([1, 1, 0.5, 3, 6, 3, 1, 5, 50])
+        out = matrix_utils.mean_at(i1, v1)
+        assert (
+            np.testing.assert_equal(
+                out,
+                np.array([np.nan, 1.0, 0.5, 4.0, 1.0, np.nan, np.nan, np.nan, 27.5]),
+            )
+            == None
+        )
