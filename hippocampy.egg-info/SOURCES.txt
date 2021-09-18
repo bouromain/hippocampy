@@ -5,9 +5,8 @@ hippocampy/assemblies.py
 hippocampy/calfunc.py
 hippocampy/ccg.py
 hippocampy/matrix_utils.py
-hippocampy/signal.py
+hippocampy/sig_tool.py
 hippocampy/spectral.py
-hippocampy/utils.py
 hippocampy/wavelet.py
 hippocampy.egg-info/PKG-INFO
 hippocampy.egg-info/SOURCES.txt

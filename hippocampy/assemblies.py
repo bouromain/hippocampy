@@ -20,7 +20,6 @@ https://github.com/losonczylab/Sparks_Liao_NatComms2020
 import bottleneck as bn
 import numpy as np
 from sklearn.decomposition import FastICA
-
 from hippocampy.matrix_utils import corr_mat, smooth1D, zscore
 
 

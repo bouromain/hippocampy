@@ -1,4 +1,3 @@
-from . import utils
 from . import sig_tool
 from . import matrix_utils
 from . import calfunc
@@ -8,6 +7,7 @@ from . import model
 from . import ccg
 from . import spectral
 from . import wavelet
+from . import utils
 
 # DataTypes
 from .core._interval import Iv

@@ -1,6 +1,6 @@
 from scipy.io import loadmat as loadmat_old
 from mat73 import loadmat as loadmat73
-
+from hippocampy.utils.type_utils import is_number
 
 def loadmat(path_file, squeeze_me=True, use_attrdict=True, verbose=False):
     """
@@ -76,7 +76,7 @@ def matlab_string2dict(in_string: str):
 
     Converted output:
 
-    out['extTrigEnable'] = 1.0
+    out['SI']['extTrigEnable'] = 1.0
     out['SI']['hBeams']['beamCalibratedStatus'] = False
 
     """
@@ -95,7 +95,7 @@ def matlab_string2dict(in_string: str):
             seq = [s.strip() for s in seq]
 
             # convert value if needed
-            if _is_number(tail):
+            if is_number(tail):
                 tail = float(tail)
                 if tail.is_integer():
                     tail = int(tail)
@@ -109,11 +109,3 @@ def matlab_string2dict(in_string: str):
             _setval(out, seq, tail)
 
     return out
-
-
-def _is_number(s: str):
-    try:
-        float(s)
-        return True
-    except ValueError:
-        return False
