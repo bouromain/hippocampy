@@ -11,7 +11,6 @@ def load_nwb_oe(fpath, verbose=False):
     fpath: str
         - path of the file to open 
 
-
     Return
     ------
     data: array_like

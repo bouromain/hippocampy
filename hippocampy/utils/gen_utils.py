@@ -177,4 +177,3 @@ def calc_dt(t):
     """
     return bn.nanmedian(np.diff(t))
 
-

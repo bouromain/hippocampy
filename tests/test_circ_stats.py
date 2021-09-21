@@ -1,5 +1,4 @@
 from hippocampy.stats import circular
-import pytest
 import unittest
 import numpy as np
 from numpy import pi

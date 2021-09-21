@@ -1,7 +1,7 @@
 import numpy as np
-from scipy.signal import spectrogram as sp_spectrogram
-from scipy.fftpack import next_fast_len
 import pywt
+from scipy.fftpack import next_fast_len
+from scipy.signal import spectrogram as sp_spectrogram
 
 # import ghostipy as gsp
 # alternatively see ghostipy for mtspectrogram, cwt and synchrosqueezed

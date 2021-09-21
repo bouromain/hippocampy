@@ -4,7 +4,7 @@ from . import calfunc
 from . import ccg
 from . import spectral
 from . import wavelet
-
+from . import binning
 from . import stats
 from . import model
 from . import io
