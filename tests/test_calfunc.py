@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from hippocampy.matrix_utils import remove_small_objects, first_true
 import bottleneck as bn
 
+
 # p = "/mnt/data_pool/DataToShare/DataDori/Data2Process/m4540/20210708/plane0"
 # axis = 1
 # min_length = 5
