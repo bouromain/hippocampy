@@ -204,9 +204,7 @@ def swt_denoise(data, *, wavelet_name="sym4", level=5, axis=-1):
     threshold = np.sqrt(n1 / d1 * n2)
     threshold = np.ones((len(threshold), n_sig)) * threshold[:, None]
 
-    coeffs_f = hp.wavelet._thresh_coeff(
-        coeffs, threshold, threshold_type="soft", axis=axis
-    )
+    coeffs_f = _thresh_coeff(coeffs, threshold, threshold_type="soft", axis=axis)
 
     # reconstruct the signal
     data_rec = np.empty_like(data)

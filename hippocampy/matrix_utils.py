@@ -215,7 +215,7 @@ def zscore(matrix, axis=1):
 
 
 #%% OTHER
-def label_continuous_1d(v) -> np.array:
+def label(v, axis=-1) -> np.array:
     """
     label_continuous_1d 
     label continuous values in either a bolean or int/float vector
@@ -225,6 +225,8 @@ def label_continuous_1d(v) -> np.array:
     ----------
     v : [bool, int, float]
         input vector
+    axis: [int]
+        axis to compute the labeling
 
     Returns
     -------
@@ -244,37 +246,52 @@ def label_continuous_1d(v) -> np.array:
     Example
     -------
     for bool inputs
-    >>> label_1d(np.array([1,1,1,0,0,0,1,0,0,1],dtype=bool))
+    >>> label(np.array([1,1,1,0,0,0,1,0,0,1],dtype=bool))
     >>> array([1, 1, 1, 0, 0, 0, 2, 0, 0, 3])
 
     or for other types 
-    >>> label_1d(np.array([1,1,1,2,2,3,4,5,5,6]))
+    >>> label(np.array([1,1,1,2,2,3,4,5,5,6]))
     >>> array([1, 1, 1, 2, 2, 3, 4, 5, 5, 6])
 
     """
+    v = np.array(v, ndmin=2)
 
-    if v.ndim != 1:
-        raise ValueError("Input should be 1 dimensional")
+    if not 1 <= v.ndim <= 2:
+        raise ValueError("Input should not be scalar")
 
     # initialize output vector
     st = np.empty_like(v, dtype=bool)
-    st[0] = v[0]
 
-    if v.dtype.kind == "b":
-        st[1:] = ~v[:-1] & v[1:]
-        C = np.cumsum(st)
-        C[~v] = False
-        return C
-    else:
-        mask = v.astype(bool)
-        st[1:] = v[:-1] != v[1:]
-        st[~mask] = False
-        C = np.cumsum(st)
-        C[~mask] = 0
-        return C
+    if axis == 1 or axis == -1:
+        st[:, 0] = v[:, 0]
+
+        if v.dtype.kind == "b":
+            st[:, 1:] = ~v[:, :-1] & v[:, 1:]
+            C = np.cumsum(st, axis=axis, dtype=np.int64)
+            C[~v] = False
+        else:
+            mask = v.astype(bool)
+            st[:, 1:] = v[:, :-1] != v[:, 1:]
+            st[~mask] = False
+            C = np.cumsum(st, axis=axis, dtype=np.int64)
+            C[~mask] = 0
+    elif axis == 0:
+        st[0, :] = v[0, :]
+
+        if v.dtype.kind == "b":
+            st[1:, :] = ~v[:-1, :] & v[1:, :]
+            C = np.cumsum(st, axis=axis, dtype=np.int64)
+            C[~v] = False
+        else:
+            mask = v.astype(bool)
+            st[1:, :] = v[:-1, :] != v[1:, :]
+            st[~mask] = False
+            C = np.cumsum(st, axis=axis, dtype=np.int64)
+            C[~mask] = 0
+    return np.squeeze(C)
 
 
-def label(M):
+def label2D(M):
     """
     label input vector or matrix
 
@@ -287,14 +304,44 @@ def label(M):
     ------
     np.array of labeled data
     """
+    # the following line ensure we feed a boolean data to the label
+    # function. Its helps with
+    M_new = np.array(M, dtype=bool)
+    return measure.label(M_new)
 
-    if M.ndim == 1:
-        return label_continuous_1d(M)
-    else:
-        # the following line ensure we feed a boolean data to the label
-        # function. Its helps with
-        M_new = np.array(M, dtype=bool)
-        return measure.label(M_new)
+
+def first_true(v: np.ndarray, axis=-1):
+    """
+    first_true Return first true value of contiguous sequence of True
+    per row or colum
+
+    Example:
+    first_true([0,0,1,1,0,1,1,1])
+    array([[False,  True, False, False,  True, False, False]])
+
+    Parameters
+    ----------
+    v : np.ndarray
+        [description]
+    axis : int, optional
+        [description], by default -1
+
+    Returns
+    -------
+    [type]
+        [description]
+    """
+    v = np.array(v, ndmin=2)
+    v = v.astype(bool)
+
+    st = np.empty_like(v, dtype=bool)
+    if axis == 1 or axis == -1:
+        st[:, 0] = v[:, 0]
+        st[:, 1:] = ~v[:, :-1] & v[:, 1:]
+    elif axis == 0:
+        st[0, :] = v[0, :]
+        st[1:, :] = ~v[:-1, :] & v[1:, :]
+    return st
 
 
 def remove_small_objects(M, min_sz=3):
@@ -490,6 +537,29 @@ def moving_win(a, length, overlap=0, axis=None, end="cut", endvalue=0):
 
 
 def rolling_quantile(data, window_len, quantile):
+    """
+    rolling_quantile Calculate a rolling quantile a a window of size window len
+
+    Note: For now, the pandas method seem convenient and fast. I'll try to use 
+    numpy slices to be faster and or cleaner
+
+    To Do:
+    this function should take an axis input
+
+    Parameters
+    ----------
+    data : [type]
+        [description]
+    window_len : [type]
+        [description]
+    quantile : [type]
+        [description]
+
+    Returns
+    -------
+    [type]
+        [description]
+    """
 
     out = np.empty_like(data)
     for i, x in tqdm.tqdm(enumerate(data), total=data.shape[0]):
@@ -581,3 +651,6 @@ def find_peaks(M, min_amplitude=None):
     peaks_idx = [np.squeeze(np.nonzero(valP)) for itP, valP in enumerate(peaks)]
 
     return peaks, peaks_idx
+
+
+# %%

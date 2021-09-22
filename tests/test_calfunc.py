@@ -1,63 +1,45 @@
-from hippocampy import wavelet
 import unittest
 import numpy as np
 import os
 from hippocampy.io.s2p import load_all_s2p
 import hippocampy as hp
 import matplotlib.pyplot as plt
-
-p = "/mnt/data_pool/DataToShare/DataDori/Data2Process/m4540/20210708/plane0"
-
-F, Fneu, spks, stat, ops, iscell = load_all_s2p(p)
-F_f = hp.calfunc.subtract_neuropil(F, Fneu)
-
-
-F_d = hp.wavelet.swt_denoise(F_f[:2, :10000], level=4)
-
-import pywt
+from hippocampy.matrix_utils import remove_small_objects, first_true
 import bottleneck as bn
 
-data = F_f[:20, :]
-wavelet_name = "sym4"
-level = 2
-axis = -1
+# p = "/mnt/data_pool/DataToShare/DataDori/Data2Process/m4540/20210708/plane0"
+# axis = 1
+# min_length = 5
+
+# F, Fneu, spks, stat, ops, iscell = load_all_s2p(p)
+# F_f = hp.calfunc.subtract_neuropil(F, Fneu)
+# F_d = hp.calfunc.detrend_F(F_f, 600)
+# F_d = hp.wavelet.wden(F_d, level=4)
 
 
-data = np.array(data, ndmin=2)
+# # define the threshold for candidate events
+# F_mean = bn.nanmean(F_d, axis=axis)
+# F_std = bn.nanstd(F_d, axis=axis)
+# T = F_mean + 2.5 * F_std
+# # Threshold the signal
+# F_b = F_d > T[:, None]
 
-if axis == 1 or axis == -1:
-    n_sample = data.shape[1]
-    n_sig = data.shape[0]
-elif axis == 0:
-    n_sample = data.shape[0]
-    n_sig = data.shape[1]
-else:
-    raise ValueError("Axis should be either [0,1,-1]")
+# # label the events
+# F_b = hp.matrix_utils.label(F_b, axis=1)
 
-coeffs = pywt.swt(data, wavelet_name, level=level, trim_approx=True, axis=axis)
+# F_t = first_true(F_t)
 
-s = np.array([np.sqrt(2) * bn.nanmedian(np.abs(c)) / 0.6745 for c in coeffs[1:]])
+# events = [np.nonzero(f)[0] for f in F_t]
 
-n1 = 2 * s ** 2
-d1 = 2 ** (np.arange(level) + 1)
-n2 = np.log(n_sample)
-
-# find threshold
-threshold = np.sqrt(n1 / d1 * n2)
-threshold = np.ones((len(threshold),n_sig)) * threshold[:,None]
-
-coeffs_f = hp.wavelet._thresh_coeff(coeffs,threshold,threshold_type="soft",axis=axis)
-
-# reconstruct the signal
-data_rec = np.empty_like(data)
-for it in np.range(n_sig):
-    if axis == 1 or axis == -1:
-        c = [tmp_c[it,:] for tmp_c in coeff_f]
-        data_rec[:,it] = pywt.iswt(c, wavelet_name)
-    elif axis = 0:
-        c = [tmp_c[:,it] for tmp_c in coeff_f]
-        data_rec[it,:] = pywt.iswt(c, wavelet_name)
+# plt.plot(F_d[0,:])
+# plt.plot(events[0],F_d[0,events[0]],'or')
+# plt.xlim([35000,37000])
+# plt.show()
 
 
-data_rec = pywt.iswtn(coeffs_f, wavelet_name,axes=axis)
+# import matplotlib.pyplot as plt
 
+# plt.plot(C[1, :10000])
+# plt.plot(F_d[1, :10000] * 0.0010)
+# plt.xlim([0, 10000])
+# plt.show()

@@ -3,7 +3,7 @@ import numpy as np
 import tqdm as tqdm
 from sklearn.linear_model import RANSACRegressor
 
-from hippocampy.matrix_utils import remove_small_objects, rolling_quantile, zscore
+from hippocampy.matrix_utils import remove_small_objects, rolling_quantile, first_true
 
 
 def subtract_neuropil(Froi, Fneu, *, method="fixed", downsample_ratio=10):
@@ -82,22 +82,52 @@ def transientSH(F, axis=1):
     F_std = bn.nanstd(F, axis=axis)
 
 
-def transientRoy(F, threshold=2.5, min_length=9):
+def transientRoy(
+    F: np.ndarray, threshold: float = 2.5, min_length: int = 5, axis: int = -1
+) -> list:
     """
+    transientRoy 
     find transient as in Roy 2017
     Ca 2+ events were detected by applying a threshold (greater than 2 standard
     deviations from the dF/F signal) at the local maxima of the dF/F signal.
     Since we employed GCaMP6f, our analysis used a threshold of > = 5 frames (250 ms)
+
+
+    Parameters
+    ----------
+    F : np.ndarray (n_cells, n_samples) or (n_samples,n_cells)
+        Fluorescence matrix
+    threshold : float, optional
+        number of std above the mean to use as a threshold, by default 2.5
+    min_length : int, optional
+        minimum of frame (samples) that the event needs to last to be kept, by default 5
+    axis : int, optional
+        axis to perform the detection across, by default -1
+
+    Returns
+    -------
+    list
+        List containing the indexes of the detected events per cells
     """
 
-    # Zscore traces
-    F_z = zscore(F, axis=1)
+    # define the threshold for candidate events
+    F_mean = bn.nanmean(F, axis=axis)
+    F_std = bn.nanstd(F, axis=axis)
+    T = F_mean + threshold * F_std
 
-    # threshold trace above 2.5 std
-    F_t = F_z > threshold
+    # Threshold the signal
+    F_b = F > T[:, None]
+
     # remove transients that are shorter than a given threshold
-    F_t = np.apply_along_axis(remove_small_objects, axis=1, arr=F_t, min_sz=min_length)
-    return F_t
+    F_t = np.apply_along_axis(
+        remove_small_objects, axis=axis, arr=F_b, min_sz=min_length
+    )
+
+    F_t = first_true(F_t)
+    if axis == 1 or axis == -1:
+        return [np.nonzero(f)[0] for f in F_t]
+    elif axis == 0:
+        return [np.nonzero(f)[0] for f in F_t.T]
 
 
 def detrend_F(F, win_size, quantile=0.08):

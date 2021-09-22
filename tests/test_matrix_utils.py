@@ -45,6 +45,19 @@ class TestRemoveSmallObject(unittest.TestCase):
         assert all(out == np.array([False, False, True, True, False, False]))
 
 
+class TestFirstTrue(unittest.TestCase):
+    def test_first_true_row(self):
+        a = matrix_utils.first_true([0, 0, 1, 1, 0, 1, 1, 1])
+        res = np.array([[False, False, True, False, False, True, False, False]])
+        assert (a == res).all()
+
+    def test_first_true_col(self):
+        v = np.array([0, 0, 1, 1, 0, 1, 1, 1], ndmin=2).T
+        a = matrix_utils.first_true(v, axis=0)
+        res = np.array([[False, False, True, False, False, True, False, False]])
+        assert (a.T == res).all()
+
+
 class TestMeanAt(unittest.TestCase):
     def test_mean_at_non_zero(self):
         # test for non zero indexing

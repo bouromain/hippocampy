@@ -20,8 +20,6 @@
 #       comparison of local features," 2008 19th International Conference on Pattern
 #       Recognition, Tampa, FL, 2008, pp. 1-4, doi: 10.1109/ICPR.2008.4761372.
 #       http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.214.4116&rep=rep1&type=pdf
-#
-# Author: R Bourboulou 2020-21
 
 import numpy as np
 import bottleneck as bn

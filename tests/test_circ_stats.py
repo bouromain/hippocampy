@@ -29,3 +29,18 @@ class TestHelper(unittest.TestCase):
         r, p = circular.corr_cc(x, y)
         self.assertAlmostEqual(r, 0.942, places=3)
         self.assertAlmostEqual(p, 0.0658, places=3)
+
+    def test_circ_cl(self):
+        # fmt: off
+        x = np.asarray([107, 46, 33, 67, 122, 69, 43, 30, 12, 25, 37,\
+        69, 5, 83, 68, 38, 21, 1, 71, 60, 71, 71, 57, 53, 38, 70, 7, 48, 7, 21, 27])
+        phi = np.asarray([67, 66, 74, 61, 58, 60, 100, 89, 171, 166, 98,\
+            60, 197, 98, 86, 123, 165, 133, 101, 105, 71, 84, 75, 98, 83, 71, 74, 91, 38, 200, 56])
+        # fmt: on
+        phi = np.deg2rad(phi)
+
+        rho, slope, phi0, p_c = circular.lin_circ_regress(x, phi)
+        self.assertAlmostEqual(rho, -0.499, places=3)
+        self.assertAlmostEqual(slope, -0.012, places=3)
+        self.assertAlmostEqual(phi0, 2.28, places=2)
+        self.assertAlmostEqual(p_c, 0.018, places=2)
