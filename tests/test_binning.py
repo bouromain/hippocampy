@@ -1,4 +1,3 @@
-from datetime import time
 from hippocampy import binning
 import unittest
 import numpy as np
@@ -130,37 +129,3 @@ class TestBinning(unittest.TestCase):
         assert np.testing.assert_equal(occ, good_occ.T) == None
         assert np.testing.assert_equal(act, good_act.T) == None
         assert np.testing.assert_equal(rate, good_rate.T) == None
-
-
-# from hippocampy import binning
-# import unittest
-# import numpy as np
-
-# x = np.array(
-#     [
-#         [0, 1, 2, 3, 4, 5, 6, 7, 8, 9,],
-#         [0, 1, 2, 3, 4, 5, 6, 7, 8, 9,],
-#         [0, 1, 2, 3, 4, 5, 6, 7, 8, 9,],
-#     ]
-# )
-
-# lap = np.array(
-#     [
-#         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-#         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-#         [2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
-#     ]
-# )
-
-# cond = np.array(
-#     [
-#         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-#         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-#         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-#     ]
-# )
-
-# X = np.vstack((x.ravel(), lap.ravel(), cond.ravel()))
-# spk = np.array([2, 2, 12, 13, 16])
-# bins = (np.arange(0, 11), [0, 1, 2, 3], [0, 1, 2])
-# rate, act, occ = binning.rate_map(X.T, spk, bins=bins)

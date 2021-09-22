@@ -66,4 +66,3 @@ def rate_map(var: np.ndarray, samples: np.ndarray, *, bins=10, method="spk"):
         rate = act / occ
 
     return rate, act, occ
-

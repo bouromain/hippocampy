@@ -8,3 +8,4 @@ __pycache__/
 testpy.py
 *.eggs/
 *.egg-info/
+.coverage

@@ -170,9 +170,9 @@ def sim_assemblies(
     n_bins: int
         number of sample bins
     neuron_assembly list of list of int [[list1] , [list2],...]
-        definition of neurons in the differents assemblies.
+        definition of neurons in the different assemblies.
     n_act: list of int
-        number of reactivation per asselblies
+        number of reactivation per assemblies
     act_lambda: list of int/float
         value of the lambda during the reactivation, lambda is
         hardcoded to one outside of the reactivation

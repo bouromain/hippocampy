@@ -1,13 +1,12 @@
 import bottleneck as bn
 import numpy as np
 import tqdm as tqdm
-from scipy.stats import siegelslopes
 from sklearn.linear_model import RANSACRegressor
 
-from hippocampy.matrix_utils import remove_small_objects, zscore, rolling_quantile
+from hippocampy.matrix_utils import remove_small_objects, rolling_quantile, zscore
 
 
-def subtract_neuropil(Froi, Fneu, method="fixed", downsample_ratio=10):
+def subtract_neuropil(Froi, Fneu, *, method="fixed", downsample_ratio=10):
     """
     This function will perform neuropil substraction from a given fluorescence
     trace F = Froi - (c * Fneu). The constant c can be defined as a fixed value
@@ -37,6 +36,9 @@ def subtract_neuropil(Froi, Fneu, method="fixed", downsample_ratio=10):
     Froi = np.asarray(Froi)
     Fneu = np.asarray(Fneu)
 
+    if method not in ["fixed", "robust"]:
+        raise NotImplementedError("Method not implemented")
+
     # this reshape is particularly important for the robust method but I put it
     # here for homogeneity
     if Froi.shape[1] < Froi.shape[0] or Fneu.shape[1] < Fneu.shape[0]:
@@ -64,8 +66,6 @@ def subtract_neuropil(Froi, Fneu, method="fixed", downsample_ratio=10):
 
         # Calculate F
         F = Froi - c[:, None] * Fneu
-    else:
-        raise NotImplementedError("Method not implemented")
 
     return F
 
@@ -127,20 +127,3 @@ def detrend_F(F, win_size, quantile=0.08):
     """
     Q = rolling_quantile(F, win_size, quantile)
     return F - Q
-
-
-# p = "/home/bouromain/Documents/tmpData/m4550/20210720/1/suite2p/plane0/"
-# from hippocampy.io.s2p import loadAllS2p
-# import pandas as pd
-
-# F, Fneu, spks, stat, ops, iscell = loadAllS2p(p)
-# dF = subtract_neuropil(F, Fneu, method="fixed", downsample_ratio=10)
-
-
-# a = detrend_F(dF[0:50, :], 15 * 60, 0.08)
-
-# import matplotlib.pyplot as plt
-
-# plt.plot(dF[0, :])
-# plt.plot(a[0, :])
-# plt.xlim()

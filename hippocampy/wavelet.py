@@ -85,7 +85,7 @@ def _calc_sigma(coeffs, scaling, axis):
     return sigma
 
 
-def wden2(
+def wden(
     data,
     *,
     wavelet_name="sym5",
@@ -171,7 +171,7 @@ def wden2(
     return data_rec
 
 
-def swt_denoise(data, *, wavelet_name="sym5", level=None):
+def swt_denoise(data, *, wavelet_name="sym4", level=5, axis=-1):
     """
     swt_denoise is made to mach matlab option 'modwtsqtwolog' in wden.
     Note that modwt is a synonym of stationay wavelet transform [1]
@@ -180,13 +180,21 @@ def swt_denoise(data, *, wavelet_name="sym5", level=None):
     ---------
     [1] https://en.wikipedia.org/wiki/Stationary_wavelet_transform#Synonyms
     """
+
+    if axis == 1 or axis == -1:
+        n_sample = data.shape[1]
+        n_sig = data.shape[0]
+    elif axis == 0:
+        n_sample = data.shape[0]
+        n_sig = data.shape[1]
+    else:
+        raise ValueError("Axis should be either [0,1,-1]")
+
     data = np.array(data, ndmin=2)
     n_sample = data.shape[-1]
+    coeffs = pywt.swt(data, wavelet_name, level=level, trim_approx=True, axis=axis)
 
-    coeffs = pywt.swt(data, wavelet_name, level=level, trim_approx=True)
-
-    s = [np.sqrt(2) * bn.nanmedian(np.abs(c)) / 0.6745 for c in coeffs[1:]]
-    s = np.array(s)
+    s = np.array([np.sqrt(2) * bn.nanmedian(np.abs(c)) / 0.6745 for c in coeffs[1:]])
 
     n1 = 2 * s ** 2
     d1 = 2 ** (np.arange(level) + 1)
@@ -194,12 +202,20 @@ def swt_denoise(data, *, wavelet_name="sym5", level=None):
 
     # find threshold
     threshold = np.sqrt(n1 / d1 * n2)
+    threshold = np.ones((len(threshold), n_sig)) * threshold[:, None]
 
-    # threshold coefficients
-    coeffs_f = coeffs
-    for i, (cD, T) in enumerate(zip(coeffs, threshold)):
-        coeffs_f[i + 1] = pywt.threshold(cD, T, mode="soft", substitute=0)
+    coeffs_f = hp.wavelet._thresh_coeff(
+        coeffs, threshold, threshold_type="soft", axis=axis
+    )
+
     # reconstruct the signal
-    data_rec = pywt.iswt(coeffs_f, wavelet_name)
+    data_rec = np.empty_like(data)
+    for it in np.arange(n_sig):
+        if axis == 1 or axis == -1:
+            c = [tmp_c[it, :] for tmp_c in coeffs_f]
+            data_rec[it, :] = pywt.iswt(c, wavelet_name)
+        elif axis == 0:
+            c = [tmp_c[:, it] for tmp_c in coeffs_f]
+            data_rec[:, it] = pywt.iswt(c, wavelet_name)
 
     return data_rec
