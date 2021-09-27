@@ -424,35 +424,63 @@ def mean_at(idx, vals, fillvalue=np.nan, dtype=np.dtype(np.float64)) -> np.array
     return ret
 
 
-def moving_win(a, length, overlap=0, axis=None, end="cut", endvalue=0):
-    """Generate a new array that chops the given array along the given axis into overlapping frames.
+def moving_win(
+    a: np.ndarray,
+    win_length: int,
+    overlap: int = 0,
+    axis: int = None,
+    padding: str = "cut",
+    endvalue: float = 0,
+) -> np.ndarray:
+    """
+    moving_win Generate a view of the input array (or a copy if needed) withe the 
+    specified window length and overlap.
+    It is particularly useful to perform some rolling window like operation.
 
-    example:
-    >>> segment_axis(arange(10), 4, 2)
+    However it worth checking other types of function that are more optimized such
+    as moving window function of bottleneck (mean, std, median,...) or pandas/dask 
+    dataframe.rolling functions
+
+    Parameters
+    ----------
+    a : np.ndarray
+        [description]
+    win_length : int
+        [description]
+    overlap : int, optional
+        [description], by default 0
+    axis : int, optional
+        [description], by default None
+    padding : str, optional
+        [description], by default "cut"
+    endvalue : float, optional
+        [description], by default 0
+
+    Returns
+    -------
+    np.ndarray
+        [description]
+
+    Raises
+    ------
+    ValueError
+        [description]
+    ValueError
+        [description]
+    ValueError
+        [description]
+    ValueError
+        [description]
+    Example
+    -------
+    >>> moving_win(arange(10), 4, 2)
     array([[0, 1, 2, 3],
            [2, 3, 4, 5],
            [4, 5, 6, 7],
            [6, 7, 8, 9]])
 
-    arguments:
-    a       The array to segment
-    length  The length of each frame
-    overlap The number of array elements by which the frames should overlap
-    axis    The axis to operate on; if None, act on the flattened array
-    end     What to do with the last frame, if the array is not evenly
-            divisible into pieces. Options are:
-
-            'cut'   Simply discard the extra values
-            'wrap'  Copy values from the beginning of the array
-            'pad'   Pad with a constant value
-
-    endvalue    The value to use for end='pad'
-
-    The array is not copied unless necessary (either because it is
-    unevenly strided and being flattened or because end is set to
-    'pad' or 'wrap').
-
-    See:
+    Reference
+    ---------
     IPython Interactive Computing and Visualization Cookbook, Second Edition (2018), by Cyrille Rossant:
     https://ipython-books.github.io/46-using-stride-tricks-with-numpy/
 
@@ -461,75 +489,86 @@ def moving_win(a, length, overlap=0, axis=None, end="cut", endvalue=0):
     https://scipy-cookbook.readthedocs.io/items/SegmentAxis.html
     https://scipy-cookbook.readthedocs.io/_static/items/attachments/SegmentAxis/segmentaxis.py
 
-    Note:
-    We could implement symmetric padding
+    TODO
+    ----
+    make a symmetric padding
+    check if we could avoid the try, except by checking if the stride is correct 
+    before initializing the array
     """
 
+    if overlap >= win_length:
+        raise ValueError("frames cannot overlap by more than 100%")
+    if overlap < 0 or win_length <= 0:
+        raise ValueError("overlap must be nonnegative and length must be positive")
+    pad_methods = ["cut", "wrap", "pad"]
+    if padding not in pad_methods:
+        raise ValueError(f"Mehtod should be: {pad_methods}")
+
+    # if no axis are specified operate on a flattened version of the array
     if axis is None:
         a = np.ravel(a)  # may copy
         axis = 0
 
     l = a.shape[axis]
 
-    if overlap >= length:
-        raise ValueError("frames cannot overlap by more than 100%")
-    if overlap < 0 or length <= 0:
-        raise ValueError("overlap must be nonnegative and length must be positive")
-
-    if l < length or (l - length) % (length - overlap):
-        if l > length:
-            roundup = length + (1 + (l - length) // (length - overlap)) * (
-                length - overlap
+    if l < win_length or (l - win_length) % (win_length - overlap):
+        if l > win_length:
+            roundup = win_length + (1 + (l - win_length) // (win_length - overlap)) * (
+                win_length - overlap
             )
-            rounddown = length + ((l - length) // (length - overlap)) * (
-                length - overlap
+            rounddown = win_length + ((l - win_length) // (win_length - overlap)) * (
+                win_length - overlap
             )
         else:
-            roundup = length
+            roundup = win_length
             rounddown = 0
         assert rounddown < l < roundup
-        assert roundup == rounddown + (length - overlap) or (
-            roundup == length and rounddown == 0
+        assert roundup == rounddown + (win_length - overlap) or (
+            roundup == win_length and rounddown == 0
         )
         a = a.swapaxes(-1, axis)
 
-        if end == "cut":
+        if padding == "cut":
             a = a[..., :rounddown]
-        elif end in ["pad", "wrap"]:  # copying will be necessary
+        elif padding in ["pad", "wrap"]:  # copying will be necessary
             s = list(a.shape)
             s[-1] = roundup
             b = np.empty(s, dtype=a.dtype)
             b[..., :l] = a
-            if end == "pad":
+            if padding == "pad":
                 b[..., l:] = endvalue
-            elif end == "wrap":
+            elif padding == "wrap":
                 b[..., l:] = a[..., : roundup - l]
             a = b
 
         a = a.swapaxes(-1, axis)
 
+    # we then update the length after cutting/paddding...
     l = a.shape[axis]
     if l == 0:
         raise ValueError(
             "Not enough data points to segment array in 'cut' mode; try 'pad' or 'wrap'"
         )
-    assert l >= length
-    assert (l - length) % (length - overlap) == 0
-    n = 1 + (l - length) // (length - overlap)
+    assert l >= win_length
+    assert (l - win_length) % (win_length - overlap) == 0
+
+    n = 1 + (l - win_length) // (win_length - overlap)
     s = a.strides[axis]
-    newshape = a.shape[:axis] + (n, length) + a.shape[axis + 1 :]
-    newstrides = a.strides[:axis] + ((length - overlap) * s, s) + a.strides[axis + 1 :]
+    newshape = a.shape[:axis] + (n, win_length) + a.shape[axis + 1 :]
+    newstrides = (
+        a.strides[:axis] + ((win_length - overlap) * s, s) + a.strides[axis + 1 :]
+    )
 
     try:
         return np.ndarray.__new__(
             np.ndarray, strides=newstrides, shape=newshape, buffer=a, dtype=a.dtype
         )
-    except TypeError:
-        warnings.warn("Problem with ndarray creation forces copy.")
+    except (TypeError, ValueError):
+        # warnings.warn("Problem with ndarray creation forces copy.")
         a = a.copy()
         # Shape doesn't change but strides does
         newstrides = (
-            a.strides[:axis] + ((length - overlap) * s, s) + a.strides[axis + 1 :]
+            a.strides[:axis] + ((win_length - overlap) * s, s) + a.strides[axis + 1 :]
         )
         return np.ndarray.__new__(
             np.ndarray, strides=newstrides, shape=newshape, buffer=a, dtype=a.dtype

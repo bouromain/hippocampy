@@ -1,3 +1,5 @@
+from numpy.core.fromnumeric import squeeze
+from hippocampy.calfunc import detrend_F
 import unittest
 import numpy as np
 import os
@@ -8,15 +10,26 @@ from hippocampy.matrix_utils import remove_small_objects, first_true
 import bottleneck as bn
 
 
-# p = "/mnt/data_pool/DataToShare/DataDori/Data2Process/m4540/20210708/plane0"
-# axis = 1
-# min_length = 5
-
-# F, Fneu, spks, stat, ops, iscell = load_all_s2p(p)
+# F, Fneu = hp.data.load_fluo()
 # F_f = hp.calfunc.subtract_neuropil(F, Fneu)
-# F_d = hp.calfunc.detrend_F(F_f, 600)
-# F_d = hp.wavelet.wden(F_d, level=4)
+# # F_d = hp.calfunc.detrend_F(F_f, 600)
+# # F_d = hp.wavelet.wden(F_d, level=4)
 
+
+# import dask.dataframe as dd
+# from hippocampy.calfunc import detrend_F
+
+# p = "/mnt/data_pool/Data/Data2Process/m4550/20210708/plane0/F.npy"
+# F = np.load(p)
+# # #%%
+# # %%timeit
+# df=dd.from_array(F)
+# df_d = df.rolling(500,center=True,min_periods=1).quantile(0.08).squeeze()
+# # #%%
+# # %time df_d = detrend_F(F,500)
+
+# import matplotlib.pyplot as plt
+# plt.plot(df_d[1,:1000])
 
 # # define the threshold for candidate events
 # F_mean = bn.nanmean(F_d, axis=axis)
@@ -44,3 +57,5 @@ import bottleneck as bn
 # plt.plot(F_d[1, :10000] * 0.0010)
 # plt.xlim([0, 10000])
 # plt.show()
+
+# %%
