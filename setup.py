@@ -25,7 +25,7 @@ setup(
         "numba",
         "cython",
         "pandas",
-        "git+https://github.com/j-friedrich/OASIS",
+        "oasis",
         "PyWavelets",
     ],
 )
