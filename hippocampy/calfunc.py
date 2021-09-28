@@ -1,9 +1,17 @@
 import bottleneck as bn
 import numpy as np
 import tqdm as tqdm
-from sklearn.linear_model import RANSACRegressor
 from oasis.functions import deconvolve as _deconvolve
-from hippocampy.matrix_utils import remove_small_objects, rolling_quantile, first_true
+from sklearn.linear_model import RANSACRegressor
+
+from hippocampy.matrix_utils import (
+    first_true,
+    remove_small_objects,
+    rolling_quantile,
+    zscore,
+)
+from hippocampy.stats.stats import mad
+from hippocampy.wavelet import wden
 
 
 def subtract_neuropil(Froi, Fneu, *, method="fixed", downsample_ratio=10):
@@ -91,24 +99,65 @@ def deconvolve(F: np.ndarray, fs: int = 30, tau: float = 0.7, verbose: bool = Tr
         denoised calcium traces [n_traces, n_samples]
     s : np.ndarray
         deconvolved calcium traces [n_traces, n_samples]
+    b : np.ndarray
+        deconvolved calcium traces baseline
     """
 
     g = np.exp(-(1 / (fs * tau)))
 
     c = np.empty_like(F)
     s = np.empty_like(F)
+    b = np.empty((F.shape[0], 1))
     if verbose:
         for itf, f in tqdm.tqdm(enumerate(F), total=F.shape[0]):
-            c[itf, :], s[itf, :], _, _, _ = _deconvolve(f, g=[g])
+            c[itf, :], s[itf, :], b[itf], _, _ = _deconvolve(f, g=[g])
     else:
         for itf, f in enumerate(F):
-            c[itf, :], s[itf, :], _, _, _ = _deconvolve(f, g=[g])
+            c[itf, :], s[itf, :], b[itf], _, _ = _deconvolve(f, g=[g])
 
-    return c, s
+    return c, s, b
 
 
-def transient(F: np.ndarray, threshold=2.5, fs: int = 30):
-    ...
+def transient(
+    F: np.ndarray,
+    threshold=2.5,
+    fs: int = 30,
+    spike_norm="mad",
+    denoise_wavelet="sym4",
+    denoise_level: int = 5,
+    detrend_window=True,
+):
+    if spike_norm not in ["mad", "zscore"]:
+        raise ValueError(f"{spike_norm} not a valid spike normalization ")
+
+    if detrend_window is not None:
+        F_d = detrend_F(F, win_size=detrend_window)
+    else:
+        F_d = F.copy()
+
+    if denoise_level is not None:
+        F_d = wden(F_d, wavelet_name=denoise_wavelet, level=denoise_level)
+
+    if spike_norm == "mad":
+        F_c, S, B = deconvolve(F_d, fs=fs)
+        # estimate noise as the mad of the residuals of the difference between
+        #  the initial traces and the denoized ones. Then normalize the spike estimate
+        noise = mad((F_d - B) - F_c, axis=1)
+        S /= noise[:, None]
+    elif spike_norm == "zscore":
+        _, S = deconvolve(F_d, fs=fs)
+        S = zscore(S, axis=1)
+
+    # threeshold the spike estimate
+    if isinstance(threshold, float):
+        S = S > threshold
+    elif isinstance(threshold, np.ndarray):
+        S = S[S > threshold]
+
+    # in case multiple sucessive samples cross the threshold, only keep the first
+    S = first_true(S)
+
+    return [np.nonzero(s)[0] for s in S]
 
 
 def transient_simple(

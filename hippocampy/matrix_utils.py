@@ -187,7 +187,7 @@ def corr_mat(a, axis=1):
         return (1 / (n - 1)) * (a_z @ a_z.T)
 
 
-def zscore(matrix, axis=1):
+def zscore(matrix, axis=-1):
     """
     Compute zscores along one axis.
 
@@ -203,15 +203,19 @@ def zscore(matrix, axis=1):
     z: np.array()
         zscore matrix
     """
-    if axis == 1:
-        z = (matrix - bn.nanmean(matrix, axis=axis)[:, None]) / bn.nanstd(
-            matrix, axis=axis, ddof=1
-        )[:, None]
-    else:
-        z = (matrix - bn.nanmean(matrix, axis=axis)[None, :]) / bn.nanstd(
-            matrix, axis=axis, ddof=1
-        )[None, :]
-    return z
+
+    mu = bn.nanmean(matrix, axis=axis)
+    sigma = bn.nanstd(matrix, axis=axis, ddof=1)
+
+    if isinstance(mu, np.ndarray):
+        if axis == 1 or axis == -1:
+            mu = mu[:, None]
+            sigma = sigma[:, None]
+        elif axis == 0:
+            mu = mu[None, :]
+            sigma = sigma[None, :]
+
+    return (matrix - mu) / sigma
 
 
 #%% OTHER
