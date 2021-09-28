@@ -26,6 +26,7 @@ setup(
         "cython",
         "pandas",
         "oasis",
+        "cvxpy",
         "PyWavelets",
     ],
 )

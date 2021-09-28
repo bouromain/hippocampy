@@ -4,7 +4,6 @@ import tqdm as tqdm
 from sklearn.linear_model import RANSACRegressor
 from oasis.functions import deconvolve as _deconvolve
 from hippocampy.matrix_utils import remove_small_objects, rolling_quantile, first_true
-from typing import Tuple
 
 
 def subtract_neuropil(Froi, Fneu, *, method="fixed", downsample_ratio=10):
@@ -71,9 +70,7 @@ def subtract_neuropil(Froi, Fneu, *, method="fixed", downsample_ratio=10):
     return F
 
 
-def deconvolve(
-    F: np.ndarray, fs: int = 30, tau: float = 0.7, verbose: bool = True
-) -> Tuple(np.ndarray, np.ndarray):
+def deconvolve(F: np.ndarray, fs: int = 30, tau: float = 0.7, verbose: bool = True):
     """
     deconvolve calcium traces using oasis algorithm
 
@@ -108,6 +105,10 @@ def deconvolve(
             c[itf, :], s[itf, :], _, _, _ = _deconvolve(f, g=[g])
 
     return c, s
+
+
+def transient(F: np.ndarray, threshold=2.5, fs: int = 30):
+    ...
 
 
 def transient_simple(
