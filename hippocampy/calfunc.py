@@ -2,8 +2,9 @@ import bottleneck as bn
 import numpy as np
 import tqdm as tqdm
 from sklearn.linear_model import RANSACRegressor
-
+from oasis.functions import deconvolve as _deconvolve
 from hippocampy.matrix_utils import remove_small_objects, rolling_quantile, first_true
+from typing import Tuple
 
 
 def subtract_neuropil(Froi, Fneu, *, method="fixed", downsample_ratio=10):
@@ -70,19 +71,46 @@ def subtract_neuropil(Froi, Fneu, *, method="fixed", downsample_ratio=10):
     return F
 
 
-def transientSH(F, axis=1):
+def deconvolve(
+    F: np.ndarray, fs: int = 30, tau: float = 0.7, verbose: bool = True
+) -> Tuple(np.ndarray, np.ndarray):
     """
-    find transient as in Allegra, Posani, Schmidt-Hieber
+    deconvolve calcium traces using oasis algorithm
 
-    “Events” were identified as contiguous regions in the d​ F ​ / ​ F signal exceeding a
-    threshold of mean +2.5 standard deviations of the overall d​ F ​ / ​ F signal, and exceeding an integral
-    above threshold of 7,000 d​ F ​ / ​ F ​ .
+    Parameters
+    ----------
+    F : np.ndarray
+        calcium traces [n_traces, n_samples]
+    fs : int, optional
+        sampling frequency, by default 30
+    tau : float, optional
+        decay time constant in sec, by default 0.7
+    verbose : bool, optional
+        make this function chatty, by default True
+
+    Returns
+    -------
+    c : np.ndarray
+        denoised calcium traces [n_traces, n_samples]
+    s : np.ndarray
+        deconvolved calcium traces [n_traces, n_samples]
     """
-    F_mean = bn.nanmean(F, axis=axis)
-    F_std = bn.nanstd(F, axis=axis)
+
+    g = np.exp(-(1 / (fs * tau)))
+
+    c = np.empty_like(F)
+    s = np.empty_like(F)
+    if verbose:
+        for itf, f in tqdm.tqdm(enumerate(F), total=F.shape[0]):
+            c[itf, :], s[itf, :], _, _, _ = _deconvolve(f, g=[g])
+    else:
+        for itf, f in enumerate(F):
+            c[itf, :], s[itf, :], _, _, _ = _deconvolve(f, g=[g])
+
+    return c, s
 
 
-def transientRoy(
+def transient_simple(
     F: np.ndarray, threshold: float = 2.5, min_length: int = 5, axis: int = -1
 ) -> list:
     """

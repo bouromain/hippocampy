@@ -433,7 +433,7 @@ def moving_win(
     endvalue: float = 0,
 ) -> np.ndarray:
     """
-    moving_win Generate a view of the input array (or a copy if needed) withe the 
+    moving_win Generate a view of the input array (or a copy if needed) with the 
     specified window length and overlap.
     It is particularly useful to perform some rolling window like operation.
 
@@ -444,36 +444,27 @@ def moving_win(
     Parameters
     ----------
     a : np.ndarray
-        [description]
+        input vector or array
     win_length : int
-        [description]
+        length of the moving window (in samples)
     overlap : int, optional
-        [description], by default 0
+        number of overlaping samples between consecutive windows, by default 0
     axis : int, optional
-        [description], by default None
+        axis to work on, by default None
     padding : str, optional
-        [description], by default "cut"
+        method to deal with borders, by default "cut"
     endvalue : float, optional
-        [description], by default 0
+        value to use to fill out of array values, by default 0
 
     Returns
     -------
     np.ndarray
-        [description]
+        view of the input array (or a copy if needed) with the 
+        specified window length and overlap
 
-    Raises
-    ------
-    ValueError
-        [description]
-    ValueError
-        [description]
-    ValueError
-        [description]
-    ValueError
-        [description]
     Example
     -------
-    >>> moving_win(arange(10), 4, 2)
+    >>> moving_win(np.arange(10), 4, 2)
     array([[0, 1, 2, 3],
            [2, 3, 4, 5],
            [4, 5, 6, 7],
@@ -579,9 +570,8 @@ def rolling_quantile(data, window_len, quantile):
     """
     rolling_quantile Calculate a rolling quantile a a window of size window len
 
-    Note: For now, the pandas method seem convenient and fast. I'll try to use 
-    numpy slices to be faster and or cleaner
-
+    Note: For now, the pandas method seem convenient and fast. 
+    It seem to be faster than usinnumpy strides
     To Do:
     this function should take an axis input
 
