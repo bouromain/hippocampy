@@ -43,9 +43,7 @@ def mad(x: np.ndarray, scale: float = None, axis: int = -1):
     med = bn.nanmedian(x, axis=axis)
 
     if isinstance(med, np.ndarray):
-        if axis == 1 or axis == -1:
-            med = med[:, None]
-        elif axis == 0:
-            med = med[None, :]
+        med = np.expand_dims(med, axis=axis)
+
     return bn.nanmedian(np.abs(x - med), axis=axis) * scale
 

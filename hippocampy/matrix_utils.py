@@ -203,18 +203,12 @@ def zscore(matrix, axis=-1):
     z: np.array()
         zscore matrix
     """
-
     mu = bn.nanmean(matrix, axis=axis)
     sigma = bn.nanstd(matrix, axis=axis, ddof=1)
 
     if isinstance(mu, np.ndarray):
-        if axis == 1 or axis == -1:
-            mu = mu[:, None]
-            sigma = sigma[:, None]
-        elif axis == 0:
-            mu = mu[None, :]
-            sigma = sigma[None, :]
-
+        mu = np.expand_dims(mu, axis=axis)
+        sigma = np.expand_dims(sigma, axis=axis)
     return (matrix - mu) / sigma
 
 

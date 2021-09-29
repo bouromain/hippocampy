@@ -118,22 +118,92 @@ def deconvolve(F: np.ndarray, fs: int = 30, tau: float = 0.7, verbose: bool = Tr
     return c, s, b
 
 
+def calc_dF(F: np.ndarray, window: int, *, type_win="median", axis=-1):
+    """
+    calc_dF calculate dF/F as F - F_0 / F0
+
+    Parameters
+    ----------
+    F : [np.ndarray]
+        [description]
+    window : [int]
+        window length in samples
+    axis : int, optional
+        axis to work on, by default -1
+
+    Returns
+    -------
+    dF/F [np.ndarray]
+        deltaF over F
+    """
+    if type_win not in ["median", "mean"]:
+        raise ValueError(f"Window type {type_win} not recognized")
+
+    if type_win.lower() == "median":
+        F_0 = bn.move_median(F, window, axis=axis, min_count=1)
+    elif type_win.lower() == "mean":
+        F_0 = bn.move_mean(F, window, axis=axis, min_count=1)
+
+    return (F - F_0) / F_0
+
+
 def transient(
     F: np.ndarray,
     threshold=2.5,
     fs: int = 30,
     spike_norm="mad",
-    denoise_wavelet="sym4",
-    denoise_level: int = 5,
+    denoise_wavelet="db2",
+    denoise_level: int = 2,
     detrend_window=True,
 ):
+    """
+    Transient detection inspired from Grosmark 2020.
+    It will take the traces, slightly denoise them to them deconvolve them
+    Events are then defined as deconvolved signal higher then Threshold time 
+    the level of estimated noise. This noise is defined as the 
+    median absolute deviation between the initial trace and the traces 
+    reconstructed with the deconvolution algorithm OASIS
+
+    Parameters
+    ----------
+    F : np.ndarray
+        calcium traces [n_traces, n_samples]
+    threshold : float, optional
+        threshold to detect event. Defined as threshold  times the "mad"
+        or "zscore" of the deconvolved trace, by default 2.5
+
+        This can be given as a float or a vector if you need different 
+        threshold for different epoch (activity, inactivity)
+    fs : int, optional
+        sampling rate of the traces, by default 30
+    spike_norm : str, optional
+        normalisation of the deconvolved spikes, by default "mad"
+    denoise_wavelet : str, optional
+        type of wavelets to use for  the denoising, by default "db2"
+    denoise_level : int, optional
+        level to use for the denoising, by default 2
+    detrend_window : bool, optional
+        length of the window to use during detrending, by default True
+
+    Returns
+    -------
+    S np.ndarray
+        spike matrix
+    Ts list
+        spike times
+
+    Raises
+    ------
+    ValueError
+        [description]
+    """
     if spike_norm not in ["mad", "zscore"]:
         raise ValueError(f"{spike_norm} not a valid spike normalization ")
 
+    F_d = F.copy()
+
     if detrend_window is not None:
-        F_d = detrend_F(F, win_size=detrend_window)
-    else:
-        F_d = F.copy()
+        F_d = detrend_F(F_d, win_size=detrend_window)
 
     if denoise_level is not None:
         F_d = wden(F_d, wavelet_name=denoise_wavelet, level=denoise_level)
@@ -141,23 +211,23 @@ def transient(
     if spike_norm == "mad":
         F_c, S, B = deconvolve(F_d, fs=fs)
         # estimate noise as the mad of the residuals of the difference between
-        #  the initial traces and the denoized ones. Then normalize the spike estimate
-        noise = mad((F_d - B) - F_c, axis=1)
+        #  the initial traces and the denoised ones. Then normalize the spike estimate
+        noise = mad((F - B) - F_c, axis=1)
         S /= noise[:, None]
     elif spike_norm == "zscore":
         _, S = deconvolve(F_d, fs=fs)
         S = zscore(S, axis=1)
 
-    # threeshold the spike estimate
+    # threshold the spike estimate
     if isinstance(threshold, float):
         S = S > threshold
     elif isinstance(threshold, np.ndarray):
         S = S[S > threshold]
 
-    # in case multiple sucessive samples cross the threshold, only keep the first
+    # in case multiple successive samples cross the threshold, only keep the first
     S = first_true(S)
 
-    return [np.nonzero(s)[0] for s in S]
+    return S, [np.nonzero(s)[0] for s in S]
 
 
 def transient_simple(

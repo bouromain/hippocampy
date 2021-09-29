@@ -53,8 +53,8 @@ def gaussian_envelope(pos, centers, sigma=10, amplitude=1):
 
     # prepare variables
     pos = np.asarray(pos)
-    centers = np.atleast_2d(np.asarray(centers))
-    sigma = np.atleast_2d(np.asarray(sigma))
+    centers = np.atleast_2d(centers)
+    sigma = np.atleast_2d(sigma)
 
     num = (pos - centers) ** 2
     denum = 2 * sigma
@@ -97,38 +97,84 @@ def _remove_refractory_period(spike_time, refractory_period):
     Remove spikes with inter-spike interval smaller than a
     given refractory period
     """
-    spike_time_diff = np.diff(spike_time)
-    m = np.hstack((True, spike_time_diff > refractory_period))
 
-    return spike_time[m]
+    for i, s in enumerate(spike_time):
+        m = np.empty_like(s, dtype=bool)
+        spike_time_diff = np.diff(s)
+        m[0] = True
+        m[1:] = spike_time_diff > refractory_period
+        spike_time[i] = s[m]
+
+    return spike_time
 
 
 def homogeneous_poisson_process(
-    lam, t_0=0, t_end=10, delta_t=1e-3, refractory_period=None, method="uniform"
+    lam: np.ndarray = None,
+    t_0: float = 0,
+    t_end: float = 10,
+    delta_t: float = 1e-3,
+    refractory_period: float = None,
+    method: str = "uniform",
 ):
     """
-    Reference:
+    homogeneous_poisson_process [summary]
+
+    Parameters
+    ----------
+    lam : np.ndarray, optional
+        Average rate value or vector, by default None
+    t_0 : float, optional
+        start time in second, by default 0
+    t_end : float, optional
+        end time in seconds, by default 10
+    delta_t : float, optional
+        sampling period in second, by default 1e-3
+    refractory_period : float, optional
+        length of the refractory period in second, by default None
+    method : str, optional
+        method to generate the poisson process. Can be "uniform" or 
+        "exponential", by default "uniform"
+
+    Returns
+    -------
+    [type]
+        [description]
+
+    Raises
+    ------
+    NotImplementedError
+        [description]
+
+    Reference
+    ---------
     http://www.cns.nyu.edu/~david/handouts/poisson.pdf
     """
 
-    if method == "uniform":
-        time = np.arange(t_0, t_end, delta_t)
-        uniform = np.random.uniform(size=time.size)
-        idx_spk = uniform <= lam * delta_t
+    if lam is None:
+        lam = np.random.randint(1, 15, (10, 1))
 
-        spk_time = time[idx_spk]
+    n_samples = int((t_end - t_0) / delta_t)
+    n_lambda = len(lam)
+
+    if method == "uniform":
+        uniform = np.random.uniform(size=(n_lambda, n_samples))
+        idx_spk = uniform <= lam[:, None] * delta_t
+
+        spk_time = [np.nonzero(st)[0] * delta_t for st in idx_spk]
 
     elif method == "exponential":
         # calculate the number of expected spikes
         expected_spikes = np.ceil((t_end - t_0) * lam)
         # draw inter spikes interval (isi) from a random exponential distribution
-        spk_isi = [np.random.exponential(1 / lam) for i in np.arange(expected_spikes)]
-        spk_time = np.cumsum(spk_isi)
+        spk_time = [None] * n_lambda
 
-        # correct spikes time with t_0 and  t_end
-        spk_time = spk_time + t_0
-        spk_time = spk_time[spk_time < t_end]
-
+        for it_l, (l, n_spk) in enumerate(zip(lam, expected_spikes)):
+            spk_isi = np.random.exponential(1 / l, size=(1, int(n_spk)))
+            spk_isi = np.cumsum(spk_isi)
+            # correct spikes time with t_0 and  t_end
+            spk_isi = spk_isi + t_0
+            spk_isi = spk_isi[spk_isi < t_end]
+            spk_time[it_l] = spk_isi
     else:
         raise NotImplementedError("Method should be uniform of exponential")
 
@@ -146,45 +192,36 @@ def inhomogeneous_poisson_process(rate, time, refractory_period=None, method="un
     process with fixed rate λ = max(rate(t)).
     Event from this distribution are then kept for time t with probability p(t).
 
-    Parameters:
-                - rate: firing rate vector
-                - time: time vector corresponding to the rate vector
-                - refractory period: refractory period of spike generation.
-                spike with isi < to refractory period will be removed
+    Parameters
+    ----------
+    - rate: 
+        firing rate vector in time 
+    - time: 
+        time vector corresponding to the rate vector
+    - refractory period: 
+        refractory period of spike generation.
+        spike with isi < to refractory period will be removed
 
-    Returns:
-                - spk_time: time of spikes in the same unit than the input time vector
+    Returns
+    -------
+    - spk_time: time of spikes in the same unit than the input time vector
 
 
     Reference:
     http://www.cns.nyu.edu/~david/handouts/poisson.pdf
     inhomogeneous_poisson_process from:
     https://github.com/NeuralEnsemble/elephant/blob/master/elephant/spike_train_generation.py
+    https://gitlab.com/e.reifenstein/synaptic-learning-rules-for-sequence-learning/-/blob/master/Code_for_SynapticLearningRulesForSequenceLearning.py
 
     """
+    rate = np.asarray(rate)
+    rate_max = bn.nanmax(rate, axis=1)
+    delta_t = bn.nanmedian(np.diff(time))
 
-    rate_max = np.max(rate)
-    t_0 = np.min(time)
-    t_end = np.max(time)
-    delta_t = bn.median(np.diff(time))
+    uniform = np.random.uniform(size=rate.shape) * rate_max[:, None]
+    # reifenstein do that insted, I will compare the two
+    # avg_prob = 1 - np.exp(-avg_rate * delta)
+    avg_prob = 1 - np.exp(-rate * delta_t)
+    uniform[uniform < avg_prob] = 0
 
-    hpp = homogeneous_poisson_process(
-        rate_max, t_0=t_0, t_end=t_end, delta_t=delta_t, method=method
-    )
-
-    # find the rate for these values
-    rate_i = np.interp(hpp, time, rate)
-
-    # generate random distribution
-    uniform = np.random.uniform(size=hpp.size) * rate_max
-
-    # select spikes from this distribution according to their probability
-    # Nb: we select according to their probability as uniform is multiplied by
-    # rate_max. A rate close to rate_max will have a high probability to be
-    # selected, the contrary will be true too
-    spk_time = hpp[uniform < rate_i]
-
-    if refractory_period is not None:
-        spk_time = _remove_refractory_period(spk_time, refractory_period)
-
-    return spk_time
+    return uniform
