@@ -191,26 +191,42 @@ def band_filter(sig, fRange, fs, method="cheby2", order=4) -> np.ndarray:
     return filtfilt(b, a, sig)
 
 
-def hilbertPhase(sig, method="hilbert") -> np.ndarray:
+def phase(sig, method="hilbert", axis=-1) -> np.ndarray:
     """
-    Compute hilbert phase and amplitude of a signal.
+    Compute phase and amplitude of a signal.
 
     TO DO: implement linear interpolation and shape preserving phase
     """
+    sig = np.array(sig, ndmin=2)
 
     if method == "hilbert":
-        n_sig = len(sig)
-        bestLen = next_fast_len(n_sig)
+        n_samples = sig.shape[axis]
+        bestLen = next_fast_len(n_samples)
         analytic_signal = hilbert(sig, bestLen)
         # remove padding
-        analytic_signal = np.mod(
-            np.angle(analytic_signal[:n_sig]) + 2 * np.pi, 2 * np.pi
-        )
+        analytic_signal = np.take(analytic_signal, np.arange(n_samples), axis=axis)
+        analytic_signal = np.mod(np.angle(analytic_signal) + 2 * np.pi, 2 * np.pi)
         amplitude_envelope = np.abs(analytic_signal)
     else:
         raise NotImplementedError("phase method not implemented")
 
     return analytic_signal, amplitude_envelope
+
+
+def envelope(sig, axis=-1) -> np.ndarray:
+    """
+    Compute phase and amplitude of a signal.
+    """
+    sig = np.array(sig, ndmin=2)
+    n_samples = sig.shape[axis]
+    bestLen = next_fast_len(n_samples)
+
+    analytic_signal = hilbert(sig, bestLen)
+    # remove padding
+    analytic_signal = np.take(analytic_signal, np.arange(n_samples), axis=axis)
+    amplitude_envelope = np.abs(analytic_signal)
+
+    return amplitude_envelope
 
 
 def instantaneousFreq(sig_p: np.ndarray, fs) -> np.ndarray:

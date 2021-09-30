@@ -1,8 +1,9 @@
 import bottleneck as bn
 import numpy as np
+from typing import Union
 
 
-def value_cross(x, threshold=0):
+def value_cross(M, threshold=0, axis=-1):
     """
     Function finding the crossing point between a vector and a value.
     Particularly useful when you want to detect crossing of a threshold
@@ -10,8 +11,9 @@ def value_cross(x, threshold=0):
 
     Parameters
     ----------
-    x:
-        vector of data
+    M:
+        data array
+        
     threshold:
         threshold to cross
 
@@ -22,16 +24,59 @@ def value_cross(x, threshold=0):
     down:
         logical vector with True value for down crossing
     """
-    before = np.array(x[:-1])
-    after = np.array(x[1:])
+    # before = np.array(x[:-1])
+    # after = np.array(x[1:])
 
-    up = np.logical_and(before < threshold, after > threshold)
-    down = np.logical_and(before > threshold, after < threshold)
+    # up = np.logical_and(before < threshold, after > threshold)
+    # down = np.logical_and(before > threshold, after < threshold)
 
-    up = np.append(up, False)
-    down = np.append(down, False)
+    # up = np.append(up, False)
+    # down = np.append(down, False)
 
-    return up, down
+    M_b = np.array(M, ndmin=2)
+    return start_stop(M_b > threshold, axis=axis)
+
+
+def start_stop(B: np.ndarray, axis=-1):
+    """
+    start_stop find start and stop in a boolean array
+
+    Parameters
+    ----------
+    B : np.ndarray
+        input boolean array 
+    axis : int, optional
+        axis to work on, by default -1
+
+    Returns
+    -------
+    start: np.ndarray
+        boolean array with True values for starts 
+
+    stops: np.ndarray
+        boolean array with True values for stops     
+    """
+    B = np.array(B, dtype=bool, ndmin=2)
+    start = np.empty_like(B, dtype=bool)
+    stop = np.empty_like(B, dtype=bool)
+
+    if axis == 1 or axis == -1:
+        # take into account that fist value can be a start or end value a stop
+        start[:, 0] = B[:, 0]
+        stop[:, -1] = B[:, -1]
+
+        start[:, 1:] = ~B[:, :-1] & B[:, 1:]
+        stop[:, :-1] = B[:, :-1] & ~B[:, 1:]
+
+    elif axis == 0:
+        # take into account that fist value can be a start or end value a stop
+        start[0, :] = B[0, :]
+        stop[-1, :] = B[-1, :]
+
+        start[1:, :] = ~B[:-1, :] & B[1:, :]
+        stop[:-1, :] = B[:-1, :] & ~B[1:, :]
+
+    return start, stop
 
 
 def localExtrema(x, method="max"):
@@ -177,3 +222,44 @@ def calc_dt(t):
     """
     return bn.nanmedian(np.diff(t))
 
+
+def nearest_odd(x: Union[float, np.ndarray]):
+    """
+    nearest_odd round number or array to nearest odd number
+
+    Parameters
+    ----------
+    x : Union[float, np.ndarray]
+        values or array to round
+
+    Returns
+    -------
+    out
+        values or array rounded to the nearest odd number
+    """
+    x = np.asarray(x)
+    idx = (x % 2) < 1
+    x = np.floor(x)
+    if isinstance(x, np.ndarray):
+        x[idx] = x[idx] + 1
+    elif idx:
+        x += 1
+    return x
+
+
+def nearest_even(x: Union[float, np.ndarray]):
+    """
+    nearest_even round number or array to nearest even number
+
+    Parameters
+    ----------
+    x : Union[float, np.ndarray]
+        values or array to round
+
+    Returns
+    -------
+    out
+        values or array rounded to the nearest even number
+    """
+    x = np.asarray(x)
+    return np.round(x / 2) * 2

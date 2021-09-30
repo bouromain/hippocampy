@@ -10,6 +10,7 @@ from . import model
 from . import io
 from . import utils
 from . import data
+from . import lfp
 
 # DataTypes
 from .core._interval import Iv

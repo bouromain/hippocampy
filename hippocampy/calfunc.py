@@ -120,7 +120,8 @@ def deconvolve(F: np.ndarray, fs: int = 30, tau: float = 0.7, verbose: bool = Tr
 
 def calc_dF(F: np.ndarray, window: int, *, type_win="median", axis=-1):
     """
-    calc_dF calculate dF/F as F - F_0 / F0
+    calc_dF calculate dF/F as F - F_0 / F0 with F_0 defined as 
+    the mean or median in a sliding time window
 
     Parameters
     ----------

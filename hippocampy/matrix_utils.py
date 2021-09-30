@@ -357,10 +357,33 @@ def remove_small_objects(M, min_sz=3):
     -------
     np.array only with connected components bigger than min_sz
 
+    TODO: we should be able to perform this function across an axis 
     """
-    M_l = label(M.astype(bool))
-    M_l = morphology.remove_small_objects(M_l, min_size=min_sz)
-    return np.array(M_l, dtype=bool)
+    return morphology.remove_small_objects(M.astype(bool), min_size=min_sz)
+
+
+def remove_holes(M, min_sz=3):
+    """
+    remove holes smaller than minsize
+
+    Parameters
+    ----------
+    M: np.array
+        boolean or zero and non-zero values vector
+    min_sz: int
+        minimum size of the object to keep
+
+    Returns
+    -------
+    np.array only with connected components bigger than min_sz
+    
+    TODO: we should be able to perform this function across an axis 
+
+    """
+    M_b = np.logical_not(M.astype(bool))
+    M_b = morphology.remove_small_objects(M_b, min_size=min_sz)
+
+    return np.logical_not(M_b)
 
 
 def mean_at(idx, vals, fillvalue=np.nan, dtype=np.dtype(np.float64)) -> np.array:
@@ -678,6 +701,3 @@ def find_peaks(M, min_amplitude=None):
     peaks_idx = [np.squeeze(np.nonzero(valP)) for itP, valP in enumerate(peaks)]
 
     return peaks, peaks_idx
-
-
-# %%
