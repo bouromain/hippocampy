@@ -1,7 +1,7 @@
 import numpy as np
 import bottleneck as bn
 from hippocampy.sig_tool import envelope
-from hippocampy.utils.gen_utils import nearest_odd
+from hippocampy.utils.gen_utils import nearest_odd, start_stop
 from hippocampy.matrix_utils import smooth1D, zscore
 
 
@@ -52,11 +52,19 @@ def find_ripples(
 
     # filter the signal a bit
     # (moving window of ~ 10ms) and zscore it
-    filt_half_win = nearest_odd(10e-3 * fs)
-
-    squared_sig = smooth1D(squared_sig, filt_win, kernel_type=smooth_type, axis=axis)
+    filt_half_win = nearest_odd(5e-3 * fs)
+    squared_sig = smooth1D(
+        squared_sig, filt_half_win, kernel_type=smooth_type, axis=axis
+    )
 
     squared_sig = zscore(squared_sig, axis=axis)
 
     # detect candidate events
+    thresholded = squared_sig > low_threshold
+    starts, stops = start_stop(thresholded)
+    ripple_epoch = np.array([np.nonzero(starts)[0], np.nonzero(stops)[0]])
+
+    # merge them if they are close but only if they do not create huge ripples
+    inter_ripple_time = ripple_epoch[0, 1:] - ripple_epoch[1, :-1]
+    iri_to_keep = inter_ripple_time > int(min_len * 10e-3 * fs)
 

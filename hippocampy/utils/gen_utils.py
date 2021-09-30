@@ -67,7 +67,7 @@ def start_stop(B: np.ndarray, axis=-1):
         start[1:, :] = ~B[:-1, :] & B[1:, :]
         stop[:-1, :] = B[:-1, :] & ~B[1:, :]
 
-    return start, stop
+    return np.squeeze(start), np.squeeze(stop)
 
 
 def localExtrema(x, method="max"):

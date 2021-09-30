@@ -6,10 +6,10 @@ import numpy as np
 
 class TestIv(unittest.TestCase):
     def test_in(self):
-        a = hp.Iv([[1, 3], [6, 10]])
+        a = hp.Interval([[1, 3], [6, 10]])
         b = [2, 3]
         c = [2.5, 3]
-        c_iv = hp.Iv([2.5, 3])
+        c_iv = hp.Interval([2.5, 3])
 
         d = [0, 1]
 

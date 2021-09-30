@@ -1,7 +1,7 @@
 import bottleneck as bn
 import numpy as np
 from astropy.convolution import convolve
-from skimage import measure, morphology
+from skimage import measure
 import pandas as pd
 import tqdm as tqdm
 
@@ -211,7 +211,7 @@ def zscore(matrix, axis=-1):
 
 
 #%% OTHER
-def label(v, axis=-1) -> np.array:
+def label(v, axis=-1, unique_label=False) -> np.array:
     """
     label continuous values in either a boolean or int/float vector
 
@@ -222,6 +222,8 @@ def label(v, axis=-1) -> np.array:
         input vector
     axis: [int]
         axis to compute the labeling
+    unique_label: [bool]
+        if we need unique labels or if labels can be repeated for each row/column
 
     Returns
     -------
@@ -283,7 +285,18 @@ def label(v, axis=-1) -> np.array:
             st[~mask] = False
             C = np.cumsum(st, axis=axis, dtype=np.int64)
             C[~mask] = 0
-    return np.squeeze(C)
+    C = np.squeeze(C)
+
+    if unique_label:
+        # give a unique label for the total stack and not per row
+        C_max = bn.nanmax(C, axis=axis)
+        if isinstance(C_max, np.ndarray):
+            mask = C.astype(bool)
+            C_max = np.roll(C_max, 1)
+            C_max[0] = 0
+            C = C + np.expand_dims(C_max, axis=axis)
+            C[~mask] = 0
+    return C
 
 
 def label2D(M):
@@ -300,7 +313,7 @@ def label2D(M):
     np.array of labeled data
     """
     # the following line ensure we feed a boolean data to the label
-    # function. Its helps with
+    # function.
     M_new = np.array(M, dtype=bool)
     return measure.label(M_new)
 
@@ -362,16 +375,7 @@ def remove_small_objects(M, min_size=3, axis=-1):
     """
     M[np.isnan(M)] = 0
     # label our matrix per row/collumn
-    M_l = label(M.astype(bool), axis=axis)
-
-    # give a unique label for the total stack and not per row
-    M_max = bn.nanmax(M_l, axis=axis)
-    if isinstance(M_max, np.ndarray):
-        iszero = M_l == 0
-        M_max = np.roll(M_max, 1)
-        M_max[0] = 0
-        M_l = M_l + np.expand_dims(M_max, axis=axis)
-        M_l[iszero] = 0
+    M_l = label(M.astype(bool), axis=axis, unique_label=True)
 
     # find all the connected components and check their size
     comp_size = np.bincount(M_l.ravel())

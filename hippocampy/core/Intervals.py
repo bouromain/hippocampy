@@ -1,9 +1,12 @@
 import numpy as np
 import bottleneck as bn
 
+from hippocampy.utils.gen_utils import start_stop
 
-class Iv:
-    def __init__(self, data):
+
+class Interval:
+    def __init__(self, data=None):
+
         data = np.array(data, ndmin=2, dtype=float)
         data = np.reshape(data, [-1, 2])
 
@@ -12,11 +15,11 @@ class Iv:
         ### Should make a better check of the size and type of the input data
 
     def __getitem__(self, idx):
-        return Iv([self.starts[idx], self.stops[idx]])
+        return Interval([self.starts[idx], self.stops[idx]])
 
     def __iter__(self):
         for start, stop in zip(self.starts, self.stops):
-            yield Iv([start, stop])
+            yield Interval([start, stop])
 
     def __len__(self):
         return len(self.starts)
@@ -78,23 +81,23 @@ class Iv:
     def append(self, other):
 
         if not self:
-            return Iv(other)
+            return Interval(other)
         if not other:
             return self
 
         self_data = np.array([self.starts, self.stops], ndmin=2)
 
-        if isinstance(other, Iv):
+        if isinstance(other, Interval):
             other_data = np.array([other.starts, other.stops])
             newVal = np.hstack((self_data, other_data)).T
-            return Iv(newVal)
+            return Interval(newVal)
         elif isinstance(other, (np.ndarray, list)):
             ### Should make a better check of the size and type of the input data
             other_data = np.array(other, ndmin=2)
             assert other_data.shape[1] == 2, "Dimension mismatch"
 
             newVal = np.hstack((self_data, other_data)).T
-            return Iv(newVal)
+            return Interval(newVal)
         else:
             raise NotImplementedError
 
@@ -130,12 +133,5 @@ class Iv:
                     newdata = np.vstack([newdata, [l_new, u_new]])
 
                 isMerged[mask] = 1
-        return Iv(newdata)
+        return Interval(newdata)
 
-    def merge(self, other):
-        """
-        merge two sets of interval.
-        Append the interval and clean it
-        """
-        tmp = self.append(other)
-        return tmp.clean()
