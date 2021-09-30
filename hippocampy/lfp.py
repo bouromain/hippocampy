@@ -1,9 +1,8 @@
 import numpy as np
 import bottleneck as bn
 from hippocampy.sig_tool import envelope
-import hippocampy.spectral
 from hippocampy.utils.gen_utils import nearest_odd
-from hippocampy.matrix_utils import zscore
+from hippocampy.matrix_utils import smooth1D, zscore
 
 
 def find_ripples(
@@ -15,7 +14,8 @@ def find_ripples(
     low_threshold: float = 2,
     high_threshold: float = 5,
     combine=True,
-    filter_type="mean",
+    smooth_type="mean",
+    restrict: np.ndarray = None,
     axis=-1,
 ):
     # ref:
@@ -31,8 +31,8 @@ def find_ripples(
         low_threshold < high_threshold
     ), "High threshold factor should be greater than high threshold"
 
-    if filter_type not in ["mean", "gauss"]:
-        raise NotImplemented(f"Filtering type:{filter_type} not implemented")
+    if smooth_type not in ["mean", "gauss"]:
+        raise NotImplemented(f"Smooth type:{smooth_type} not implemented")
 
     filtered = np.array(filtered, ndmin=2)
 
@@ -43,16 +43,19 @@ def find_ripples(
     # squared lfp signal if we wan to
     if filtered.ndim > 1 and combine:
         if axis == 1 or axis == -1:
-            squared_sig = bn.nansum(squared_sig, 0)
+            squared_sig = bn.nansum(filtered, 0)
         elif axis == 0:
-            squared_sig = bn.nansum(squared_sig, 1)
+            squared_sig = bn.nansum(filtered, 1)
 
     # calculate the squared signal
-    squared_sig = filtered ** 2
+    squared_sig = squared_sig ** 2
 
-    # filter the signal a bit (moving window of ~ 10ms) and zscore it
-    mean_filt_win = nearest_odd(10e-3 * fs)
-    squared_sig = bn.move_mean(squared_sig, mean_filt_win, axis=axis)
+    # filter the signal a bit
+    # (moving window of ~ 10ms) and zscore it
+    filt_half_win = nearest_odd(10e-3 * fs)
+
+    squared_sig = smooth1D(squared_sig, filt_win, kernel_type=smooth_type, axis=axis)
+
     squared_sig = zscore(squared_sig, axis=axis)
 
     # detect candidate events

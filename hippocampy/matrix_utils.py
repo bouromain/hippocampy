@@ -1,5 +1,3 @@
-import warnings
-
 import bottleneck as bn
 import numpy as np
 from astropy.convolution import convolve
@@ -341,27 +339,52 @@ def first_true(v: np.ndarray, axis=-1):
     return st
 
 
-def remove_small_objects(M, min_sz=3):
+def remove_small_objects(M, min_size=3, axis=-1):
     """
     remove small non-zero "objects" from a vector
+    not that this function will not preserve nans
 
     Parameters
     ----------
     M: np.array
         boolean or zero and non-zero values vector
-    min_sz: int
+    min_size: int
         minimum size of the object to keep
 
     Returns
     -------
-    np.array only with connected components bigger than min_sz
+    np.array only with connected components bigger than min_size
 
-    TODO: we should be able to perform this function across an axis 
+    TODO: 
+    -we should be able to perform this function across an axis 
+    -make this function work for 2D. it should be doable by using 
+    ravel and reshaping at the end
     """
-    return morphology.remove_small_objects(M.astype(bool), min_size=min_sz)
+    M[np.isnan(M)] = 0
+    # label our matrix per row/collumn
+    M_l = label(M.astype(bool), axis=axis)
+
+    # give a unique label for the total stack and not per row
+    M_max = bn.nanmax(M_l, axis=axis)
+    if isinstance(M_max, np.ndarray):
+        iszero = M_l == 0
+        M_max = np.roll(M_max, 1)
+        M_max[0] = 0
+        M_l = M_l + np.expand_dims(M_max, axis=axis)
+        M_l[iszero] = 0
+
+    # find all the connected components and check their size
+    comp_size = np.bincount(M_l.ravel())
+    comp_id = np.unique(M_l.ravel())
+
+    for id, sz in zip(comp_id, comp_size):
+        if sz < min_size:
+            M_l[M_l == id] = False
+
+    return M_l.astype(bool)
 
 
-def remove_holes(M, min_sz=3):
+def remove_holes(M, min_size=3, axis=-1):
     """
     remove holes smaller than minsize
 
@@ -380,7 +403,7 @@ def remove_holes(M, min_sz=3):
 
     """
     M_b = np.logical_not(M.astype(bool))
-    M_b = morphology.remove_small_objects(M_b, min_size=min_sz)
+    M_b = remove_small_objects(M_b, min_size=min_size, axis=axis)
 
     return np.logical_not(M_b)
 

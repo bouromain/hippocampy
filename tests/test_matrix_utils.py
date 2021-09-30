@@ -39,10 +39,23 @@ class TestLabel(unittest.TestCase):
 class TestRemoveSmallObject(unittest.TestCase):
     def test_remove_small_objects(self):
         # test matrix with nan
-        a = np.array([1, 0, np.nan, 1, 0, 1])
+        a = np.array([1, 0, np.nan, 1, 1, 1])
         out = matrix_utils.remove_small_objects(a, 2)
 
-        assert all(out == np.array([False, False, True, True, False, False]))
+        assert all(out == np.array([False, False, False, True, True, True]))
+
+    def test_remove_small_objects_axis(self):
+        # test matrix with nan
+        a = np.array([[1.0, 0.0, 0.0, 1.0, 0.0, 1.0], [1.0, 1.0, 0.0, 1.0, 1.0, 1.0]])
+        out = matrix_utils.remove_small_objects(a, 2)
+        exp_out = np.array(
+            [
+                [False, False, False, False, False, False],
+                [True, True, False, True, True, True],
+            ]
+        )
+
+        assert (exp_out == out).all()
 
 
 class TestFirstTrue(unittest.TestCase):
@@ -81,3 +94,6 @@ class TestMeanAt(unittest.TestCase):
             )
             == None
         )
+
+
+# %%
