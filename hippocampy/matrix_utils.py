@@ -215,8 +215,7 @@ def zscore(matrix, axis=-1):
 #%% OTHER
 def label(v, axis=-1) -> np.array:
     """
-    label_continuous_1d 
-    label continuous values in either a bolean or int/float vector
+    label continuous values in either a boolean or int/float vector
 
 
     Parameters

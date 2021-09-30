@@ -168,6 +168,8 @@ def band_filter(sig, fRange, fs, method="cheby2", order=4) -> np.ndarray:
     TO DO
     -----
     implement sosfilter
+    implement remez method:
+    https://github.com/Eden-Kramer-Lab/ripple_detection/blob/4c3ae1cdf421f38db1c4dcd67cdd967c63989d4a/ripple_detection/core.py#L95
     """
 
     allMethods = ["butter", "cheby2"]
@@ -186,7 +188,7 @@ def band_filter(sig, fRange, fs, method="cheby2", order=4) -> np.ndarray:
             order, 20, [fRange[0] / nyquist, fRange[1] / nyquist], btype="band"
         )
     else:
-        raise NotImplementedError
+        raise NotImplementedError(f"Method {method} not implemented")
 
     return filtfilt(b, a, sig)
 

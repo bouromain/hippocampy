@@ -24,15 +24,6 @@ def value_cross(M, threshold=0, axis=-1):
     down:
         logical vector with True value for down crossing
     """
-    # before = np.array(x[:-1])
-    # after = np.array(x[1:])
-
-    # up = np.logical_and(before < threshold, after > threshold)
-    # down = np.logical_and(before > threshold, after < threshold)
-
-    # up = np.append(up, False)
-    # down = np.append(down, False)
-
     M_b = np.array(M, ndmin=2)
     return start_stop(M_b > threshold, axis=axis)
 

@@ -52,6 +52,7 @@ def rate_map(var: np.ndarray, samples: np.ndarray, *, bins=10, method="spk"):
 
     # calculate occupancy
     occ, _ = np.histogramdd(var, bins)
+
     # affect no occupancy to nan. This avoid zero division later
     # and is necessary to consider non explored areas
     no_occ = occ == 0
