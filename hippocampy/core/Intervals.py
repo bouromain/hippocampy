@@ -134,4 +134,3 @@ class Interval:
 
                 isMerged[mask] = 1
         return Interval(newdata)
-

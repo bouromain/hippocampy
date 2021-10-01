@@ -1,8 +1,42 @@
 import numpy as np
 import bottleneck as bn
-from numpy.core.fromnumeric import squeeze
 
 from hippocampy.utils.gen_utils import start_stop
+
+"""
+Interval objects
+
+References
+----------
+https://github.com/kvesteri/intervals/blob/master/intervals/interval.py
+https://github.com/nelpy/nelpy/blob/43d07f3652324f8b89348a21fde04019164ab536/nelpy/core/_intervalarray.py
+
+"""
+
+
+def coerce_to_interval(func):
+    def wrapper(self, arg):
+        if (
+            isinstance(arg, list)
+            or isinstance(arg, tuple)
+            or isinstance(arg, np.ndarray)
+            or isinstance(arg, type(self))
+        ):
+            try:
+                if arg is not None:
+                    arg = type(self)(arg)
+                return func(self, arg)
+            except:
+                raise TypeError(
+                    f" Function {func.__name__} not implemented for type {type(arg).__name__}"
+                )
+        try:
+            arg = type(self)(arg)
+        except (ValueError, TypeError, OverflowError):
+            pass
+        return func(self, arg)
+
+    return wrapper
 
 
 class Iv:
@@ -13,7 +47,6 @@ class Iv:
 
         if data is None or len(data) == 0:
             # to allow the creation of empty Iv
-            print("create empty")
             for attr in self.__attributes__:
                 exec("self." + attr + " = None")
             return
@@ -33,10 +66,10 @@ class Iv:
                     )
 
                 if data.ndim == 1:
-                    data = data.ravel()
+                    data = np.atleast_2d(data).reshape(-1, 2)
 
                 elif data.ndim == 2:
-                    if not any(data.shape == 2):
+                    if 2 not in data.shape:
                         raise ValueError(
                             "Data should have the same number of starts and stops"
                         )
@@ -58,7 +91,7 @@ class Iv:
     def domain(self):
         if self._domain is None:
             self._domain = type(self)([-np.inf, np.inf])
-            return self._domain
+        return self._domain
 
     @domain.setter
     def domain(self, vals):
@@ -126,7 +159,7 @@ class Iv:
 
         if isinstance(idx, int):
             return type(self)([self.data[idx, :]])
-        elif isinstance(idx, (list, tuple, np.array)):
+        elif isinstance(idx, (list, tuple, np.ndarray)):
             try:
                 idx = np.squeeze(idx)
                 return type(self)([self.data[idx, :]])
@@ -149,30 +182,99 @@ class Iv:
         self._index += 1
         return type(self)(self.data[index, :])
 
+    @coerce_to_interval
     def __and__(self, other):
-        ...
+        """
+        perform the intersection of an set of interval with a
+        single or an other set of intervals
+
+        TODO correct the domain eg intesect the too domains too
+        """
         # https://scicomp.stackexchange.com/questions/26258/the-easiest-way-to-find-intersection-of-two-intervals
+
+        new_starts = []
+        new_stops = []
+
+        for tmp_other in other:
+            is_intersect = np.logical_and(
+                self.starts <= tmp_other.stops, self.stops >= tmp_other.starts
+            )
+            # now we found the intersecting interval we can either have
+            # no intersection, a single of multiple ones
+            if is_intersect.any():
+                for tmp_self in self[is_intersect]:
+                    new_starts.append(max([tmp_self.starts, tmp_other.starts]))
+                    new_stops.append(min([tmp_self.stops, tmp_other.stops]))
+        new_starts = np.asarray(new_starts)
+        new_stops = np.asarray(new_stops)
+
+        return type(self)(np.hstack((new_starts, new_stops)))
+
+    def intersect(self, other):
+        return self & other
+
+    @coerce_to_interval
+    def __or__(self, other):
+        """Define union between intervals
+        we will do that by joining the two sets of interval and by
+        merging them (eg: joining overlapping intervals)
+        """
+
+        new_self = self.append(other)
+        new_self._sort()
+
+        return new_self.merge()
+
+    def union(self, other):
+        return self | other
+
+    @coerce_to_interval
+    def append(self, other):
+
+        if self.isempty:
+            return other
+        if other.isempty:
+            return self
+
+        return type(self)(np.vstack((self.data, other.data)))
+
+    @coerce_to_interval
+    def __rshift__(self, other):
+        return self.append(other)
+
+    @coerce_to_interval
+    def __lshift__(self, other):
+        return self.append(other)
+
+    def __invert__(self):
+        # invert the interval using the domain
+        pass
 
     def __contains__(self, other):
         """
         Contains is defined for Iv, arrays/list and values
         """
+        return (self.contain(other)).any()
 
-        if isinstance(other, type(self)):
-            is_in = np.logical_and(
-                other.starts >= self.starts, other.stops <= self.stops
-            )
-            return is_in
-
-        elif isinstance(other, (np.ndarray, list)):
-            return type(self)(other) in self
-
-        elif isinstance(other, (int, float)):
+    @coerce_to_interval
+    def contain(self, other):
+        """
+        return boolean showing which interval contains
+        the defined Iv, arrays/list or values
+        """
+        if isinstance(other, (int, float)):
             is_in = np.logical_and(other >= self.starts, other <= self.stops)
             return is_in
 
         else:
-            raise TypeError
+            is_in = np.zeros((1, self.n_intevals), dtype=bool)
+
+            for tmp_out in other:
+                tmp_in = np.logical_and(
+                    tmp_out.starts >= self.starts, tmp_out.stops <= self.stops
+                )
+                is_in = np.logical_or(is_in, tmp_in)
+            return is_in
 
     def __len__(self):
         return self.n_intevals
@@ -183,6 +285,7 @@ class Iv:
     def __nonzero__(self):
         return not self.isempty
 
+    @coerce_to_interval
     def __eq__(self, other):
         return (
             (self.starts == other.starts).all()
@@ -193,51 +296,33 @@ class Iv:
     def __ne__(self, other):
         return not (self == other)
 
+    @coerce_to_interval
     def __gt__(self, other):
         if isinstance(other, (int, float)):
             return self.starts > other
-        elif isinstance(other, type(self)):
+        else:
             return self.starts > other.max
 
+    @coerce_to_interval
     def __lt__(self, other):
         if isinstance(other, (int, float)):
             return self.starts < other
-        elif isinstance(other, type(self)):
+        else:
             return self.starts < other.min
 
+    @coerce_to_interval
     def __ge__(self, other):
         if isinstance(other, (int, float)):
             return self.starts >= other
-        elif isinstance(other, type(self)):
+        else:
             return self.starts >= other.max
 
+    @coerce_to_interval
     def __le__(self, other):
         if isinstance(other, (int, float)):
             return self.starts <= other
-        elif isinstance(other, type(self)):
+        else:
             return self.starts <= other.min
-
-    def __invert__(self):
-        # invert the interval using the domain
-        pass
-
-    def __or__(self):
-        # calculate union
-        pass
-
-    def __rshift__(self, other):
-        if not self.isempty:
-            if isinstance(other, (int, float)):
-                self.data = self.data + other
-            else:
-                raise TypeError
-
-    def __lshift__(self, other):
-        if not self.isempty:
-            if isinstance(other, (int, float)):
-                self.data = self.data - other
-            else:
-                raise TypeError
 
     def __repr__(self) -> str:
         cls_name = self.__class__.__name__
@@ -257,9 +342,15 @@ class Iv:
         bool_vec = np.squeeze(np.array(bool_vec, dtype=bool))
 
         if not bool_vec.ndim == 1:
-            raise ValueError("Boolean input shoudl be a vector")
+            raise ValueError("Boolean input should be a vector")
         else:
             starts, stops = start_stop(bool_vec)
-            return type(self)([starts, stops])
+            starts = np.nonzero(starts)[0]
+            stops = np.nonzero(stops)[0]
+            self._data = np.vstack((starts, stops)).T
+            self._domain = [0, len(starts)]
+
+    def merge(self, *, gap=0.0, overlap=0.0, max_len=None):
+        ...
 
     # others

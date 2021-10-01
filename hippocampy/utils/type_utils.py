@@ -1,6 +1,8 @@
 import numpy as np
+from typing import Union
 
-def is_number(s: str):
+
+def is_number(s: Union[str, int, float]):
     try:
         float(s)
         return True
@@ -10,8 +12,8 @@ def is_number(s: str):
 
 def float_to_int(array) -> np.array:
     """
-    float_to_int 
-    Cast float to int but check value are then equal 
+    float_to_int
+    Cast float to int but check value are then equal
 
     Parameters
     ----------
@@ -21,7 +23,7 @@ def float_to_int(array) -> np.array:
     Returns
     -------
     array:
-        output array converted to int 
+        output array converted to int
 
     Raises
     ------
@@ -30,7 +32,7 @@ def float_to_int(array) -> np.array:
 
     Reference
     ---------
-    https://stackoverflow.com/questions/36505879/convert-float64-to-int64-using-safe    
+    https://stackoverflow.com/questions/36505879/convert-float64-to-int64-using-safe
     """
     if array.dtype.kind == "i":
         return array
