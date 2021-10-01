@@ -1,3 +1,4 @@
+from hippocampy.matrix_utils import label
 import numpy as np
 import bottleneck as bn
 
@@ -10,6 +11,9 @@ References
 ----------
 https://github.com/kvesteri/intervals/blob/master/intervals/interval.py
 https://github.com/nelpy/nelpy/blob/43d07f3652324f8b89348a21fde04019164ab536/nelpy/core/_intervalarray.py
+
+TODO correct the domain eg intesect the too domains too
+for now it creates an infinite recursion as a domain is an Iv 
 
 """
 
@@ -55,6 +59,8 @@ class Iv:
             if isinstance(data, type(self)):
                 # create from the same type
                 data = data.data
+                domain = data.domain
+                unit = data.unit
 
             elif isinstance(data, (list, tuple, np.ndarray)):
                 data = np.squeeze(data)
@@ -102,7 +108,7 @@ class Iv:
             self._domain = type(self)([vals[0], vals[0]])
 
     @property
-    def n_intevals(self):
+    def n_intervals(self):
         "number of intervals"
         if self.isempty:
             return None
@@ -150,8 +156,24 @@ class Iv:
     def issorted(self):
         if self.isempty:
             return True
+        if self.n_intervals == 1:
+            return True
         else:
-            return all(np.diff(self.starts) >= 0)
+            return all(np.diff(self.starts) >= 0) and all(np.diff(self.stops) >= 0)
+
+    @property
+    def ismerged(self):
+        """(bool) No overlapping intervals exist."""
+        if self.isempty:
+            return True
+        if self.n_intervals == 1:
+            return True
+        if not self.issorted:
+            self._sort()
+        if not all(np.diff(self.stops) >= 0):
+            return False
+
+        return (self.starts[1:] > self.stops[:-1]).all()
 
     def __getitem__(self, idx):
         if self.isempty:
@@ -176,19 +198,23 @@ class Iv:
 
     def __next__(self):
         index = self._index
-        if index > self.n_intevals - 1:
+        if index > self.n_intervals - 1:
             raise StopIteration
 
         self._index += 1
         return type(self)(self.data[index, :])
 
-    @coerce_to_interval
     def __and__(self, other):
+        return self.intersect(other)
+
+    @coerce_to_interval
+    def intersect(self, other):
+
         """
         perform the intersection of an set of interval with a
         single or an other set of intervals
 
-        TODO correct the domain eg intesect the too domains too
+
         """
         # https://scicomp.stackexchange.com/questions/26258/the-easiest-way-to-find-intersection-of-two-intervals
 
@@ -210,16 +236,12 @@ class Iv:
 
         return type(self)(np.hstack((new_starts, new_stops)))
 
-    def intersect(self, other):
-        return self & other
-
     @coerce_to_interval
     def __or__(self, other):
         """Define union between intervals
         we will do that by joining the two sets of interval and by
         merging them (eg: joining overlapping intervals)
         """
-
         new_self = self.append(other)
         new_self._sort()
 
@@ -267,7 +289,7 @@ class Iv:
             return is_in
 
         else:
-            is_in = np.zeros((1, self.n_intevals), dtype=bool)
+            is_in = np.zeros((1, self.n_intervals), dtype=bool)
 
             for tmp_out in other:
                 tmp_in = np.logical_and(
@@ -277,7 +299,7 @@ class Iv:
             return is_in
 
     def __len__(self):
-        return self.n_intevals
+        return self.n_intervals
 
     def __bool__(self):
         return not self.isempty
@@ -328,10 +350,10 @@ class Iv:
         cls_name = self.__class__.__name__
         if self.isempty:
             return f"empty {cls_name}"
-        elif self.n_intevals == 1:
+        elif self.n_intervals == 1:
             return f"< {cls_name} object with 1 interval >"
         else:
-            return f"< {cls_name} object with {self.n_intevals} intervals >"
+            return f"< {cls_name} object with {self.n_intervals} intervals >"
 
     def _sort(self):
         """Sort interval data with start time"""
@@ -350,7 +372,54 @@ class Iv:
             self._data = np.vstack((starts, stops)).T
             self._domain = [0, len(starts)]
 
-    def merge(self, *, gap=0.0, overlap=0.0, max_len=None):
+    def merge(self, *, gap=0.0, overlap=0.0, max_len=np.Inf):
         ...
 
-    # others
+        if gap < 0:
+            raise ValueError(f"Gap should not be negative")
+        if overlap < 0:
+            raise ValueError(f"Gap should not be negative")
+        if max_len < 0:
+            raise ValueError(f"Gap should not be negative")
+
+        if self.isempty:
+            return self
+
+        # if alredy merged return self
+
+        if self.ismerged and gap == 0:
+            return self
+
+        new_starts = []
+        new_stops = []
+
+        to_merge = self.starts[1:] - self.stops[:-1] > -overlap
+        # add an element at the begining
+
+        # a = np.array([0,0,0,1,1,0,1,0,1,1],dtype=bool)
+
+        # o,_ = start_stop(a)
+        # o1,_= start_stop(~a)
+        # oo = np.logical_or(o,o1)
+        # i = np.nonzero(oo)[0]
+        # i = np.insert(i,0,0)
+        # i = np.append(i,len(a)+1)
+        # print(i-0.5)
+        # r = np.arange(len(a))
+        # print(r)
+        # np.digitize(r,i)
+
+        for it_merge in np.unique(to_merge[to_merge != 0]):
+            tmp_start = min(self[to_merge == it_merge].starts)
+            tmp_stop = max(self[to_merge == it_merge].stops)
+
+            if tmp_stop - tmp_start < max_len:
+                # only merge if resulting length does not exceed
+                # a given maximum length
+                new_starts.append(tmp_start)
+                new_stops.append(tmp_stop)
+
+        new_starts = np.asarray(new_starts)
+        new_stops = np.asarray(new_stops)
+
+        return type(self)(np.hstack((new_starts, new_stops)))
