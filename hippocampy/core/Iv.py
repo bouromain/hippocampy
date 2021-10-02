@@ -1,3 +1,4 @@
+from numpy.lib.function_base import copy
 from hippocampy.matrix_utils import label
 import numpy as np
 import bottleneck as bn
@@ -24,7 +25,6 @@ def coerce_to_interval(func):
             isinstance(arg, list)
             or isinstance(arg, tuple)
             or isinstance(arg, np.ndarray)
-            or isinstance(arg, type(self))
         ):
             try:
                 if arg is not None:
@@ -58,9 +58,10 @@ class Iv:
 
             if isinstance(data, type(self)):
                 # create from the same type
-                data = data.data
-                domain = data.domain
-                unit = data.unit
+                _data = data
+                data = _data.data
+                domain = _data.domain
+                unit = _data._unit
 
             elif isinstance(data, (list, tuple, np.ndarray)):
                 data = np.squeeze(data)
@@ -181,6 +182,9 @@ class Iv:
 
         if isinstance(idx, int):
             return type(self)([self.data[idx, :]])
+        if isinstance(idx, slice):
+            return type(self)([self.data[idx, :]])
+
         elif isinstance(idx, (list, tuple, np.ndarray)):
             try:
                 idx = np.squeeze(idx)
@@ -373,7 +377,7 @@ class Iv:
             self._domain = [0, len(starts)]
 
     def merge(self, *, gap=0.0, overlap=0.0, max_len=np.Inf):
-        ...
+        """ merge overlaping intervals"""
 
         if gap < 0:
             raise ValueError(f"Gap should not be negative")
@@ -390,36 +394,56 @@ class Iv:
         if self.ismerged and gap == 0:
             return self
 
+        if not self.issorted:
+            self._sort()
+
+        # remove included intervals
+        included = self.contain(self)
+        raise NameError("we need to correctly remove included intervals")
+
+        if (included).any():
+            self = self[~included]
+
         new_starts = []
         new_stops = []
 
-        to_merge = self.starts[1:] - self.stops[:-1] > -overlap
-        # add an element at the begining
+        prev_start = self[0].starts
+        prev_stop = self[0].stops
 
-        # a = np.array([0,0,0,1,1,0,1,0,1,1],dtype=bool)
+        for it, tmp_iv in enumerate(self[1:]):
+            new_start = min(tmp_iv.starts, prev_start)
+            new_stop = max(tmp_iv.stops, prev_stop)
 
-        # o,_ = start_stop(a)
-        # o1,_= start_stop(~a)
-        # oo = np.logical_or(o,o1)
-        # i = np.nonzero(oo)[0]
-        # i = np.insert(i,0,0)
-        # i = np.append(i,len(a)+1)
-        # print(i-0.5)
-        # r = np.arange(len(a))
-        # print(r)
-        # np.digitize(r,i)
+            # we want to merge if:
+            is_overlap = prev_stop - tmp_iv.starts >= gap
+            is_too_long = new_stop - new_start > max_len
 
-        for it_merge in np.unique(to_merge[to_merge != 0]):
-            tmp_start = min(self[to_merge == it_merge].starts)
-            tmp_stop = max(self[to_merge == it_merge].stops)
+            if is_overlap and (not is_too_long):
+                # but also if it does not merge with the next interval
+                if it < len(self) - 2:
+                    overlap_next = tmp_iv.stops - self[it + 2].starts >= gap
+                else:
+                    overlap_next = False
 
-            if tmp_stop - tmp_start < max_len:
-                # only merge if resulting length does not exceed
-                # a given maximum length
-                new_starts.append(tmp_start)
-                new_stops.append(tmp_stop)
+                if overlap_next:
+                    prev_start = new_start
+                    prev_stop = new_stop
+                else:
+                    new_starts.append(new_start)
+                    new_stops.append(new_stop)
+                    prev_start = new_start
+                    prev_stop = new_stop
+
+            else:
+                # if no overlap, keep the interval
+                new_starts.append(prev_start)
+                new_stops.append(prev_stop)
+                prev_start = tmp_iv.starts
+                prev_stop = tmp_iv.stops
 
         new_starts = np.asarray(new_starts)
         new_stops = np.asarray(new_stops)
 
-        return type(self)(np.hstack((new_starts, new_stops)))
+        self._data = np.hstack((new_starts, new_stops))
+
+        return self
