@@ -147,11 +147,11 @@ class Iv:
 
     @property
     def centers(self):
-        return bn.nanmean(self.data, axis=1)
+        return (self.starts - self.stops) / 2
 
     @property
     def lengths(self):
-        return self.data[:, 1] - self.data[:, 0]
+        return self.stops - self.starts
 
     @property
     def issorted(self):
@@ -175,6 +175,11 @@ class Iv:
             return False
 
         return (self.starts[1:] > self.stops[:-1]).all()
+
+    @property
+    def degenerate(self):
+        """ an interval is considered degenerate if it is empty"""
+        return self.starts == self.stops
 
     def __getitem__(self, idx):
         if self.isempty:
