@@ -1,5 +1,6 @@
 import numpy as np
 import bottleneck as bn
+from hippocampy.core.Iv import Iv
 from hippocampy.sig_tool import envelope
 from hippocampy.utils.gen_utils import nearest_odd, start_stop
 from hippocampy.matrix_utils import smooth1D, zscore
@@ -37,10 +38,10 @@ def find_ripples(
     filtered = np.array(filtered, ndmin=2)
 
     # calculate envelope
-    filtered = envelope(filter, axis=axis)
+    filtered = envelope(filtered, axis=axis)
 
     # if multiple traces are provided, sum them to an average
-    # squared lfp signal if we wan to
+    # squared lfp signal if we want to
     if filtered.ndim > 1 and combine:
         if axis == 1 or axis == -1:
             squared_sig = bn.nansum(filtered, 0)
@@ -61,6 +62,17 @@ def find_ripples(
 
     # detect candidate events
     thresholded = squared_sig > low_threshold
+    cand_event = Iv().from_bool(thresholded)
+
+    n_sample_gap = min_inter * 10e-3 * fs
+    n_sample_max_len = max_len * 10e-3 * fs
+
+    cand_event.merge(gap=n_sample_gap, overlap=0.0, max_len=n_sample_max_len)
+
+    # remove small intervals
+    too_small = cand_event.stops - cand_event.starts > min_len * 10e-3 * fs
+    cand_event = cand_event[~too_small]
+
     starts, stops = start_stop(thresholded)
     ripple_epoch = np.array([np.nonzero(starts)[0], np.nonzero(stops)[0]])
 

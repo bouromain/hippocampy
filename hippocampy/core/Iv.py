@@ -11,8 +11,7 @@ References
 https://github.com/kvesteri/intervals/blob/master/intervals/interval.py
 https://github.com/nelpy/nelpy/blob/43d07f3652324f8b89348a21fde04019164ab536/nelpy/core/_intervalarray.py
 
-TODO correct the domain eg intersect the too domains too
-for now it creates an infinite recursion as a domain is an Iv 
+TODO check the intersect function and make a exclude function (eg exclude an IV from an other) 
 
 """
 
@@ -96,6 +95,8 @@ class Iv:
     def domain(self):
         if self._domain is None:
             self._domain = type(self)([-np.inf, np.inf])
+        else:
+            self._domain = type(self)(self._domain)
         return self._domain
 
     @domain.setter
@@ -195,9 +196,9 @@ class Iv:
             except IndexError:
                 raise IndexError(f"{self.__class__.__name__} index out of range")
             except Exception:
-                raise TypeError(f"Unsuported indexing type {type(idx)}")
+                raise TypeError(f"Unsupported indexing type {type(idx)}")
         else:
-            raise TypeError(f"Unsuported indexing type {type(idx)}")
+            raise TypeError(f"Unsupported indexing type {type(idx)}")
 
     def __iter__(self):
         self._index = 0
@@ -220,11 +221,21 @@ class Iv:
         """
         perform the intersection of an set of interval with a
         single or an other set of intervals
-
-
+        
+        https://scicomp.stackexchange.com/questions/26258/the-easiest-way-to-find-intersection-of-two-intervals
         """
-        # https://scicomp.stackexchange.com/questions/26258/the-easiest-way-to-find-intersection-of-two-intervals
+        new_starts, new_stops = self._intersect(other)
+        domain_new_starts, domain_new_stops = self.domain._intersect(other.domain)
 
+        # remove potential interval duplicates
+        data_out = np.unique(np.hstack((new_starts, new_stops)), axis=0)
+        out = type(self)(data=data_out, domain=[domain_new_starts, domain_new_stops])
+        # remove empty intervals
+        m = out.degenerate
+
+        return out[~m]
+
+    def _intersect(self, other):
         new_starts = []
         new_stops = []
 
@@ -238,10 +249,8 @@ class Iv:
                 for tmp_self in self[is_intersect]:
                     new_starts.append(max([tmp_self.starts, tmp_other.starts]))
                     new_stops.append(min([tmp_self.stops, tmp_other.stops]))
-        new_starts = np.asarray(new_starts)
-        new_stops = np.asarray(new_stops)
 
-        return type(self)(np.hstack((new_starts, new_stops)))
+        return np.asarray(new_starts), np.asarray(new_stops)
 
     @coerce_to_interval
     def __or__(self, other):
@@ -319,7 +328,7 @@ class Iv:
         return (
             (self.starts == other.starts).all()
             and (self.stops == other.stops).all()
-            and (self.domain == other.domain).all()
+            and (self.domain.data == other.domain.data).all()
         )
 
     def __ne__(self, other):
@@ -368,6 +377,12 @@ class Iv:
         self._data = self.data[idx, :]
 
     def from_bool(self, bool_vec):
+        """ 
+        create a Iv from a boolean vector
+
+        the domain will be affected to 0 and len(bool_vector)
+        
+        """
         bool_vec = np.squeeze(np.array(bool_vec, dtype=bool))
 
         if not bool_vec.ndim == 1:
@@ -385,14 +400,14 @@ class Iv:
         if gap < 0:
             raise ValueError(f"Gap should not be negative")
         if overlap < 0:
-            raise ValueError(f"Gap should not be negative")
+            raise ValueError(f"Overlap should not be negative")
         if max_len < 0:
-            raise ValueError(f"Gap should not be negative")
+            raise ValueError(f"Maximum length should not be negative")
 
         if self.isempty:
             return self
 
-        # if alredy merged return self
+        # if already merged return self
 
         if self.ismerged and gap == 0:
             return self
@@ -416,13 +431,13 @@ class Iv:
             new_stop = max(tmp_iv.stops, prev_stop)
 
             # we want to merge if:
-            is_overlap = prev_stop - tmp_iv.starts >= gap
+            is_overlap = (prev_stop + gap) - tmp_iv.starts >= overlap
             is_too_long = new_stop - new_start > max_len
 
             if is_overlap and (not is_too_long):
                 # but also if it does not merge with the next interval
                 if it < len(self) - 2:
-                    overlap_next = tmp_iv.stops - self[it + 2].starts >= gap
+                    overlap_next = tmp_iv.stops - self[it + 2].starts >= overlap
                 else:
                     overlap_next = False
 

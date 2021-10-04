@@ -1,15 +1,16 @@
 import hippocampy as hp
-import pytest
 import unittest
 import numpy as np
+
+from hippocampy.core.Iv import Iv
 
 
 class TestIv(unittest.TestCase):
     def test_in(self):
-        a = hp.Interval([[1, 3], [6, 10]])
+        a = Iv([[1, 3], [6, 10]])
         b = [2, 3]
         c = [2.5, 3]
-        c_iv = hp.Interval([2.5, 3])
+        c_iv = Iv([2.5, 3])
 
         d = [0, 1]
 
@@ -21,3 +22,32 @@ class TestIv(unittest.TestCase):
         self.assertIn(c_iv, a)
         # check Iv out
         self.assertNotIn(d, a)
+
+    def test_eq(self):
+        f = Iv([[2, 4], [6, 8], [10, 12]])
+        e = Iv([[2, 4], [6, 8], [10, 12]])
+
+        self.assertTrue(f == e)
+
+    def test_neq_domain(self):
+        f = Iv([[2, 4], [6, 8], [10, 12]])
+        e = Iv([[2, 4], [6, 8], [10, 12]], domain=[0, 10000])
+
+        self.assertFalse(f == e)
+
+    def test_merge(self):
+        b = Iv([[10, 12], [6, 8], [2, 4]])
+        b = b.merge()
+
+        exp_b = Iv([[2, 4], [6, 8], [10, 12]])
+
+        self.assertTrue(b == exp_b)
+
+    def test_merge_overlap(self):
+        b = Iv([[3, 12], [12, 17], [-5, 3]])
+        b = b.merge()
+
+        exp_b = Iv([[-5, 17]])
+
+        self.assertTrue(b == exp_b)
+

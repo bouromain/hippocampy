@@ -13,4 +13,4 @@ from . import data
 from . import lfp
 
 # DataTypes
-from .core.Intervals import Interval
+from .core.Iv import Iv
