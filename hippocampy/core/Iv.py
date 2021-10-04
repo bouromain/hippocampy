@@ -1,5 +1,3 @@
-from numpy.lib.function_base import copy
-from hippocampy.matrix_utils import label
 import numpy as np
 import bottleneck as bn
 
@@ -13,7 +11,7 @@ References
 https://github.com/kvesteri/intervals/blob/master/intervals/interval.py
 https://github.com/nelpy/nelpy/blob/43d07f3652324f8b89348a21fde04019164ab536/nelpy/core/_intervalarray.py
 
-TODO correct the domain eg intesect the too domains too
+TODO correct the domain eg intersect the too domains too
 for now it creates an infinite recursion as a domain is an Iv 
 
 """
@@ -403,12 +401,10 @@ class Iv:
             self._sort()
 
         # remove included intervals
-        included = self.contain(self)
-        raise NameError("we need to correctly remove included intervals")
+        m = self.included(self)
+        self = self[~m]
 
-        if (included).any():
-            self = self[~included]
-
+        # we can now start the merge
         new_starts = []
         new_stops = []
 
@@ -446,9 +442,18 @@ class Iv:
                 prev_start = tmp_iv.starts
                 prev_stop = tmp_iv.stops
 
-        new_starts = np.asarray(new_starts)
-        new_stops = np.asarray(new_stops)
-
-        self._data = np.hstack((new_starts, new_stops))
+        self._data = np.hstack((np.asarray(new_starts), np.asarray(new_stops)))
 
         return self
+
+    @coerce_to_interval
+    def included(self, other):
+        """ return a mask of interval in "other" which are completely included 
+        in the set of intervals"""
+        mask = np.empty((len(other), 1), dtype=bool)
+        for i, tmp_it in enumerate(other):
+            mask[i] = np.logical_and(
+                tmp_it.starts > self.starts, tmp_it.stops < self.stops
+            ).any()
+        return np.squeeze(mask)
+
