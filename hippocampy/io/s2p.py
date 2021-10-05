@@ -19,9 +19,31 @@ def load_ops(pathfile):
     return ops.item()
 
 
-def load_all_s2p(pathfile):
+def load_all_s2p(pathfile: str):
     """
     Load all suite2p files generated after preprocessing
+
+    Parameters
+    ----------
+    pathfile : [str]
+        [description]
+
+    Returns
+    -------
+    F : np.ndarray
+        array of fluorescence traces
+    Fneu : np.ndarray
+        array of neuropil fluorescence traces
+    spks : np.ndarray
+        array of deconvolved traces
+    stats : list
+        list of cellular stats 
+    ops : dict
+        dict of processing options
+    iscell = np.ndarray
+        output of the cell classifier
+
+
     """
     F = load_s2p(pathfile, "F.npy")
     Fneu = load_s2p(pathfile, "Fneu.npy")
