@@ -93,11 +93,11 @@ def localExtrema(x, method="max"):
     E = np.diff(D / abs(D))
 
     if method == "max":
-        return np.nonzero(E == -2)[0] + 1
+        return np.array(np.nonzero(E == -2)[0] + 1)
     elif method == "min":
-        return np.nonzero(E == 2)[0] + 1
-    else:
-        return np.nonzero(np.logical_or(E == 2, E == -2))[0] + 1
+        return np.array(np.nonzero(E == 2)[0] + 1)
+    elif method == "all":
+        return np.array(np.nonzero(np.logical_or(E == 2, E == -2))[0] + 1)
 
 
 def nearest_idx(array, values, method="sorted"):
@@ -126,10 +126,10 @@ def nearest_idx(array, values, method="sorted"):
     values = np.asarray(values)
 
     if method == "sorted":
-        idx = np.array(np.searchsorted(array, values, side="left"), dtype=int)
+        idx = np.array(np.searchsorted(values, array, side="left"), dtype=int) - 1
 
     elif method == "unsorted":
-        idx = np.array([(np.abs(array - val)).argmin() for val in values], dtype=int)
+        idx = np.array(bn.nanargmin(np.abs(array - values[:, None]), axis=0), dtype=int)
 
     return idx
 

@@ -51,3 +51,14 @@ class TestIv(unittest.TestCase):
 
         self.assertTrue(b == exp_b)
 
+    def test_union(self):
+        a = Iv([[3, 12], [12, 17]])
+        b = Iv([[-5, 3]])
+        c = a | b
+        c2 = a.union(b)
+
+        exp_c = Iv([[-5, 17]])
+
+        self.assertTrue(c == exp_c)
+        self.assertTrue(c2 == exp_c)
+
