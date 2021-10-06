@@ -5,7 +5,6 @@ from skimage import measure
 import pandas as pd
 import tqdm as tqdm
 
-
 #%% SMOOTH
 def smooth1D(
     data,
@@ -630,7 +629,6 @@ def rolling_quantile(data, window_len, quantile):
         [description]
     quantile : [type]
         [description]
-
     Returns
     -------
     [type]

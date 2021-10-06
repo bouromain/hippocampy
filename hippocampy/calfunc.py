@@ -155,7 +155,7 @@ def transient(
     spike_norm="mad",
     denoise_wavelet="db2",
     denoise_level: int = 2,
-    detrend_window=True,
+    detrend_window=None,
 ):
     """
     Transient detection inspired from Grosmark 2020.
