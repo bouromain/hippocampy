@@ -14,7 +14,6 @@ def save_npy(fpath: str, arr: np.ndarray, *, overwrite: bool = False):
         variable to save 
     overwrite : bool, optional
         if we should overwrite existing files, by default False
-
     Raises
     ------
     FileExistsError
@@ -28,9 +27,7 @@ def save_npy(fpath: str, arr: np.ndarray, *, overwrite: bool = False):
 
     if os.path.isdir(fpath) and not overwrite:
         raise ValueError(f"File {fpath}should be a path not a directory")
-    
-    with fio as open(fpath,"w"):
-        np.save(fio,arr,allow_pickle=True)
 
+    with open(fpath, "wb") as fio:
+        np.save(fio, arr, allow_pickle=True)
 
-    
