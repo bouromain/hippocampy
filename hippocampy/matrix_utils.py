@@ -348,7 +348,41 @@ def first_true(v: np.ndarray, axis=-1):
     elif axis == 0:
         st[0, :] = v[0, :]
         st[1:, :] = ~v[:-1, :] & v[1:, :]
-    return st
+    return np.squeeze(st)
+
+
+def last_true(v: np.ndarray, axis=-1):
+    """
+    Return last true value of contiguous sequence of True
+    per row or colum
+
+    Example:
+    last_true([0,0,1,1,0,1,1,1])
+    array([[False,  False, False, True,  False, False, True]])
+
+    Parameters
+    ----------
+    v : np.ndarray
+        [description]
+    axis : int, optional
+        [description], by default -1
+
+    Returns
+    -------
+    [type]
+        [description]
+    """
+    v = np.array(v, ndmin=2)
+    v = v.astype(bool)
+
+    st = np.empty_like(v, dtype=bool)
+    if axis == 1 or axis == -1:
+        st[:, -1] = v[:, -1]
+        st[:, :-1] = v[:, :-1] & ~v[:, 1:]
+    elif axis == 0:
+        st[-1, :] = v[-1, :]
+        st[:-1, :] = v[:-1, :] & ~v[1:, :]
+    return np.squeeze(st)
 
 
 def remove_small_objects(M, min_size=3, axis=-1):

@@ -11,6 +11,7 @@ from . import io
 from . import utils
 from . import data
 from . import lfp
+from . import behavior
 
 # DataTypes
 from .core.Iv import Iv

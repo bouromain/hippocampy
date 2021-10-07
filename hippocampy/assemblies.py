@@ -20,7 +20,7 @@ https://github.com/losonczylab/Sparks_Liao_NatComms2020
 import bottleneck as bn
 import numpy as np
 from sklearn.decomposition import FastICA
-from hippocampy.matrix_utils import corr_mat, smooth1D, zscore
+from hippocampy.matrix_utils import smooth1D, zscore
 
 
 def calc_template(spike_count, method="ICA"):
@@ -58,9 +58,7 @@ def calc_template(spike_count, method="ICA"):
     [n_cells, n_bins] = spike_count.shape
 
     # compute correlation matrix of binned spikes matrix
-    spike_count_z = (
-        spike_count - bn.nanmean(spike_count, axis=1)[:, None]
-    ) / bn.nanstd(spike_count, ddof=1, axis=1)[:, None]
+    spike_count_z = zscore(spike_count, axis=1)
 
     correlation_matrix = (1 / (n_bins - 1)) * (spike_count_z @ spike_count_z.T)
 
@@ -187,7 +185,7 @@ def sim_assemblies(
 
     for it, curr_neuron in enumerate(neuron_assembly):
         n_neu_ass = len(curr_neuron)
-        r_rdx = np.random.random_integers(0, n_bins - 1, n_act[it])
+        r_rdx = np.random.randint(0, n_bins - 1, n_act[it])
 
         spikes_binned[np.array(curr_neuron)[:, None], r_rdx] = np.random.poisson(
             act_lambda[it], (n_neu_ass, n_act[it])

@@ -306,3 +306,32 @@ def detrend_F(F, win_size, quantile=0.08):
     """
     Q = rolling_quantile(F, win_size, quantile)
     return F - Q
+
+
+def noise_level(F: np.ndarray, fs: int, axis=-1) -> np.ndarray:
+    """
+    compute noise level as defined in the cascade paper [1]
+
+    Parameters
+    ----------
+    F : np.ndarray
+        fluorescence traces array
+    fs : int
+        sampling rate
+    axis : int, optional
+        axis to work along, by default -1
+
+    Returns
+    -------
+    np.ndarray
+        array of noise level in percent
+    Reference
+    ---------
+    [1] Rupprecht P, Carta S, Hoffmann A, Echizen M, Blot A, AC Kwan, Dan Y,
+        Hofer SB, Kitamura K, Helmchen F*, Friedrich RW*, 
+        A database and deep learning toolbox for noise-optimized, generalized 
+        spike inference from calcium imaging, Nature Neuroscience (2021)
+    """
+
+    noise = mad(F, axis=axis) / np.sqrt(fs)
+    return noise * 100
