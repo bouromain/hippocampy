@@ -15,7 +15,8 @@ def find_lap_1d(
     max_dist_ratio: float = 1.5,
 ) -> np.ndarray:
     """
-    find_lap_1d [summary]
+    find_lap_1d find laps from a 1d position vector
+    Note: non laps will be set to nan
 
     Parameters
     ----------
@@ -50,7 +51,8 @@ def find_lap_1d(
         min_dist = len_maze * min_dist_ratio
         max_dist = len_maze * max_dist_ratio
 
-    out = np.zeros_like(pos, dtype=int)
+    out = np.empty_like(pos)
+    out[:] = np.nan
     # detect teleportation
     pos_d = np.abs(np.diff(pos, append=np.nan))
     idx_tel = first_true(pos_d > thresh_teleportation)
@@ -61,7 +63,7 @@ def find_lap_1d(
     starts = idx_tel[:-1]
     stops = idx_tel[1:]
 
-    lap_i = 1
+    lap_i = 0
     for i_start, i_stop in zip(starts, stops):
         # if we exceed a minimum distance we are in a candidate lap
         tmp_pos_d = pos_d[i_start:i_stop]
