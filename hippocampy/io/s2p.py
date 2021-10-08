@@ -1,6 +1,5 @@
 import numpy as np
 import os
-import suite2p
 
 ## DOC: https://suite2p.readthedocs.io/en/latest/settings.html
 ## DOC: https://github.com/MouseLand/suite2p/blob/master/jupyter/run_pipeline_tiffs_or_batch.ipynb

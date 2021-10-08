@@ -34,6 +34,7 @@ def rate_map(var: np.ndarray, samples: np.ndarray, *, bins=10, method="spk"):
     """
     # TODO take care of the no_occupancy case and set them to nan
     # take care of the bins
+    # correctly smooth
 
     # check inputs
     var = np.asarray(var)

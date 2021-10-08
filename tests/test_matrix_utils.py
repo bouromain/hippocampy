@@ -96,4 +96,14 @@ class TestMeanAt(unittest.TestCase):
         )
 
 
-# %%
+class TestSmooth1D(unittest.TestCase):
+    # fmt: off
+    def test_smooth(self):
+        v = np.array([[0,0,0,0,1,0,0,0,0,1],[0,0,0,0,1,0,0,0,0,1]])
+        v_s = matrix_utils.smooth_1d(v,2)
+
+        exp_v = np.array([[0., 0., 0., 0.32710442, 0.34579116,0.32710442, 0., 0., 0.32710442, 0.34579116],
+        [0., 0., 0., 0.32710442, 0.34579116,0.32710442, 0., 0., 0.32710442, 0.34579116]])
+    # fmt: on
+        assert (np.testing.assert_array_almost_equal(v_s,exp_v) == None)
+

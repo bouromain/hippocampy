@@ -6,53 +6,74 @@ import pandas as pd
 import tqdm as tqdm
 
 #%% SMOOTH
-def smooth1D(
-    data,
-    kernel_half_width=3,
-    kernel_type="gauss",
-    padtype="reflect",
-    preserve_nan_opt=True,
+def smooth_1d(
+    data: np.ndarray,
+    kernel_half_width: int = 2,
+    axis: int = -1,
+    *,
+    kernel_type: str = "gauss",
+    padtype: str = "reflect",
+    preserve_nan_opt: bool = True,
 ):
     """
-    One dimensional Smoothing of data. It can deal with vector or matrix of vector.
-    In case of 2D inputs, it will smooth along dim=1
+    One dimensional Smoothing of data. It can deal with vector or matrix of vector
 
-    padtypes are given to numpy.pad. Availlable option are:
+    Parameters
+    ----------
+    data : np.ndarray
+        input values
+    kernel_half_width : int, optional
+        half width of the smoothing kernel, by default 2
+    axis : int, optional
+        axis along which the function is performed, by default -1
+    kernel_type : str, optional
+        type of smoothing, by default "gauss"
+        option: - gauss: gaussian
+                - ramp: ramp kernel
+                - box: median box kernel
+    padtype : str, optional
+        type of padding, by default "reflect"
+        - ‘symmetric’ Pads with the reflection of the vector mirrored along the edge
+            of the array.
+        - 'reflect’ Pads with the reflection of the vector mirrored on the first and
+            last values of the vector along each axis.
 
-    - ‘symmetric’ Pads with the reflection of the vector mirrored along the edge
-      of the array.
-    - 'reflect’ Pads with the reflection of the vector mirrored on the first and
-      last values of the vector along each axis.
+            NB: The difference between symmetric and reflect is that reflect mirror the
+                the data without duplicating the end value:
+                a = np.array([1 , 2 , 3 , 4])
+                a_p = np.pad(a , (0,2) , 'reflect')
+                [1 2 3 4 3 2]
 
-      NB: The difference between symmetric and reflect is that reflect mirror the
-          the data without duplicating the end value:
-          a = np.array([1 , 2 , 3 , 4])
-          a_p = np.pad(a , (0,2) , 'reflect')
-          [1 2 3 4 3 2]
+                a_p = np.pad(a , (0,2) , 'symmetric')
+                [1 2 3 4 4 3]
 
-          a_p = np.pad(a , (0,2) , 'symmetric')
-          [1 2 3 4 4 3]
+        - ‘wrap’ : Pads with the wrap of the vector along the axis. The first values are
+            used to pad the end and the end values are used to pad the beginning.
 
-    - ‘wrap’ : Pads with the wrap of the vector along the axis. The first values are
-      used to pad the end and the end values are used to pad the beginning.
+    preserve_nan_opt : bool, optional
+        Define if nan value from the input data ae perserved in the output, by default True
+
+    Returns
+    -------
+    out np.ndarray
+        smoothed input values
+
     """
-    # Check Input
+    # check input
+    if kernel_type not in ["gauss", "box", "ramp"]:
+        raise ValueError(f"Kernel type value {kernel_type} not recognized")
+    if padtype not in ["reflect", "symmetric", "wrap"]:
+        raise ValueError(f"Pad type value {padtype} not recognized")
+
     if kernel_half_width % 2 != 1:
         kernel_half_width += 1
-        # kernel size has to be odd
 
-    if len(data.shape) == 1:
-        data = data[np.newaxis, :]
+    # pad the data along the correct dimension
+    n_pad = [(0, 0)] * data.ndim
+    n_pad[axis] = (kernel_half_width, kernel_half_width)
+    data_p = np.pad(data, n_pad, padtype)
 
-    acceptedPad = ["reflect", "symmetric", "wrap"]
-    assert padtype in acceptedPad, "Not Implemented pad type"
-
-    acceptedType = ["gauss", "box", "ramp"]
-    assert kernel_type in acceptedType, "Not Implemented smoothing kernel type"
-
-    # pad the data
-    data_p = np.pad(data, ((0, 0), (kernel_half_width, kernel_half_width)), padtype)
-
+    # smooth !
     if kernel_type == "box":
         # here bn.movemean seem to be much faster (~10x) than using a convolution as
         # for the gaussian or ramp kernel. It affect the value of the moving mean to
@@ -60,15 +81,13 @@ def smooth1D(
         # peculiar
 
         data_c = bn.move_mean(
-            data_p, kernel_half_width * 2 + 1, min_count=kernel_half_width, axis=1
+            data_p, kernel_half_width * 2 + 1, min_count=kernel_half_width, axis=axis
         )
-        data_c = data_c[:, kernel_half_width * 2 :]
+        idx = np.arange(0, data_p.shape[axis] - (kernel_half_width * 2))
+        data_c = np.take(data_c, idx, axis=axis)
 
         if preserve_nan_opt:
-            data_c[:, np.isnan(data)] = np.nan
-
-        return data_c
-
+            data_c[np.isnan(data)] = np.nan
     else:
         # Make convolution kernel
         kernel = np.zeros(kernel_half_width * 2 + 1)
@@ -85,12 +104,19 @@ def smooth1D(
 
         # Normalize kernel to one
         kernel = kernel / bn.nansum(kernel)
+
         # Convolve. Astropy  seems to deal really well with nan values
         data_c = np.apply_along_axis(
-            convolve, axis=1, arr=data_p, kernel=kernel, preserve_nan=preserve_nan_opt
+            convolve,
+            axis=axis,
+            arr=data_p,
+            kernel=kernel,
+            preserve_nan=preserve_nan_opt,
         )
 
-        return data_c[:, kernel_half_width:-kernel_half_width]
+        idx = np.arange(kernel_half_width, data_p.shape[axis] - kernel_half_width)
+        data_c = np.take(data_c, idx, axis=axis)
+    return data_c
 
 
 def smooth2D(
@@ -165,7 +191,7 @@ def corr_mat(a, axis=1):
     Parameters
     ----------
     - Matrix for example [unit, samples]
-    - axis on which we want to work on
+    - axis along which the function is performed, by default -1
 
     Returns
     -------

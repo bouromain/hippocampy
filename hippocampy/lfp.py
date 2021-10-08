@@ -3,7 +3,7 @@ import bottleneck as bn
 from hippocampy.core.Iv import Iv
 from hippocampy.sig_tool import envelope
 from hippocampy.utils.gen_utils import nearest_odd, start_stop
-from hippocampy.matrix_utils import smooth1D, zscore
+from hippocampy.matrix_utils import smooth_1d, zscore
 
 
 def find_ripples(
@@ -54,7 +54,7 @@ def find_ripples(
     # filter the signal a bit
     # (moving window of ~ 10ms) and zscore it
     filt_half_win = nearest_odd(5e-3 * fs)
-    squared_sig = smooth1D(
+    squared_sig = smooth_1d(
         squared_sig, filt_half_win, kernel_type=smooth_type, axis=axis
     )
 
