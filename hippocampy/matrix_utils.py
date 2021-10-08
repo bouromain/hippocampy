@@ -193,7 +193,7 @@ def zscore(matrix, axis=-1):
     matrix: np.array
 
     ax: int
-        axis to work along
+        axis along which the function is performed, by default -1
 
     Returns
     -------
@@ -209,8 +209,44 @@ def zscore(matrix, axis=-1):
     return (matrix - mu) / sigma
 
 
+def norm_axis(matrix: np.ndarray, method="max", axis=-1) -> np.ndarray:
+    """
+    normalize a matrix collumn or rawwise with a given method
+
+    Parameters
+    ----------
+    matrix : np.ndarray
+        matrix or vector to normalize
+    method : str, optional
+        normalisation method, by default "max"
+            max: normalize such as the new max per row/column is 1
+            one: normalize such as the sum of the values per row/column 
+                sums to one (eg: become a probability distribution)
+            zscore: compute the row/column wise zscore 
+    axis : int, optional
+        axis along which the function is performed, by default -1
+
+    Returns
+    -------
+    np.ndarray
+        normalized matrix
+
+    """
+    if method.lower() not in ["max", "one", "zscore"]:
+        raise ValueError(f"Method {method} not recognized")
+
+    if method == "zscore":
+        return zscore(matrix, axis=axis)
+    elif method == "one":
+        divisor = bn.nansum(matrix, axis=axis)
+    elif method == "max":
+        divisor = bn.nanmax(matrix, axis=axis)
+
+    return matrix / np.expand_dims(divisor, axis=axis)
+
+
 #%% OTHER
-def label(v, axis=-1, unique_label=False) -> np.array:
+def label(v, axis=-1, *, unique_label=False) -> np.array:
     """
     label continuous values in either a boolean or int/float vector
 
@@ -220,7 +256,7 @@ def label(v, axis=-1, unique_label=False) -> np.array:
     v : [bool, int, float]
         input vector
     axis: [int]
-        axis to compute the labeling
+        axis along which the function is performed, by default -1
     unique_label: [bool]
         if we need unique labels or if labels can be repeated for each row/column
 
@@ -329,14 +365,15 @@ def first_true(v: np.ndarray, axis=-1):
     Parameters
     ----------
     v : np.ndarray
-        [description]
+        input array/vector
     axis : int, optional
-        [description], by default -1
+        axis along which the function is performed, by default -1
 
     Returns
     -------
-    [type]
-        [description]
+    out
+        boolean array only containing first true value occuring 
+        along one axis
     """
     v = np.array(v, ndmin=2)
     v = v.astype(bool)
@@ -363,14 +400,15 @@ def last_true(v: np.ndarray, axis=-1):
     Parameters
     ----------
     v : np.ndarray
-        [description]
+        input array/vector
     axis : int, optional
-        [description], by default -1
+        axis along which the function is performed, by default -1
 
     Returns
     -------
-    [type]
-        [description]
+    out
+        boolean array only containing last true value occuring 
+        along one axis
     """
     v = np.array(v, ndmin=2)
     v = v.astype(bool)
@@ -396,18 +434,19 @@ def remove_small_objects(M, min_size=3, axis=-1):
         boolean or zero and non-zero values vector
     min_size: int
         minimum size of the object to keep
+    axis: int
+        axis along which the function is performed, by default -1
 
     Returns
     -------
     np.array only with connected components bigger than min_size
 
     TODO: 
-    -we should be able to perform this function across an axis 
     -make this function work for 2D. it should be doable by using 
     ravel and reshaping at the end
     """
     M[np.isnan(M)] = 0
-    # label our matrix per row/collumn
+    # label our matrix per row/column
     M_l = label(M.astype(bool), axis=axis, unique_label=True)
 
     # find all the connected components and check their size
@@ -431,13 +470,12 @@ def remove_holes(M, min_size=3, axis=-1):
         boolean or zero and non-zero values vector
     min_sz: int
         minimum size of the object to keep
+    axis: int
+        axis along which the function is performed, by default -1
 
     Returns
     -------
     np.array only with connected components bigger than min_sz
-    
-    TODO: we should be able to perform this function across an axis 
-
     """
     M_b = np.logical_not(M.astype(bool))
     M_b = remove_small_objects(M_b, min_size=min_size, axis=axis)
@@ -455,7 +493,7 @@ def mean_at(idx, vals, fillvalue=np.nan, dtype=np.dtype(np.float64)) -> np.array
     Parameters
     ----------
     idx : [type]
-        index vector, 
+        input, 
     vals : [type]
         [description]
     fillvalue : [type], optional
@@ -486,11 +524,6 @@ def mean_at(idx, vals, fillvalue=np.nan, dtype=np.dtype(np.float64)) -> np.array
         raise ValueError("Inputs should be have only one dimension")
     if len(idx) != len(vals):
         raise ValueError("Inputs should have the same length")
-
-    # # to rectify non-zero based indexes
-    # m = bn.nanmin(idx)
-    # if m != 0:
-    #     idx = idx - m
 
     minlen = len(np.unique(idx))
     count_idx = np.bincount(idx, minlength=minlen)
@@ -530,7 +563,7 @@ def moving_win(
     overlap : int, optional
         number of overlaping samples between consecutive windows, by default 0
     axis : int, optional
-        axis to work on, by default None
+        axis along which the function is performed, by default None
     padding : str, optional
         method to deal with borders, by default "cut"
     endvalue : float, optional
@@ -651,7 +684,7 @@ def rolling_quantile(data, window_len, quantile):
     rolling_quantile Calculate a rolling quantile a a window of size window len
 
     Note: For now, the pandas method seem convenient and fast. 
-    It seem to be faster than usinnumpy strides
+    It seem to be faster than numpy strides
     To Do:
     this function should take an axis input
 

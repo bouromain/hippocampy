@@ -141,7 +141,7 @@ def _limit_q(q: int, max_mult: int = 12) -> list:
 ########################################################################
 
 
-def band_filter(sig, fRange, fs, method="cheby2", order=4) -> np.ndarray:
+def band_filter(sig, fRange, fs, method="cheby2", order=4, axis=-1) -> np.ndarray:
     """
     Filter a signal in a certain frequency band and with a particular filter type
     
@@ -159,7 +159,9 @@ def band_filter(sig, fRange, fs, method="cheby2", order=4) -> np.ndarray:
             - Butterworth (butter)
     order:
         order of the filter
-    
+    axis:
+        axis along which the function is performed, by default -1
+
     Returns
     -------
     sig_f: array_like
@@ -190,12 +192,27 @@ def band_filter(sig, fRange, fs, method="cheby2", order=4) -> np.ndarray:
     else:
         raise NotImplementedError(f"Method {method} not implemented")
 
-    return filtfilt(b, a, sig)
+    return filtfilt(b, a, sig, axis=axis)
 
 
 def phase(sig, method="hilbert", axis=-1) -> np.ndarray:
     """
-    Compute phase and amplitude of a signal.
+    Compute phase of a signal.
+
+    Parameters
+    ----------
+    sig : [type]
+        input values
+    method : str, optional
+        method to compute the phase, by default "hilbert"
+    axis : int, optional
+        axis along which the function is performed, by default -1
+
+    Returns
+    -------
+    np.ndarray
+        [description]
+        
 
     TO DO: implement linear interpolation and shape preserving phase
     """
@@ -215,9 +232,21 @@ def phase(sig, method="hilbert", axis=-1) -> np.ndarray:
     return analytic_signal, amplitude_envelope
 
 
-def envelope(sig, axis=-1) -> np.ndarray:
+def envelope(sig: np.ndarray, axis: int = -1) -> np.ndarray:
     """
     Compute phase and amplitude of a signal.
+
+    Parameters
+    ----------
+    sig : np.ndarray
+        input values
+    axis : int, optional
+        axis along which the function is performed, by default -1
+
+    Returns
+    -------
+    np.ndarray
+        [description]
     """
     sig = np.array(sig, ndmin=2)
     n_samples = sig.shape[axis]
@@ -231,12 +260,23 @@ def envelope(sig, axis=-1) -> np.ndarray:
     return amplitude_envelope
 
 
-def instantaneousFreq(sig_p: np.ndarray, fs) -> np.ndarray:
+def instantaneousFreq(sig_p: np.ndarray, fs: int) -> np.ndarray:
     """
-    Return instantaneous frequency of a signal from its phase.
+    Compute instantaneous frequency of a signal from its phase.
     This phase can be computed with hilbertPhase()
+
+    Parameters
+    ----------
+    sig_p : np.ndarray
+        input values
+    fs : int
+        sampling frequency of this signalS
+
+    Returns
+    -------
+    np.ndarray
+        vector of instantaneous frequency
     """
 
     sig_p_u = np.unwrap(sig_p)
     return np.diff(sig_p_u) / (2.0 * np.pi) * fs
-
