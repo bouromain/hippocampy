@@ -11,7 +11,7 @@ def rate_map(
     *,
     bins=10,
     fs: int = 30,
-    smooth_half_win: int = 5,
+    smooth_half_win: int = 0,
     smooth_axis: int = 0,
     method="spk",
     preserve_nan_opt=True
@@ -84,9 +84,12 @@ def rate_map(
         occ_s = smooth_1d(
             occ, smooth_half_win, axis=smooth_axis, preserve_nan_opt=preserve_nan_opt
         )
+    else:
+        act_s, occ_s = act, occ
 
     if method == "spk":
         rate_s = act_s / occ_s
     elif method == "mean":
         rate_s = act_s
+
     return rate_s, act_s, occ_s
