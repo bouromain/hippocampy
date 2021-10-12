@@ -166,9 +166,8 @@ def wden(
     # reconstruct the signal
     data_rec = pywt.waverec(coeffs_f, wavelet_name, mode="symmetric", axis=axis)
 
-    # check if they are the same size
-    # get rid of the extended part for wavelet decomposition
-    return data_rec
+    # enforce same size and return (we sometimes have problems for odd size)
+    return data_rec[: data.shape[0], : data.shape[1]]
 
 
 def swt_denoise(data, *, wavelet_name="sym4", level=5, axis=-1):
