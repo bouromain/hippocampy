@@ -503,7 +503,8 @@ def remove_holes(M, min_size=3, axis=-1):
     -------
     np.array only with connected components bigger than min_sz
     """
-    M_b = np.logical_not(M.astype(bool))
+    M = np.array(M, dtype=bool)
+    M_b = np.logical_not(M)
     M_b = remove_small_objects(M_b, min_size=min_size, axis=axis)
 
     return np.logical_not(M_b)

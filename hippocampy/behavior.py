@@ -3,7 +3,12 @@ from typing import Union
 import bottleneck as bn
 import numpy as np
 
-from hippocampy.matrix_utils import first_true, last_true
+from hippocampy.matrix_utils import (
+    first_true,
+    last_true,
+    remove_holes,
+    remove_small_objects,
+)
 
 
 def find_lap_1d(
@@ -94,4 +99,39 @@ def find_lap_1d(
 
             lap_i += 1
     return out
+
+
+def find_quiet(
+    speed: np.ndarray,
+    speed_thresh: float = 2.0,
+    min_min_n_samples: int = 0,
+    min_inter_samples: int = 0,
+) -> np.ndarray:
+    """
+    find_quiet find quiet period from a vector of speed
+
+    Parameters
+    ----------
+    speed : np.ndarray
+        speed values
+    speed_thresh : float, optional
+        minimum speed threshold, by default 2.0
+    min_min_n_samples : int, optional
+        minimum samples in an activity period , by default 10
+    min_inter_samples : int, optional
+        minimum inter pauses distances, it will merge activity periods if 
+        they are not spaced by at least this distance, 
+        by default 10 [samples]
+
+    Returns
+    -------
+    np.ndarray
+        [description]
+    """
+    speed_b = speed >= speed_thresh
+
+    # merge very close activity periodes
+    speed_b = remove_holes(speed_b, min_inter_samples)
+    # remove periods that are too small
+    return remove_small_objects(speed_b, min_min_n_samples)
 

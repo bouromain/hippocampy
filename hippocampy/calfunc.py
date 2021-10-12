@@ -118,17 +118,21 @@ def deconvolve(F: np.ndarray, fs: int = 30, tau: float = 0.7, verbose: bool = Tr
     return c, s, b
 
 
-def calc_dF(F: np.ndarray, window: int, *, type_win="median", axis=-1):
+def calc_dF(
+    F: np.ndarray, window: int, *, type_win="median", quantile: float = 0.08, axis=-1
+):
     """
     calc_dF calculate dF/F as F - F_0 / F0 with F_0 defined as 
-    the mean or median in a sliding time window
+    the mean, median in a sliding time window
 
     Parameters
     ----------
     F : [np.ndarray]
-        [description]
+        input traces
     window : [int]
         window length in samples
+    quantile : [float]
+        value of the quantile, ignored for mean or median
     axis : int, optional
         axis to work on, by default -1
 
@@ -137,13 +141,15 @@ def calc_dF(F: np.ndarray, window: int, *, type_win="median", axis=-1):
     dF/F [np.ndarray]
         deltaF over F
     """
-    if type_win not in ["median", "mean"]:
+    if type_win not in ["median", "mean", "quantile"]:
         raise ValueError(f"Window type {type_win} not recognized")
 
     if type_win.lower() == "median":
         F_0 = bn.move_median(F, window, axis=axis, min_count=1)
     elif type_win.lower() == "mean":
         F_0 = bn.move_mean(F, window, axis=axis, min_count=1)
+    elif type_win.lower() == "quantile":
+        F_0 = rolling_quantile(F, window, quantile=quantile)
 
     return (F - F_0) / F_0
 
