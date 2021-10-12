@@ -234,7 +234,10 @@ def transient(
     # in case multiple successive samples cross the threshold, only keep the first
     S = first_true(S)
 
-    return S, [np.nonzero(s)[0] for s in S]
+    if S.squeeze().ndim == 1:
+        return S, np.nonzero(s)[0]
+    else:
+        return S, [np.nonzero(s)[0] for s in S]
 
 
 def transient_simple(

@@ -14,8 +14,9 @@ def rate_map(
     fs: int = 30,
     smooth_half_win: int = 0,
     smooth_axis: int = 0,
-    method="spk",
-    preserve_nan_opt=True
+    smooth_pad_type: str = "reflect",
+    method: str = "point_process",
+    preserve_nan_opt: bool = True
 ):
     """
     rate_map [summary]
@@ -28,8 +29,18 @@ def rate_map(
         can be either a continuous variable of size 
     bins : int, optional
         [description], by default 10
+    fs : int
+        sampling rate
+    smooth_half_win : np.ndarray
+        half window size (in samples) of the smoothing kernel
+    smooth_axis : int
+        axis along which to apply the smoothing
+    smooth_pad_type : str
+        type of padding before the smoothing. ex: reflect, circular,...
     method : str, optional
-        [description], by default "spk"
+        "point_process" or "continuous", by default "point_process"
+    preserve_nan_opt : bool
+        specify if nan value should be preserved in the output
 
     Returns
     -------
@@ -44,17 +55,13 @@ def rate_map(
     ValueError
         in case of error in provided method
     """
-    # TODO take care of the no_occupancy case and set them to nan
-    # take care of the bins
-    # correctly smooth
-
     # check inputs
     var = np.asarray(var)
     samples = np.asarray(samples)
 
-    if not method in ["mean", "spk"]:
-        raise ValueError("Method should be either mean or spk")
-    if method == "spk" and samples.dtype.kind != "i":
+    if not method in ["point_process", "continuous"]:
+        raise ValueError("Method should be either continuous or point_process")
+    if method == "point_process" and samples.dtype.kind != "i":
         samples = float_to_int(samples)
 
     # first take care of the bins
@@ -72,25 +79,33 @@ def rate_map(
     occ[no_occ] = np.nan
     occ = occ / fs  # convert in Hz
 
-    if method == "mean":
+    if method == "continuous":
         act, _ = np.histogramdd(var, bins, weights=samples)
         act /= occ
-    elif method == "spk":
+    elif method == "point_process":
         act, _ = np.histogramdd(var[samples], bins)
 
     if smooth_half_win > 0:
         act_s = smooth_1d(
-            act, smooth_half_win, axis=smooth_axis, preserve_nan_opt=preserve_nan_opt
+            act,
+            smooth_half_win,
+            axis=smooth_axis,
+            padtype=smooth_pad_type,
+            preserve_nan_opt=preserve_nan_opt,
         )
         occ_s = smooth_1d(
-            occ, smooth_half_win, axis=smooth_axis, preserve_nan_opt=preserve_nan_opt
+            occ,
+            smooth_half_win,
+            axis=smooth_axis,
+            padtype=smooth_pad_type,
+            preserve_nan_opt=preserve_nan_opt,
         )
     else:
         act_s, occ_s = act, occ
 
-    if method == "spk":
+    if method == "point_process":
         rate_s = act_s / occ_s
-    elif method == "mean":
+    elif method == "continuous":
         rate_s = act_s
 
     return rate_s, act_s, occ_s

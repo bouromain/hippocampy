@@ -2,14 +2,14 @@ import numpy as np
 import bottleneck as bn
 
 
-def entr(p):
+def entr(p, axis=-1):
     """
     calculate the entropy of a vector
     """
-    return -bn.nansum(p * np.log2(p))
+    return -bn.nansum(p * np.log2(p), axis=axis)
 
 
-def rel_entr(p, q):
+def rel_entr(p, q, axis=-1):
     """
     TO DO:
             - potentially implement change of base with out /= out
@@ -23,21 +23,18 @@ def rel_entr(p, q):
 
     # z[iszero] = 0
     # z[isneg] = np.Inf
-    return bn.nansum(p * np.log2(p / q))
+    return bn.nansum(p * np.log2(p / q), axis=axis)
 
 
-def kl_div(p, q, iscvx=False):
+def kl_div(p, q, axis=-1):
     """
-    following the definition of http://cvxr.com/cvx/ kldiv
-    that is why the - p + q is added
+    See  http://cvxr.com/cvx/ kldiv
+    for a potentialadditional term is why the - p + q is added
     """
-    if iscvx:
-        return rel_entr(p, q) - p + q
-    else:
-        return rel_entr(p, q)
+    return rel_entr(p, q, axis=axis)
 
 
-def jensen_shannon(p, q, base=None):
+def jensen_shannon(p, q, base=None, axis=-1):
     """
     Calculate Jensen-Shannon distance between two 1D probability
     distributions adapted from the scipy version.
@@ -51,7 +48,7 @@ def jensen_shannon(p, q, base=None):
     q = np.asarray(q, dtype=np.float)
 
     m = (p + q) / 2
-    js = rel_entr(p, m) + rel_entr(q, m)
+    js = rel_entr(p, m, axis=axis) + rel_entr(q, m, axis=axis)
 
     if base is not None:
         js /= np.log(base)
