@@ -235,7 +235,8 @@ def transient(
     S = first_true(S)
 
     if S.squeeze().ndim == 1:
-        return S, np.nonzero(s)[0]
+        S = S.squeeze()
+        return S, np.nonzero(S)[0]
     else:
         return S, [np.nonzero(s)[0] for s in S]
 

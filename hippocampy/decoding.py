@@ -248,5 +248,4 @@ def confusion_matrix(
         elif full_posterior == "median":
             conf_mat = bn.nanmedian(full_conf_mat, axis=2)
 
-    conf_mat = conf_mat / bn.nansum(conf_mat, axis=0)
-    return conf_mat
+    return conf_mat / bn.nansum(conf_mat, axis=0)
