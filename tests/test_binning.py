@@ -71,7 +71,7 @@ class TestBinning(unittest.TestCase):
         x = np.array([0, 1, 2, 3, 4, 6, 7, 8, 9, 0, 1, 2, 3, 4, 6, 7, 8, 9])
         spk = np.array([0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 3, 1, 0, 0, 0, 0, 0])
         bins = np.arange(0, 11)
-        rate, act, occ = binning.rate_map(x, spk, bins=bins, fs=1, method="mean")
+        rate, act, occ = binning.rate_map(x, spk, bins=bins, fs=1, method="continuous")
 
         good_occ = np.array([2.0, 2.0, 2.0, 2.0, 2.0, np.nan, 2.0, 2.0, 2.0, 2.0])
         good_act = np.array([0.0, 0.5, 2.0, 0.5, 0.0, np.nan, 0.0, 0.0, 0.0, 0.0])
