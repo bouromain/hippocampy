@@ -1,36 +1,7 @@
 import numpy as np
 
 
-def _remove_nan(x, x_mask=None, axis=0):
-    """
-    Remove NaN in a 1D array.
-    adapted from Pinguin _remove_na_single
-    """
-    if x_mask is None:
-        x_mask = _nan_mask(x, axis=axis)
-
-    # Check if missing values are present
-    if ~x_mask.all():
-        ax = 0 if axis == 0 else 1
-        ax = 0 if x.ndim == 1 else ax
-        x = x.compress(x_mask, axis=ax)
-
-    return x
-
-
-def _nan_mask(x, axis=0):
-    if x.ndim == 1:
-        # 1D arrays
-        x_mask = ~np.isnan(x)
-    else:
-        # 2D arrays
-        ax = 1 if axis == 0 else 0
-        x_mask = ~np.any(np.isnan(x), axis=ax)
-
-    return x_mask
-
-
-def remove_nan(x, y=None, paired=False, axis=0):
+def remove_nan(x, y=None, paired=False, axis=-1):
     """
     Helper function to remove nan from 1D or 2D
 
@@ -72,3 +43,33 @@ def remove_nan(x, y=None, paired=False, axis=0):
                 y = _remove_nan(y, x_mask=xy_mask, axis=axis)
 
             return x, y
+
+
+def _remove_nan(x, x_mask=None, axis=0):
+    """
+    Remove NaN in a 1D array.
+    adapted from Pinguin _remove_na_single
+    """
+    if x_mask is None:
+        x_mask = _nan_mask(x, axis=axis)
+
+    # Check if missing values are present
+    if ~x_mask.all():
+        ax = 0 if axis == 0 else 1
+        ax = 0 if x.ndim == 1 else ax
+        x = x.compress(x_mask, axis=ax)
+
+    return x
+
+
+def _nan_mask(x, axis=0):
+    if x.ndim == 1:
+        # 1D arrays
+        x_mask = ~np.isnan(x)
+    else:
+        # 2D arrays
+        ax = 1 if axis == 0 else 0
+        x_mask = ~np.any(np.isnan(x), axis=ax)
+
+    return x_mask
+

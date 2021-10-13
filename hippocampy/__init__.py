@@ -11,6 +11,8 @@ from . import utils
 from . import data
 from . import lfp
 from . import behavior
+from . import decoding
+from . import estimators
 
 # DataTypes
 from .core.Iv import Iv

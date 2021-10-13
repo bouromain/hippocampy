@@ -12,13 +12,14 @@ def bayesian_1d(Q: np.ndarray, Tc: np.ndarray, prior=None, method="caim") -> np.
     Parameters
     ----------
     Q : np.ndarray
-        Q [n_neurons, n_samples]
+        Boolean activity matrix, binned spikes/transient Q [n_neurons, n_samples]
     Tc : np.ndarray
-        Tc [n_neurons, n_bins]
+        Tuning curves Tc [n_neurons, n_bins]
     prior : [type], optional
-        [description], by default None
+        either provide a prior or the code wll use a flat/ uniform one, by default None
     method : str, optional
-        [description], by default "caim"
+        method to decode, either like in ref [1] "caim" or a naive "classic" baysian decode
+        like in ref [2], ["caim","classic"] by default "caim"
 
     Returns
     -------
@@ -90,7 +91,7 @@ def bayesian_1d(Q: np.ndarray, Tc: np.ndarray, prior=None, method="caim") -> np.
         pTc = (prob_active_knowing_bin * prior) / prob_active[:, None]
         step_prod = pTc[:, :, None] * Q[:, None, :]
 
-    # to avoid numerical overflow we use exp( log( x + 1 ) -1)
+    # to avoid numerical overflow we use exp( log( x + 1 ) - 1)
     P = np.expm1(bn.nansum(np.log1p(step_prod), axis=0))
     # re-normalize to have a probability for each time step
     P = P / bn.nansum(P, axis=0)
@@ -100,14 +101,13 @@ def bayesian_1d(Q: np.ndarray, Tc: np.ndarray, prior=None, method="caim") -> np.
 
 def frv(Q: np.ndarray, Tc: np.ndarray) -> np.ndarray:
     """
-    frv 
-    decode by doing the correlation of the activity of each time steps 
+    Decode by doing the correlation of the activity of each time steps 
     with a template activity. This decoding is similar to the one performed 
-    in ref [1]
+    in ref [1] or [2]
 
     To be efficient here we calculate the pearson correlation as:
 
-    corr(x,y) = (1/n-1) sum( (x - mean(x)) / std(x) (y - mean(y))/std(y)  )
+    corr(x,y) = (1/n-1) sum( zscore(x) * zscore(y) )
     with n the number of sample in x and y
 
     Parameters
@@ -132,6 +132,9 @@ def frv(Q: np.ndarray, Tc: np.ndarray) -> np.ndarray:
     [1] Middleton SJ, McHugh TJ. Silencing CA3 disrupts temporal coding 
         in the CA1 ensemble.
         Nat Neurosci. 2016 Jul;19(7):945-51. doi: 10.1038/nn.4311. 
+    [2] Wilson MA, McNaughton BL. Dynamics of the hippocampal ensemble 
+        code for space. Science. 1993 Aug 20;261(5124):1055-8. 
+        doi: 10.1126/science.8351520.
     """
     if Q.shape[0] != Tc.shape[0]:
         raise ValueError(

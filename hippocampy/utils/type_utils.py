@@ -34,6 +34,9 @@ def float_to_int(array) -> np.array:
     ---------
     https://stackoverflow.com/questions/36505879/convert-float64-to-int64-using-safe
     """
+    if not isinstance(array, np.ndarray):
+        array = np.array(array)
+
     if array.dtype.kind == "i":
         return array
 
