@@ -184,24 +184,28 @@ def smooth2D(
 
 
 #%% STATISTICS
-def corr_mat(a, axis=1):
+def corr_mat(a: np.ndarray, axis=-1) -> np.ndarray:
     """
     Compute correlation between all the rows (or column) of a given matrix
 
     Parameters
     ----------
-    - Matrix for example [unit, samples]
-    - axis along which the function is performed, by default -1
+    a : np.ndarray
+        input matrix for example [unit, samples]
+    axis : int, optional
+        axis along which the function is performed, by default -1
 
     Returns
     -------
-    - correlation matrix
-
+    np.ndarray
+        correlation matrix
+    Reference
+    ---------
     https://en.wikipedia.org/wiki/Pearson_correlation_coefficient
     """
     a = np.asarray(a)
 
-    a_z = zscore(a, axis)
+    a_z = zscore(a, axis=axis)
     n = a.shape[axis]
 
     if axis == 0:

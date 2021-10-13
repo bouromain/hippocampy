@@ -1,17 +1,46 @@
 import numpy as np
 import bottleneck as bn
+from hippocampy.matrix_utils import zscore
 
 from hippocampy.utils.type_utils import float_to_int
 
 
 def bayesian_1d(Q: np.ndarray, Tc: np.ndarray, prior=None, method="caim") -> np.ndarray:
-    ...
-    # this code can be applied in 2D by raveling the positional bins and reshaping at the end
-    # Q [n_neurons, n_samples]
-    # Tc [n_neurons, n_bins]
+    """
+    bayesian_1d [summary]
 
-    # print("still in development")
+    Parameters
+    ----------
+    Q : np.ndarray
+        Q [n_neurons, n_samples]
+    Tc : np.ndarray
+        Tc [n_neurons, n_bins]
+    prior : [type], optional
+        [description], by default None
+    method : str, optional
+        [description], by default "caim"
 
+    Returns
+    -------
+    np.ndarray
+        [description]
+
+    Reference
+    ---------
+    [1] Etter, G., Manseau, F. & Williams, S. A probabilistic framework 
+        for decoding behavior from in vivo calcium imaging data. 
+        Front. Neural Circuits 14, (2020).
+
+    [2] Zhang, K., Ginzburg, I., McNaughton, B. L., and Sejnowski, T. J. (1998). 
+        Interpreting neuronal population activity by reconstruction: unified 
+        framework with application to hippocampal place cells. 
+        J. Neurophysiol. 79, 1017–1044. doi: 10.1152/jn.1998.79.2.1017
+
+    Note
+    ----
+    this code can be applied in 2D by raveling the positional bins and reshaping at the end
+
+    """
     # Q = np.random.uniform(0, 1, (50, 15000)) > 0.95
     # Tc = np.random.uniform(0, 1, (50, 100))
     # prior = None
@@ -32,15 +61,16 @@ def bayesian_1d(Q: np.ndarray, Tc: np.ndarray, prior=None, method="caim") -> np.
         # make sure the prior sum to 1
         prior = prior / bn.nansum(prior)
 
-    # initialize output probability matrix
+    # ensure q is boolean
+    Q = Q.astype(bool)
+    # turn Tuning curves into probabilities
+    prob_active_knowing_bin = Tc / bn.nansum(Tc, axis=1)[:, None]
+    prob_active = bn.nansum(Q, axis=1) / n_samples
+
     if method == "caim":
         # in caim decoding we use the probability that a cell is active
         # but also that it is inactive
         # turn Tuning curves into probabilities
-        Q = Q.astype(bool)
-        prob_active_knowing_bin = Tc / bn.nansum(Tc, axis=1)[:, None]
-        prob_active = bn.nansum(Q, axis=1) / n_samples
-
         # calculate the bayes prob for each time steps
         pTc = (prob_active_knowing_bin * prior) / prob_active[:, None]
         n_pTc = ((1 - prob_active_knowing_bin) * prior) / (1 - prob_active[:, None])
@@ -56,12 +86,7 @@ def bayesian_1d(Q: np.ndarray, Tc: np.ndarray, prior=None, method="caim") -> np.
         step_prod = step_prod_act + step_prod_nact
 
     elif method == "classic":
-        # turn Tuning curves into probabilities
-        Q = Q.astype(bool)
-        prob_active_knowing_bin = Tc / bn.nansum(Tc, axis=1)[:, None]
-        prob_active = bn.nansum(Q, axis=1) / n_samples
-
-        #
+        # calculate the bayes prob for each time steps
         pTc = (prob_active_knowing_bin * prior) / prob_active[:, None]
         step_prod = pTc[:, :, None] * Q[:, None, :]
 
@@ -71,6 +96,54 @@ def bayesian_1d(Q: np.ndarray, Tc: np.ndarray, prior=None, method="caim") -> np.
     P = P / bn.nansum(P, axis=0)
 
     return P
+
+
+def frv(Q: np.ndarray, Tc: np.ndarray) -> np.ndarray:
+    """
+    frv 
+    decode by doing the correlation of the activity of each time steps 
+    with a template activity. This decoding is similar to the one performed 
+    in ref [1]
+
+    To be efficient here we calculate the pearson correlation as:
+
+    corr(x,y) = (1/n-1) sum( (x - mean(x)) / std(x) (y - mean(y))/std(y)  )
+    with n the number of sample in x and y
+
+    Parameters
+    ----------
+    Q : np.ndarray
+        activity matrix Q [n_neurons, n_samples]
+    Tc : np.ndarray
+        tunning curves matrix Tc [n_neurons, n_bins]
+
+    Returns
+    -------
+    np.ndarray
+        matrix of correlation of temporal bin activity with template activity 
+        accross time
+    
+    Note
+    ----
+    this code can also be generalized in 2D by raveling input and reshaping at the end
+    
+    Reference
+    ---------
+    [1] Middleton SJ, McHugh TJ. Silencing CA3 disrupts temporal coding 
+        in the CA1 ensemble.
+        Nat Neurosci. 2016 Jul;19(7):945-51. doi: 10.1038/nn.4311. 
+    """
+    if Q.shape[0] != Tc.shape[0]:
+        raise ValueError(
+            "Q and tunning curve matrix should share their 0th dimension (number neurons)"
+        )
+
+    n_neurons = Q.shape[0]
+
+    Tc_z = zscore(Tc, axis=1)
+    Q_z = zscore(Q, axis=1)
+
+    return (1 / (n_neurons - 1)) * (Tc_z.T @ Q_z)
 
 
 def decoded_state(P: np.ndarray, method: str = "max") -> np.ndarray:
