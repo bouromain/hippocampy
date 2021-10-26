@@ -7,7 +7,7 @@ setup(
     author="Bourboulou Romain",
     author_email="bouromain@gmail.com",
     packages=["hippocampy"],
-    python_requires=">=3.8, <3.9",
+    python_requires=">=3.7, <3.9",
     install_requires=[
         "numpy",
         "scipy",
@@ -25,7 +25,7 @@ setup(
         "numba",
         "cython",
         "pandas",
-        "oasis",
+        "oasis @ git+https://github.com/j-friedrich/OASIS",
         "cvxpy",
         "PyWavelets",
     ],

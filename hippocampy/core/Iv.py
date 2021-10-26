@@ -58,7 +58,7 @@ class Iv:
                 _data = data
                 data = _data.data
                 domain = _data.domain
-                unit = _data._unit
+                # unit = _data._unit
 
             elif isinstance(data, (list, tuple, np.ndarray)):
                 data = np.squeeze(data)
@@ -85,7 +85,7 @@ class Iv:
 
             self._data = data
             self._domain = domain
-            self._unit = unit
+            # self._unit = unit
 
     @property
     def data(self):
@@ -393,6 +393,8 @@ class Iv:
             stops = np.nonzero(stops)[0]
             self._data = np.vstack((starts, stops)).T
             self._domain = [0, len(starts)]
+
+        return self
 
     def merge(self, *, gap=0.0, overlap=0.0, max_len=np.Inf):
         """ merge overlaping intervals"""

@@ -10,7 +10,7 @@ def find_ripples(
     filtered: np.ndarray,
     fs: int,
     min_len: int = 20,
-    max_len: int = 100,
+    max_len: int = 200,
     min_inter: int = 20,
     low_threshold: float = 2,
     high_threshold: float = 5,
@@ -24,7 +24,7 @@ def find_ripples(
     # https://github.com/Eden-Kramer-Lab/ripple_detection/blob/master/ripple_detection/detectors.py
 
     # check input
-    assert min_len < 0, "Minimum ripple duration should be positive"
+    assert min_len > 0, "Minimum ripple duration should be positive"
     assert (
         min_len < max_len
     ), "Maximum duration should be longer than minimum ripple duration"
@@ -73,10 +73,5 @@ def find_ripples(
     too_small = cand_event.stops - cand_event.starts > min_len * 10e-3 * fs
     cand_event = cand_event[~too_small]
 
-    starts, stops = start_stop(thresholded)
-    ripple_epoch = np.array([np.nonzero(starts)[0], np.nonzero(stops)[0]])
-
-    # merge them if they are close but only if they do not create huge ripples
-    inter_ripple_time = ripple_epoch[0, 1:] - ripple_epoch[1, :-1]
-    iri_to_keep = inter_ripple_time > int(min_len * 10e-3 * fs)
+    return cand_event
 

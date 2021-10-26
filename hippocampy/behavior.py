@@ -128,7 +128,7 @@ def find_quiet(
     np.ndarray
         [description]
     """
-    speed_b = speed >= speed_thresh
+    speed_b = np.abs(speed) >= speed_thresh
 
     # merge very close activity periodes
     speed_b = remove_holes(speed_b, min_inter_samples)

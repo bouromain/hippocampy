@@ -28,6 +28,8 @@ from scipy.stats import norm
 from scipy.optimize import fminbound
 from math import erf
 
+from typing import Union
+
 ########################################################################
 ## Helpers
 ########################################################################
@@ -86,7 +88,7 @@ def circ_mean(alpha, weight=None, dim=0):
     return mu
 
 
-def circ_r(alpha, weight=None, d=False, dim=0):
+def circ_r(alpha, weight=None, d=None, dim=0):
     """"""
     alpha = np.asarray(alpha)
     if weight is None:
@@ -95,14 +97,14 @@ def circ_r(alpha, weight=None, d=False, dim=0):
     # compute weighted sum of cos and sin of angles
     r = bn.nansum(np.multiply(weight, np.exp(1j * alpha)), dim)
 
-    r = abs(r) / bn.nansum(weight, dim)
+    r = np.abs(r) / bn.nansum(weight, dim)
 
     # from matlab circ_r function
     # for data with known spacing, apply correction factor
     # to correct for bias
     # in the estimation of r (see Zar, p. 601, equ. 26.16)
 
-    if d:
+    if d is not None:
         c = d / 2.0 / np.sin(d / 2)
         r = c * r
 
@@ -224,7 +226,7 @@ def corr_cl(x, theta, tail="two-sided"):
 
     n = x.size
 
-    # Compute pearson correlation forsin and cos of angular data
+    # Compute pearson correlation for sin and cos of angular data
     rxs = pearsonr(theta, np.sin(x))[0]
     rxc = pearsonr(theta, np.cos(x))[0]
     rcs = pearsonr(np.sin(x), np.cos(x))[0]
@@ -291,7 +293,7 @@ def lin_circ_regress(x, phi, bound=None):
     phi0 = np.arctan2(S, C)
 
     # and compute the circular linear correlation with Kempter 2012 Eq 3
-    # first circularise the linear variable
+    # first circularize the linear variable
     theta = np.mod(np.abs(slope) * x, 2 * np.pi)
 
     # compute the circular mean of each variables
@@ -330,6 +332,55 @@ def _resultant_length(a, x, phi):
     # we will return -R as will will then search to minimise the function
     # minimizing -R == maximinsing R
     return -np.sqrt(G ** 2 + D ** 2)
+
+
+def rayleigh_test(
+    alpha: np.ndarray,
+    weight: Union[None, np.ndarray] = None,
+    d: Union[None, float] = None,
+):
+    """
+    rayleigh_test [summary]
+
+    Parameters
+    ----------
+    alpha : np.ndarray
+    
+    weight : np.ndarray
+        [description]
+    d : [type]
+        [description]
+
+    References
+    ----------
+    [1] Statistical analysis of circular data, N. I. Fisher
+        Topics in circular statistics, S. R. Jammalamadaka et al. 
+        Biostatistical Analysis, J. H. Zar
+
+    [2] Berens, Philipp. 2009. CircStat: A MATLAB Toolbox for Circular Statistics.
+        Journal of Statistical Software, Articles 31 (10): 1–21.
+
+    [3] Topics in circular statistics, S. R. Jammalamadaka et al. 
+        Biostatistical Analysis, J. H. Zar
+    adapted from cirsc_rtest
+    """
+    if weight is not None:
+        assert len(alpha) == len(weight), f"alpha and weight should have the same size"
+    r = circ_r(alpha, weight=weight, d=d)
+    if weight is None:
+        n = len(alpha)
+    else:
+        n = bn.nansum(weight)
+
+    # calculate Rayleigh's R (equ. 27.1 from ref [1]])
+    R = n * r
+    # calculate Rayleigh's z (equ. 27.2 from ref [1]] )
+    z = R ** 2 / n
+
+    # p value using approximation in ref [3], p. 617
+    p = np.exp(np.sqrt(1 + 4 * n + 4 * (n ** 2 - R ** 2)) - (1 + 2 * n))
+
+    return p, z
 
 
 ########################################################################
@@ -387,3 +438,4 @@ def cemd(f, g, period=[0, 2 * pi]):
     D /= n * np.diff(period)
 
     return bn.nanmin(D)
+
