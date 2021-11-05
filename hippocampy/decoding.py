@@ -64,14 +64,14 @@ def bayesian_1d(Q: np.ndarray, Tc: np.ndarray, prior=None, method="caim") -> np.
 
     # ensure q is boolean
     Q = Q.astype(bool)
-    # turn Tuning curves into probabilities
+    # turn tuning curves into probabilities
     prob_active_knowing_bin = Tc / bn.nansum(Tc, axis=1)[:, None]
     prob_active = bn.nansum(Q, axis=1) / n_samples
 
     if method == "caim":
         # in caim decoding we use the probability that a cell is active
         # but also that it is inactive
-        # turn Tuning curves into probabilities
+        # turn tuning curves into probabilities
         # calculate the bayes prob for each time steps
         pTc = (prob_active_knowing_bin * prior) / prob_active[:, None]
         n_pTc = ((1 - prob_active_knowing_bin) * prior) / (1 - prob_active[:, None])

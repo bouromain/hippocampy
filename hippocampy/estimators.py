@@ -1,6 +1,5 @@
 import numpy as np
 import bottleneck as bn
-from numpy.lib import corrcoef
 from itertools import combinations
 from hippocampy.utils.type_utils import float_to_int
 from hippocampy.utils.nan import remove_nan

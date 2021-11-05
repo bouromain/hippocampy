@@ -275,6 +275,44 @@ def norm_axis(matrix: np.ndarray, method="max", axis=-1) -> np.ndarray:
     return matrix / np.expand_dims(divisor, axis=axis)
 
 
+def circ_shift(M: np.ndarray, max_shift: int = None, axis: int = -1):
+    """
+    circ_shift circularly shift a matrix along a given dimension 
+
+
+    Parameters
+    ----------
+    M : np.ndarray
+        input matrix
+    max_shift : int, optional
+        max shift, by default size matrix along the given dimension
+    axis : int, optional
+        axis along which the function is performed, by default -1
+
+    Returns
+    -------
+    out: np.ndarray
+        shifted input matrix
+    """
+    sz = M.shape
+    if max_shift is None:
+        max_shift = sz[axis]
+    else:
+        assert max_shift < sz[axis]
+
+    new_x, new_y = np.meshgrid(np.arange(sz[0]), np.arange(sz[1]))
+
+    if axis == 0:
+        shifts = np.random.randint(max_shift, size=(sz[1], 1))
+        new_x = np.mod(new_x + shifts, sz[axis])
+        return M[new_x, new_y].T
+
+    elif axis == 1 or axis == -1:
+        shifts = np.random.randint(max_shift, size=(1, sz[0]))
+        new_y = np.mod(new_y + shifts, sz[axis])
+        return M[new_x, new_y].T
+
+
 #%% OTHER
 def label(v, axis=-1, *, unique_label=False) -> np.array:
     """
