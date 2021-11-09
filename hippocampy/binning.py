@@ -2,7 +2,7 @@ import bottleneck as bn
 import numpy as np
 from numba import jit
 
-from hippocampy.matrix_utils import smooth_1d
+from hippocampy.matrix_utils import circ_shift, smooth_1d, circ_shift_idx
 from hippocampy.utils.type_utils import float_to_int
 
 
@@ -153,9 +153,9 @@ def boostrap_1d(
     occ[no_occ] = np.nan
     occ = occ / fs  # convert in Hz
 
+    # calculate normal rate maps
     if method == "continuous":
         act, _ = np.histogramdd(var, bins, weights=samples)
-        act /= occ
     elif method == "point_process":
         act, _ = np.histogramdd(var[samples], bins)
 
@@ -180,9 +180,21 @@ def boostrap_1d(
     if method == "point_process":
         rate_s = act_s / occ_s
     elif method == "continuous":
+        act_s /= occ
         rate_s = act_s
 
-    return rate_s, act_s, occ_s
+    # calculate the bootstrap
+    boot_mat = np.zeros((act.shape, n_rep))
+    for it_rep in np.arange(n_rep):
+        var_shifted = circ_shift_idx(var, boot_var)
+        if method == "continuous":
+            boot_mat[:, :, it_rep], _ = np.histogramdd(
+                var_shifted, bins, weights=samples
+            )
+        elif method == "point_process":
+            boot_mat[:, :, it_rep], _ = np.histogramdd(var_shifted[samples], bins)
+
+    return rate_s, act_s, occ_s, boot_mat
 
 
 def ccg(

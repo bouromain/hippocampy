@@ -314,12 +314,31 @@ def circ_shift(M: np.ndarray, max_shift: int = None, axis: int = -1):
 
 
 def circ_shift_idx(M, idx, min_shift=0, max_shift=500, axis=-1):
-    M = np.array(M)
+    M_out = np.array(M).copy()
+    M_out = np.atleast_2d(M_out)
 
-    n_rep = np.unique(idx)
+    idx_seg = np.unique(idx)
+    idx_seg = idx_seg[~np.isnan(idx_seg)]
 
-    for it in np.arange(n_rep):
-        ...
+    shifts = np.random.randint(min_shift, max_shift, size=(1, len(idx_seg)))
+
+    for tmp_id_seg, tmp_shift in zip(idx_seg.T, shifts.T):
+        tmp_idx = idx == tmp_id_seg
+        n_idx = bn.nansum(tmp_idx)
+
+        s_idx = np.where(tmp_idx)[0]
+        s_idx_min = bn.nanmin(s_idx)
+        # make the index zero - indexed, then shift
+        s_idx = (s_idx - s_idx_min) + tmp_shift
+        # wrap the end values, at the start, and add re-index correctly
+        s_idx = np.mod(s_idx, n_idx) + s_idx_min
+        s_idx = np.atleast_2d(s_idx)
+        tmp_idx = np.atleast_2d(np.nonzero(tmp_idx)[0])
+        np.put_along_axis(
+            M_out, s_idx, np.take_along_axis(M_out, tmp_idx, axis=axis), axis=axis,
+        )
+
+        return M_out
 
 
 #%% OTHER
