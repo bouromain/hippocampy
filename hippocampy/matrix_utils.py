@@ -305,12 +305,21 @@ def circ_shift(M: np.ndarray, max_shift: int = None, axis: int = -1):
     if axis == 0:
         shifts = np.random.randint(max_shift, size=(sz[1], 1))
         new_x = np.mod(new_x + shifts, sz[axis])
-        return M[new_x, new_y].T
 
     elif axis == 1 or axis == -1:
         shifts = np.random.randint(max_shift, size=(1, sz[0]))
         new_y = np.mod(new_y + shifts, sz[axis])
-        return M[new_x, new_y].T
+
+    return M[new_x, new_y].T
+
+
+def circ_shift_idx(M, idx, min_shift=0, max_shift=500, axis=-1):
+    M = np.array(M)
+
+    n_rep = np.unique(idx)
+
+    for it in np.arange(n_rep):
+        ...
 
 
 #%% OTHER

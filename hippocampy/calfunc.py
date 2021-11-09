@@ -151,7 +151,8 @@ def calc_dF(
     elif type_win.lower() == "quantile":
         F_0 = rolling_quantile(F, window, quantile=quantile)
 
-    return (F - F_0) / F_0
+    dF = (F - F_0) / F_0
+    return dF.astype(np.float32)  # to make it like suite2p F and Fneu (also float 32)
 
 
 def transient(
