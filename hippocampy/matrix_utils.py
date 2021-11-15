@@ -62,7 +62,7 @@ def smooth_1d(
     # check input
     if kernel_type not in ["gauss", "box", "ramp"]:
         raise ValueError(f"Kernel type value {kernel_type} not recognized")
-    if padtype not in ["reflect", "symmetric", "wrap"]:
+    if padtype not in ["reflect", "symmetric", "wrap", "mean", "median", "edge"]:
         raise ValueError(f"Pad type value {padtype} not recognized")
 
     if kernel_half_width % 2 != 1:
@@ -313,7 +313,7 @@ def circ_shift(M: np.ndarray, max_shift: int = None, axis: int = -1):
     return M[new_x, new_y].T
 
 
-def circ_shift_idx(M, idx, min_shift=0, max_shift=500, axis=-1):
+def circ_shift_idx(M, idx, min_shift=0, max_shift=10000, axis=-1):
     M_out = np.array(M).copy()
     M_out = np.atleast_2d(M_out)
 

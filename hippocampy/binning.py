@@ -184,7 +184,7 @@ def boostrap_1d(
         rate_s = act_s
 
     # calculate the bootstrap
-    boot_mat = np.zeros((act.shape, n_rep))
+    boot_mat = np.zeros((act.shape[0], act.shape[1], n_rep))
     for it_rep in np.arange(n_rep):
         var_shifted = circ_shift_idx(var, boot_var)
         if method == "continuous":

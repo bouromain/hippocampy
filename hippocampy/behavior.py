@@ -101,14 +101,14 @@ def find_lap_1d(
     return out
 
 
-def find_quiet(
+def find_active(
     speed: np.ndarray,
     speed_thresh: float = 2.0,
     min_min_n_samples: int = 0,
     min_inter_samples: int = 0,
 ) -> np.ndarray:
     """
-    find_quiet find quiet period from a vector of speed
+    find_active find active period from a vector of speed
 
     Parameters
     ----------
