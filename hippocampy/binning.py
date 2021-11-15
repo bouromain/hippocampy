@@ -28,7 +28,7 @@ def rate_map(
     var : np.ndarray
         for multidimensional data this function expect the input to be var[n_samples, n_dim]
     samples : np.ndarray
-        can be either a continuous variable of size 
+        can be either a continuous variable of size nsamples or indexes
     bins : int, optional
         [description], by default 10
     fs : int
