@@ -17,6 +17,7 @@ def cross_validate(
     bin_method: str = "continuous",
     smooth_var_half_win: int = 5,
     smooth_pad_type: str = "reflect",
+    verbose: bool = True,
 ):
     # check inputs
     var = np.array(var)
@@ -24,8 +25,10 @@ def cross_validate(
 
     if not decode_method in ["bayes", "frv"]:
         raise ValueError(f"Decoding method not recognized")
+
     if not bin_method in ["point_process", "continuous"]:
         raise ValueError("Method should be either continuous or point_process")
+
     if var.ndim != 1:
         raise ValueError("This function only work for 1D inputs")
 
@@ -44,8 +47,10 @@ def cross_validate(
     cv_u = cv_u[~np.isnan(cv_u)]
 
     for it_cv in cv_u:
+        if verbose:
+            print(f"Training for epoch {it_cv} of {len(cv_u)}")
+        # compute tuning curves excluding the test epoch
         mask = cross_validate_vec == it_cv
-
         for it_q, tmp_q in enumerate(Q):
             Tc[it_q, :], _, _ = rate_map(
                 var[~mask],
@@ -56,7 +61,9 @@ def cross_validate(
                 smooth_pad_type=smooth_pad_type,
                 method=bin_method,
             )
-
+        # decode in one epoch for cross validation
+        if verbose:
+            print("Decoding")
         if decode_method == "bayes":
             Z[:, mask] = bayesian_1d(Q[:, mask], Tc)
         elif decode_method == "frv":
@@ -225,11 +232,23 @@ def decoded_state(P: np.ndarray, method: str = "max") -> np.ndarray:
     np.ndarray
         vector of decoded states
     """
+    if not method in ["max", "com"]:
+        raise ValueError("Method not recognized")
+
+    tmp = np.empty((P.shape[1]))
+    tmp.fill(np.nan)
+    mask_nan = np.all(np.isnan(P), axis=0)
 
     if method == "max":
-        return bn.nanargmax(P, axis=0)
+        tmp[~mask_nan] = bn.nanargmax(P[:, ~mask_nan], axis=0)
     elif method == "com":
-        return P * np.arange(P.shape[0])[:, None] / bn.nansum(P, axis=0)
+        tmp[~mask_nan] = (
+            P[~mask_nan]
+            * np.arange(P.shape[0])[:, None]
+            / bn.nansum(P[~mask_nan], axis=0)
+        )
+
+    return tmp
 
 
 def decoded_error(var_real: np.ndarray, var_decoded: np.ndarray) -> np.ndarray:
