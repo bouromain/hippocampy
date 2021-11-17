@@ -1,8 +1,68 @@
 import numpy as np
 import bottleneck as bn
 from hippocampy.matrix_utils import zscore
+from hippocampy.binning import rate_map
 
 from hippocampy.utils.type_utils import float_to_int
+
+
+def cross_validate(
+    var: np.ndarray,
+    Q: np.ndarray,
+    *,
+    bins: np.ndarray,
+    cross_validate_vec: np.ndarray,
+    fs: int = 1,
+    decode_method: str = "bayes",
+    bin_method: str = "continuous",
+    smooth_var_half_win: int = 5,
+    smooth_pad_type: str = "reflect",
+):
+    # check inputs
+    var = np.array(var)
+    Q = np.array(Q)
+
+    if not decode_method in ["bayes", "frv"]:
+        raise ValueError(f"Decoding method not recognized")
+    if not bin_method in ["point_process", "continuous"]:
+        raise ValueError("Method should be either continuous or point_process")
+    if var.ndim != 1:
+        raise ValueError("This function only work for 1D inputs")
+
+    if Q.shape[1] != len(var) != len(cross_validate_vec):
+        raise ValueError("Inputs should have the same size")
+
+    # init inputs
+    n_neurons, n_samples = Q.shape
+    n_bins = len(bins)
+    Z = np.empty((n_bins - 1, n_samples))
+    Z.fill(np.nan)
+    Tc = np.empty((n_neurons, n_bins - 1))
+    Tc.fill(np.nan)
+
+    cv_u = np.unique(cross_validate_vec)
+    cv_u = cv_u[~np.isnan(cv_u)]
+
+    for it_cv in cv_u:
+        mask = cross_validate_vec == it_cv
+
+        for it_q, tmp_q in enumerate(Q):
+            Tc[it_q, :], _, _ = rate_map(
+                var[~mask],
+                tmp_q[~mask],
+                bins=bins,
+                fs=fs,
+                smooth_half_win=smooth_var_half_win,
+                smooth_pad_type=smooth_pad_type,
+                method=bin_method,
+            )
+
+        if decode_method == "bayes":
+            Z[:, mask] = bayesian_1d(Q[:, mask], Tc)
+        elif decode_method == "frv":
+            Z[:, mask] = frv(Q[:, mask], Tc)
+
+    return Z
 
 
 def bayesian_1d(Q: np.ndarray, Tc: np.ndarray, prior=None, method="caim") -> np.ndarray:
