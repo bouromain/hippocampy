@@ -48,7 +48,7 @@ def cross_validate(
 
     for it_cv in cv_u:
         if verbose:
-            print(f"Training for epoch {it_cv} of {len(cv_u)}")
+            print(f"Decoding for epoch {it_cv} of {len(cv_u)}")
         # compute tuning curves excluding the test epoch
         mask = cross_validate_vec == it_cv
         for it_q, tmp_q in enumerate(Q):
@@ -62,8 +62,6 @@ def cross_validate(
                 method=bin_method,
             )
         # decode in one epoch for cross validation
-        if verbose:
-            print("Decoding")
         if decode_method == "bayes":
             Z[:, mask] = bayesian_1d(Q[:, mask], Tc)
         elif decode_method == "frv":
@@ -210,8 +208,8 @@ def frv(Q: np.ndarray, Tc: np.ndarray) -> np.ndarray:
 
     n_neurons = Q.shape[0]
 
-    Tc_z = zscore(Tc, axis=1)
-    Q_z = zscore(Q, axis=1)
+    Tc_z = zscore(Tc, axis=0)
+    Q_z = zscore(Q, axis=0)
 
     return (1 / (n_neurons - 1)) * (Tc_z.T @ Q_z)
 
@@ -289,17 +287,17 @@ def decoded_error(var_real: np.ndarray, var_decoded: np.ndarray) -> np.ndarray:
 
 
 def confusion_matrix(
-    decoded: np.ndarray, true_vals: np.ndarray, full_posterior=None
+    true_vals: np.ndarray, decoded: np.ndarray, full_posterior=None
 ) -> np.ndarray:
     """
     compute confusion_matrix or full posterior confusion matrix
 
     Parameters
     ----------
-    decoded : np.ndarray
-        either a posterior matrix or a vector of decoded values
     true_vals : np.ndarray
         vector of true values 
+    decoded : np.ndarray
+        either a posterior matrix or a vector of decoded values
     full_posterior : str, optional
         method to compute the full posterior, by default None
 
