@@ -2,6 +2,15 @@ import numpy as np
 from numpy.linalg import norm
 
 
+"""
+   TODO:
+   implement Mantel test to compare distance matrix 
+   https://github.com/jwcarr/mantel
+   https://en.wikipedia.org/wiki/Mantel_test
+   
+"""
+
+
 def cos_sim(a: np.ndarray, b: np.ndarray) -> float:
     """
     Compute cosine similarity between two vectors.
