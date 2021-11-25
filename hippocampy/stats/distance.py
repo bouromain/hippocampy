@@ -10,9 +10,9 @@ def cos_sim(a: np.ndarray, b: np.ndarray) -> float:
     Parameters
     ----------
     a : np.ndarray
-        first input vector
+        first input vector, stack of vectors (n_samples, n_vectors)
     b : np.ndarray
-        other input vector
+        other input vector,, stack of vectors (n_samples, n_vectors)
 
     Returns
     -------
@@ -34,5 +34,5 @@ def cos_sim(a: np.ndarray, b: np.ndarray) -> float:
     if not np.array_equal(a.shape, b.shape):
         raise ValueError("inputs should have the same shape")
 
-    return a @ b.T / (norm(a) * norm(b))
+    return a @ b.T / (norm(a, axis=1) * norm(b, axis=1))
 

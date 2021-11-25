@@ -203,15 +203,15 @@ def frv(Q: np.ndarray, Tc: np.ndarray) -> np.ndarray:
     """
     if Q.shape[0] != Tc.shape[0]:
         raise ValueError(
-            "Q and tunning curve matrix should share their 0th dimension (number neurons)"
+            "Q and tunning curve matrix should share their 0th dimension (n samples)"
         )
 
-    n_neurons = Q.shape[0]
+    n = Q.shape[0]
 
     Tc_z = zscore(Tc, axis=0)
     Q_z = zscore(Q, axis=0)
 
-    return (1 / (n_neurons - 1)) * (Tc_z.T @ Q_z)
+    return (1 / (n - 1)) * (Tc_z.T @ Q_z)
 
 
 def decoded_state(P: np.ndarray, method: str = "max") -> np.ndarray:
