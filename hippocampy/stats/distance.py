@@ -30,6 +30,8 @@ def cos_sim(a: np.ndarray, b: np.ndarray) -> float:
     https://stackoverflow.com/questions/18424228/cosine-similarity-between-2-number-lists
 
     """
+    a = np.atleast_2d(a)
+    b = np.atleast_2d(b)
 
     if not np.array_equal(a.shape, b.shape):
         raise ValueError("inputs should have the same shape")
