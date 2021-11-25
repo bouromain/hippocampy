@@ -269,10 +269,13 @@ def norm_axis(matrix: np.ndarray, method="max", axis=-1) -> np.ndarray:
         return zscore(matrix, axis=axis)
     elif method == "one":
         divisor = bn.nansum(matrix, axis=axis)
+        return matrix / np.expand_dims(divisor, axis=axis)
     elif method == "max":
         divisor = bn.nanmax(matrix, axis=axis)
-
-    return matrix / np.expand_dims(divisor, axis=axis)
+        off = bn.nanmin(matrix, axis=axis)
+        return (matrix - np.expand_dims(off, axis=axis)) / np.expand_dims(
+            divisor, axis=axis
+        )
 
 
 def circ_shift(M: np.ndarray, max_shift: int = None, axis: int = -1):
