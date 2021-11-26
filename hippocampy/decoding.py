@@ -107,9 +107,6 @@ def bayesian_1d(Q: np.ndarray, Tc: np.ndarray, prior=None, method="caim") -> np.
     this code can be applied in 2D by raveling the positional bins and reshaping at the end
 
     """
-    # Q = np.random.uniform(0, 1, (50, 15000)) > 0.95
-    # Tc = np.random.uniform(0, 1, (50, 100))
-    # prior = None
 
     if method not in ["caim", "classic"]:
         raise ValueError(f"Method {method} not implemented")
