@@ -4,9 +4,11 @@ from numpy.linalg import norm
 
 """
    TODO:
-   implement Mantel test to compare distance matrix 
+   implement Mantel test to compare distance matrices 
    https://github.com/jwcarr/mantel
    https://en.wikipedia.org/wiki/Mantel_test
+   https://users.aalto.fi/~eglerean/permutations.html
+   
    
 """
 

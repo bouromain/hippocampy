@@ -68,7 +68,7 @@ def calc_template(spike_count, method="ICA"):
     eigvals = eigvals[i_sort][::-1]
     eigvecs = eigvecs[:, i_sort][::-1]
 
-    # define significant assemblies as an assemblie having a eigenvalue greater
+    # define significant assemblies as an assembly having an eigenvalue greater
     # than a threshold, lambda max, defined using Marchenko-Pastur law
     q = n_bins / n_cells
     assert q > 1, "Number or time bins should be greater than the number of neurons"
