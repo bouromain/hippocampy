@@ -4,6 +4,7 @@ from hippocampy.matrix_utils import zscore
 from hippocampy.binning import rate_map
 
 from hippocampy.utils.type_utils import float_to_int
+from hippocampy.stats.distance import cos_sim, pairwise_euclidian
 
 
 def cross_validate(
@@ -161,7 +162,7 @@ def bayesian_1d(Q: np.ndarray, Tc: np.ndarray, prior=None, method="caim") -> np.
     return P
 
 
-def frv(Q: np.ndarray, Tc: np.ndarray) -> np.ndarray:
+def frv(Q: np.ndarray, Tc: np.ndarray, *, method="pearson") -> np.ndarray:
     """
     Decode by doing the correlation of the activity of each time steps 
     with a template activity. This decoding is similar to the one performed 
@@ -178,6 +179,9 @@ def frv(Q: np.ndarray, Tc: np.ndarray) -> np.ndarray:
         activity matrix Q [n_neurons, n_samples]
     Tc : np.ndarray
         tunning curves matrix Tc [n_neurons, n_bins]
+    method : str
+        method to use to compute the firing rate vector similarity
+        [pearson, cosine, euclidian]
 
     Returns
     -------
@@ -203,12 +207,21 @@ def frv(Q: np.ndarray, Tc: np.ndarray) -> np.ndarray:
             "Q and tunning curve matrix should share their 0th dimension (n samples)"
         )
 
-    n = Q.shape[0]
+    if method not in ["pearson", "cosine", "euclidian"]:
+        raise ValueError(f"Method {method} not recognized")
 
-    Tc_z = zscore(Tc, axis=0)
-    Q_z = zscore(Q, axis=0)
+    if method == "pearson":
+        n = Q.shape[0]
 
-    return (1 / (n - 1)) * (Tc_z.T @ Q_z)
+        Tc_z = zscore(Tc, axis=0)
+        Q_z = zscore(Q, axis=0)
+
+        return (1 / (n - 1)) * (Tc_z.T @ Q_z)
+    elif method == "cosine":
+        return cos_sim(Tc.T, Q)
+
+    elif method == "euclidian":
+        return pairwise_euclidian(Tc.T - Q)
 
 
 def decoded_state(P: np.ndarray, method: str = "max") -> np.ndarray:
@@ -287,6 +300,8 @@ def confusion_matrix(
     true_vals: np.ndarray, decoded: np.ndarray, full_posterior=None
 ) -> np.ndarray:
     """
+    TODO need to be re-written the input is to prone to problem, it should take 
+    digitized inputs, already binned
     compute confusion_matrix or full posterior confusion matrix
 
     Parameters

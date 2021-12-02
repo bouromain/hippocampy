@@ -199,6 +199,9 @@ def corr_mat(a: np.ndarray, axis=-1) -> np.ndarray:
     -------
     np.ndarray
         correlation matrix
+
+    TODO modify this function in order to take two array as an input
+    
     Reference
     ---------
     https://en.wikipedia.org/wiki/Pearson_correlation_coefficient

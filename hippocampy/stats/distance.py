@@ -1,6 +1,6 @@
 import numpy as np
 from numpy.linalg import norm
-
+import bottleneck as bn
 
 """
    TODO:
@@ -49,3 +49,32 @@ def cos_sim(a: np.ndarray, b: np.ndarray) -> float:
 
     return a @ b.T / np.outer(norm(a, axis=1), norm(b, axis=1))
 
+
+def pairwise_euclidian(A: np.ndarray, B: np.ndarray):
+    """
+    pairwise_euclidian calculate euclidian distance aon all the pairs of row from the
+    input matrices
+
+    Based on the fact that:
+        (a - b)^2 = a^2 + b^2 - 2ab
+
+    Parameters
+    ----------
+    A : np.ndarray
+        [description]
+    B : np.ndarray
+        [description]
+
+    Returns
+    -------
+    distance matrix 
+        [description]
+
+    Reference
+    ---------
+    https://codereview.stackexchange.com/a/77270    
+    """
+
+    d = bn.nansum((A ** 2), axis=-1)[:, np.newaxis] + bn.nansum(B ** 2, axis=-1)
+    d -= 2 * np.squeeze(A @ B.T)
+    return np.sqrt(d)
