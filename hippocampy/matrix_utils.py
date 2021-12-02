@@ -316,7 +316,41 @@ def circ_shift(M: np.ndarray, max_shift: int = None, axis: int = -1):
     return M[new_x, new_y].T
 
 
-def circ_shift_idx(M, idx, min_shift=0, max_shift=10000, axis=-1):
+def circ_shift_idx(
+    M: np.ndarray, idx, min_shift: int = 0, max_shift: int = 10000, axis: int = -1
+):
+    """
+    circ_shift_idx Circularly shift the rows or column of a matrix
+    in given indexes. It treats contiguous non nan regions of the 
+    idx vector as different part to circularly shift
+
+    Parameters
+    ----------
+    M : np.ndarray
+        input matrix to be shifted
+    idx : np.ndarray
+        vector constraining the shift
+    min_shift : int, optional
+        minimum value of the shift in sample, by default 0
+    max_shift : int, optional
+        maximum value of the shift in sample, by default 10000
+    axis : int, optional
+        axis along which the function is performed, by default -1
+
+    Returns
+    -------
+    shifted input matrix
+
+    Example
+    -------
+    M = np.arange(1000).reshape(10, -1)
+    idx_in = np.empty((100))
+    idx_in.fill(np.nan)
+    idx_in[1:30] = 0
+    idx_in[40:60] = 1
+    idx_in[80:90] = 2
+    N = circ_shift_idx(M,idx_in)
+    """
     M_out = np.array(M).copy()
     M_out = np.atleast_2d(M_out)
 
@@ -336,12 +370,11 @@ def circ_shift_idx(M, idx, min_shift=0, max_shift=10000, axis=-1):
         # wrap the end values, at the start, and add re-index correctly
         s_idx = np.mod(s_idx, n_idx) + s_idx_min
         s_idx = np.atleast_2d(s_idx)
-        tmp_idx = np.atleast_2d(np.nonzero(tmp_idx)[0])
+        tmp_idx = np.atleast_2d(np.nonzero(tmp_idx)[0]).squeeze()
         np.put_along_axis(
-            M_out, s_idx, np.take_along_axis(M_out, tmp_idx, axis=axis), axis=axis,
+            M_out, s_idx, np.take(M, tmp_idx, axis=axis), axis=axis,
         )
-
-        return M_out
+    return M_out
 
 
 #%% OTHER
