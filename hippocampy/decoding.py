@@ -164,14 +164,9 @@ def bayesian_1d(Q: np.ndarray, Tc: np.ndarray, prior=None, method="caim") -> np.
 
 def frv(Q: np.ndarray, Tc: np.ndarray, *, method="pearson") -> np.ndarray:
     """
-    Decode by doing the correlation of the activity of each time steps 
+    Decode by doing the similarity of the activity of each time steps 
     with a template activity. This decoding is similar to the one performed 
     in ref [1] or [2]
-
-    To be efficient here we calculate the pearson correlation as:
-
-    corr(x,y) = (1/n-1) sum( zscore(x) * zscore(y) )
-    with n the number of sample in x and y
 
     Parameters
     ----------
@@ -201,6 +196,7 @@ def frv(Q: np.ndarray, Tc: np.ndarray, *, method="pearson") -> np.ndarray:
     [2] Wilson MA, McNaughton BL. Dynamics of the hippocampal ensemble 
         code for space. Science. 1993 Aug 20;261(5124):1055-8. 
         doi: 10.1126/science.8351520.
+    [3] https://en.wikipedia.org/wiki/Pearson_correlation_coefficient
     """
     if Q.shape[0] != Tc.shape[0]:
         raise ValueError(
@@ -212,16 +208,16 @@ def frv(Q: np.ndarray, Tc: np.ndarray, *, method="pearson") -> np.ndarray:
 
     if method == "pearson":
         n = Q.shape[0]
-
         Tc_z = zscore(Tc, axis=0)
         Q_z = zscore(Q, axis=0)
 
         return (1 / (n - 1)) * (Tc_z.T @ Q_z)
+
     elif method == "cosine":
-        return cos_sim(Tc.T, Q)
+        return cos_sim(Q, Tc)
 
     elif method == "euclidian":
-        return pairwise_euclidian(Tc.T - Q)
+        return pairwise_euclidian(Tc.T, Q)
 
 
 def decoded_state(P: np.ndarray, method: str = "max") -> np.ndarray:

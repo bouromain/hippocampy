@@ -44,37 +44,38 @@ def cos_sim(a: np.ndarray, b: np.ndarray) -> float:
     a = np.atleast_2d(a)
     b = np.atleast_2d(b)
 
-    if not np.array_equal(a.shape, b.shape):
+    if not np.array_equal(a.shape[1], b.shape[1]):
         raise ValueError("inputs should have the same shape")
 
     return a @ b.T / np.outer(norm(a, axis=1), norm(b, axis=1))
 
 
-def pairwise_euclidian(A: np.ndarray, B: np.ndarray):
+def pairwise_euclidian(a: np.ndarray, b: np.ndarray):
     """
-    pairwise_euclidian calculate euclidian distance aon all the pairs of row from the
+    pairwise_euclidian calculate euclidian distance on all the pairs of rows from the
     input matrices
 
     Based on the fact that:
-        (a - b)^2 = a^2 + b^2 - 2ab
+                            (a - b)^2 = a^2 + b^2 - 2ab
 
     Parameters
     ----------
-    A : np.ndarray
-        [description]
-    B : np.ndarray
-        [description]
+    a : np.ndarray
+        first input array 
+    b : np.ndarray
+        second input array
 
     Returns
     -------
     distance matrix 
-        [description]
 
     Reference
     ---------
     https://codereview.stackexchange.com/a/77270    
     """
+    a = np.atleast_2d(a)
+    b = np.atleast_2d(b)
 
-    d = bn.nansum((A ** 2), axis=-1)[:, np.newaxis] + bn.nansum(B ** 2, axis=-1)
-    d -= 2 * np.squeeze(A @ B.T)
+    d = bn.nansum((a ** 2), axis=-1)[:, np.newaxis] + bn.nansum(b ** 2, axis=-1)
+    d -= 2 * np.squeeze(a @ b.T)
     return np.sqrt(d)
