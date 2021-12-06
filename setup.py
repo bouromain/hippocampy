@@ -7,7 +7,7 @@ setup(
     author="Bourboulou Romain",
     author_email="bouromain@gmail.com",
     packages=["hippocampy"],
-    python_requires=">=3.7, <3.9",
+    python_requires=">=3.7, <3.10",
     install_requires=[
         "numpy",
         "scipy",

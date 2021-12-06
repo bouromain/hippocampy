@@ -360,16 +360,16 @@ def circ_shift_idx(
     idx_seg = np.unique(idx)
     idx_seg = idx_seg[~np.isnan(idx_seg)]
 
-    shifts = np.random.randint(min_shift, max_shift, size=(1, len(idx_seg)))
+    shift = np.random.randint(min_shift, max_shift)
 
-    for tmp_id_seg, tmp_shift in zip(idx_seg.T, shifts.T):
+    for tmp_id_seg in idx_seg.T:
         tmp_idx = idx == tmp_id_seg
         n_idx = bn.nansum(tmp_idx)
 
         s_idx = np.where(tmp_idx)[0]
         s_idx_min = bn.nanmin(s_idx)
         # make the index zero - indexed, then shift
-        s_idx = (s_idx - s_idx_min) + tmp_shift
+        s_idx = (s_idx - s_idx_min) + shift
         # wrap the end values, at the start, and add re-index correctly
         s_idx = np.mod(s_idx, n_idx) + s_idx_min
         s_idx = np.atleast_2d(s_idx)
