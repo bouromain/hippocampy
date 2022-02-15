@@ -20,7 +20,8 @@ https://github.com/losonczylab/Sparks_Liao_NatComms2020
 import bottleneck as bn
 import numpy as np
 from sklearn.decomposition import FastICA
-from hippocampy.matrix_utils import smooth1D, zscore
+from hippocampy.matrix_utils import smooth_1d, zscore
+from hippocampy.utils.nan import remove_nan
 
 
 def calc_template(spike_count, method="ICA"):
@@ -59,6 +60,9 @@ def calc_template(spike_count, method="ICA"):
 
     # compute correlation matrix of binned spikes matrix
     spike_count_z = zscore(spike_count, axis=1)
+
+    # remove nan values to avoid the correlation matrix to be only nans
+    spike_count_z = remove_nan(spike_count_z)
 
     correlation_matrix = (1 / (n_bins - 1)) * (spike_count_z @ spike_count_z.T)
 
@@ -143,7 +147,7 @@ def calc_activity(spike_count, template, kernel_half_width=None):
     # here we could convolve the spike_count_z with a gaussian
     # cf Van de Ven 2016
     if kernel_half_width is not None:
-        activity = smooth1D(
+        activity = smooth_1d(
             activity, kernel_half_width=kernel_half_width, kernel_type="gauss"
         )
 
