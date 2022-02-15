@@ -150,7 +150,10 @@ def band_filter(sig, fRange, fs, method="cheby2", order=4, axis=-1) -> np.ndarra
     sig: 
         signal to filter
     fRange: 
-        frequency band to filter with eg [5 12]
+        frequency band to filter with. 
+        For example:
+            Theta [5 12]
+            Ripple []
     fs: 
         sampling frequency
     method: 
@@ -167,7 +170,7 @@ def band_filter(sig, fRange, fs, method="cheby2", order=4, axis=-1) -> np.ndarra
     sig_f: array_like
         filtered signal
 
-    TO DO
+    TODO
     -----
     implement sosfilter
     implement remez method:
@@ -257,7 +260,7 @@ def envelope(sig: np.ndarray, axis: int = -1) -> np.ndarray:
     analytic_signal = np.take(analytic_signal, np.arange(n_samples), axis=axis)
     amplitude_envelope = np.abs(analytic_signal)
 
-    return amplitude_envelope
+    return amplitude_envelope.squeeze()
 
 
 def instantaneousFreq(sig_p: np.ndarray, fs: int) -> np.ndarray:

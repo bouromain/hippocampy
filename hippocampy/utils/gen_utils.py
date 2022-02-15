@@ -162,7 +162,7 @@ def nearest_odd(x: Union[float, np.ndarray]):
         x[idx] = x[idx] + 1
     elif idx:
         x += 1
-    return x
+    return x.astype(int)
 
 
 def nearest_even(x: Union[float, np.ndarray]):
@@ -180,4 +180,4 @@ def nearest_even(x: Union[float, np.ndarray]):
         values or array rounded to the nearest even number
     """
     x = np.asarray(x)
-    return np.round(x / 2) * 2
+    return (np.round(x / 2) * 2).astype(int)
