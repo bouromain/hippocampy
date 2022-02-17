@@ -8,6 +8,7 @@ from hippocampy.matrix_utils import (
     last_true,
     remove_holes,
     remove_small_objects,
+    smooth_1d,
 )
 
 
@@ -106,6 +107,7 @@ def find_active(
     speed_thresh: float = 2.0,
     min_min_n_samples: int = 0,
     min_inter_samples: int = 0,
+    smooth_half_win: int = 10,
 ) -> np.ndarray:
     """
     find_active find active period from a vector of speed
@@ -122,13 +124,21 @@ def find_active(
         minimum inter pauses distances, it will merge activity periods if 
         they are not spaced by at least this distance, 
         by default 10 [samples]
+    smooth_half_win: int, optional
+        width of the half window in case we want to perform a gaussian smooth on
+        the data
 
     Returns
     -------
     np.ndarray
         [description]
     """
-    speed_b = np.abs(speed) >= speed_thresh
+    if smooth_half_win > 0:
+        speed_s = smooth_1d(speed, kernel_half_width=smooth_half_win)
+    else:
+        speed_s = speed
+
+    speed_b = np.abs(speed_s) >= speed_thresh
 
     # merge very close activity periodes
     speed_b = remove_holes(speed_b, min_inter_samples)

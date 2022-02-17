@@ -156,18 +156,12 @@ def calc_dF(
 
 
 def transient(
-    F: np.ndarray,
-    threshold=2.5,
-    fs: int = 30,
-    spike_norm="mad",
-    denoise_wavelet="db2",
-    denoise_level: int = 2,
-    detrend_window=None,
+    F: np.ndarray, S: np.ndarray, threshold=1.5, fs: int = 30, spike_norm="mad",
 ):
     """
     Transient detection inspired from Grosmark 2020.
     It will take the traces, slightly denoise them to them deconvolve them
-    Events are then defined as deconvolved signal higher then Threshold time 
+    Events are then defined as deconvolved signal higher than Threshold time 
     the level of estimated noise. This noise is defined as the 
     median absolute deviation between the initial trace and the traces 
     reconstructed with the deconvolution algorithm OASIS
@@ -176,6 +170,10 @@ def transient(
     ----------
     F : np.ndarray
         calcium traces [n_traces, n_samples]
+    S : np.ndarray
+        deconvolved traces. It is easier to provide the deconvolved traces here 
+        in order to be able to feed deconvolved traces from different deconvolution 
+        algo such as OASIS or CASCADE
     threshold : float, optional
         threshold to detect event. Defined as threshold  times the "mad"
         or "zscore" of the deconvolved trace, by default 2.5
@@ -186,17 +184,11 @@ def transient(
         sampling rate of the traces, by default 30
     spike_norm : str, optional
         normalisation of the deconvolved spikes, by default "mad"
-    denoise_wavelet : str, optional
-        type of wavelets to use for  the denoising, by default "db2"
-    denoise_level : int, optional
-        level to use for the denoising, by default 2
-    detrend_window : bool, optional
-        length of the window to use during detrending, by default True
 
     Returns
     -------
-    S np.ndarray
-        spike matrix
+    S_b np.ndarray
+        binarised spike matrix
     Ts list
         spike times
 
@@ -208,38 +200,29 @@ def transient(
     if spike_norm not in ["mad", "zscore"]:
         raise ValueError(f"{spike_norm} not a valid spike normalization ")
 
-    F_d = F.copy()
-
-    if detrend_window is not None:
-        F_d = detrend_F(F_d, win_size=detrend_window)
-
-    if denoise_level is not None:
-        F_d = wden(F_d, wavelet_name=denoise_wavelet, level=denoise_level)
-
     if spike_norm == "mad":
-        F_c, S, B = deconvolve(F_d, fs=fs)
+        F_reconvolved = F * S
         # estimate noise as the mad of the residuals of the difference between
         #  the initial traces and the denoised ones. Then normalize the spike estimate
-        noise = mad((F - B) - F_c, axis=1)
-        S /= noise[:, None]
+        noise = mad(F_reconvolved - F, axis=1)
+        S_b = S / noise[:, None]
     elif spike_norm == "zscore":
-        _, S = deconvolve(F_d, fs=fs)
-        S = zscore(S, axis=1)
+        S_b = zscore(S, axis=1)
 
     # threshold the spike estimate
     if isinstance(threshold, float):
-        S = S > threshold
+        S_b = S_b > threshold
     elif isinstance(threshold, np.ndarray):
-        S = S[S > threshold]
+        S_b = S_b[S_b > threshold]
 
     # in case multiple successive samples cross the threshold, only keep the first
-    S = first_true(S)
+    S_b = first_true(S_b)
 
-    if S.squeeze().ndim == 1:
-        S = S.squeeze()
-        return S, np.nonzero(S)[0]
+    if S_b.squeeze().ndim == 1:
+        S_b = S_b.squeeze()
+        return S_b, np.nonzero(S_b)[0]
     else:
-        return S, [np.nonzero(s)[0] for s in S]
+        return S_b, [np.nonzero(s)[0] for s in S_b]
 
 
 def transient_simple(

@@ -24,7 +24,9 @@ from hippocampy.matrix_utils import smooth_1d, zscore
 from hippocampy.utils.nan import remove_nan
 
 
-def calc_template(spike_count, method="ICA"):
+def calc_template(
+    spike_count: np.ndarray, method: str = "ICA", correction: bool = False
+):
     """
     Calculate assemblies pattern as described in Lopes-dos-Santos V,
     Ribeiro S, Tort ABL Detecting cell assemblies in large neuronal populations,
@@ -38,7 +40,8 @@ def calc_template(spike_count, method="ICA"):
         method to extract pattern (PCA, ICA) ICA is better
         as it will take into account neurons that can be in multiple
         assemblies
-
+    correction: bool
+        Tracy-Widom correction as desciber in Ref [1,2]
 
     Return
     ------
@@ -46,11 +49,24 @@ def calc_template(spike_count, method="ICA"):
         number of significant templates (n_cells,n_patterns)
     correlation_matrix
         (n_cells,n_cells)
+    
+    Reference
+    ---------
+    [1] An integrated calcium imaging processing toolbox for the analysis of neuronal 
+        population dynamics. Sebastián A. Romano, Verónica Pérez-Schuster, 
+        Adrien Jouary, Jonathan Boulanger-Weill, Alessia Candeo, Thomas Pietri, 
+        Germán Sumbre
+        Plos Comp Biol 2017, https://doi.org/10.1371/journal.pcbi.1005526
 
-    NB
-    __
-    Some paper threshold the template vector to find the cells of an assembly
-    for exemple van de Ven et al 2016 defines it as 2 std above mean (see fig S2)
+    [2] Tracy CA, Widom H. Level-Spacing Distributions and the Airy Kernel. 
+        Commun Math Phys. 1992;159: 35. https://doi.org/10.1016/0370-2693(93)91114-3
+
+    Nota bene
+    ---------
+    -   Some paper threshold the template vector to find the cells of an assembly
+        for example van de Ven et al 2016 defines it as 2 std above mean (see fig S2)
+    -   I should may be have a look at the advantage of the promax approach used 
+        in some paper
 
     """
     assert method in ["PCA", "ICA"], "Method not recognized"
@@ -76,7 +92,13 @@ def calc_template(spike_count, method="ICA"):
     # than a threshold, lambda max, defined using Marchenko-Pastur law
     q = n_bins / n_cells
     assert q > 1, "Number or time bins should be greater than the number of neurons"
-    lambda_max = (1 + np.sqrt(1 / q)) ** 2
+
+    if correction:
+        # Tracy-Widom correction
+        lambda_max = ((1 + np.sqrt(1 / q)) ** 2) + n_cells ** (2 / 3)
+    else:
+        lambda_max = (1 + np.sqrt(1 / q)) ** 2
+
     significant_vals = eigvals > lambda_max
 
     n_assemblies = np.sum(significant_vals)
