@@ -41,7 +41,7 @@ def calc_template(
         as it will take into account neurons that can be in multiple
         assemblies
     correction: bool
-        Tracy-Widom correction as desciber in Ref [1,2]
+        Tracy-Widom correction as described in Ref [1,2]
 
     Return
     ------
