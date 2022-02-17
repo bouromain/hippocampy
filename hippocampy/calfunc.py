@@ -156,7 +156,7 @@ def calc_dF(
 
 
 def transient(
-    F: np.ndarray, S: np.ndarray, threshold=1.5, fs: int = 30, spike_norm="mad",
+    F: np.ndarray, S: np.ndarray, threshold=1.0, fs: int = 30, spike_norm="mad",
 ):
     """
     Transient detection inspired from Grosmark 2020.
@@ -210,10 +210,10 @@ def transient(
         S_b = zscore(S, axis=1)
 
     # threshold the spike estimate
-    if isinstance(threshold, float):
-        S_b = S_b > threshold
-    elif isinstance(threshold, np.ndarray):
+    if isinstance(threshold, np.ndarray):
         S_b = S_b[S_b > threshold]
+    else:
+        S_b = S_b > threshold
 
     # in case multiple successive samples cross the threshold, only keep the first
     S_b = first_true(S_b)
