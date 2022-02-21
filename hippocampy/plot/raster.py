@@ -4,5 +4,7 @@ import numpy as np
 from hippocampy.assemblies import calc_template
 
 
-def sort_F(F: np.array):
-    T, _ = calc_template(F)
+def joy_plot(F: np.ndarray, T=None, n_traces=20):
+
+    plt.figure
+

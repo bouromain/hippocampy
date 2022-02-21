@@ -8,9 +8,11 @@ from hippocampy.matrix_utils import (
     first_true,
     remove_small_objects,
     rolling_quantile,
+    smooth_1d,
     zscore,
 )
 from hippocampy.stats.stats import mad
+from hippocampy.utils.gen_utils import nearest_even
 from hippocampy.wavelet import wden
 
 
@@ -156,7 +158,7 @@ def calc_dF(
 
 
 def transient(
-    F: np.ndarray, S: np.ndarray, threshold=1.0, fs: int = 30, spike_norm="mad",
+    F: np.ndarray, S: np.ndarray, threshold=1.1, fs: int = 30, spike_norm="mad",
 ):
     """
     Transient detection inspired from Grosmark 2020.
@@ -176,10 +178,11 @@ def transient(
         algo such as OASIS or CASCADE
     threshold : float, optional
         threshold to detect event. Defined as threshold  times the "mad"
-        or "zscore" of the deconvolved trace, by default 2.5
+        or "zscore" of the deconvolved trace, by default 1.1 
 
         This can be given as a float or a vector if you need different 
-        threshold for different epoch (activity, inactivity)
+        threshold for different epoch (activity, inactivity). Grosmark 2021 set
+        a treshold of 1.5 during active epoch and 1.25 during rest. 
     fs : int, optional
         sampling rate of the traces, by default 30
     spike_norm : str, optional
@@ -211,7 +214,7 @@ def transient(
 
     # threshold the spike estimate
     if isinstance(threshold, np.ndarray):
-        S_b = S_b[S_b > threshold]
+        S_b = np.greater_equal(S_b, threshold)
     else:
         S_b = S_b > threshold
 
@@ -329,3 +332,33 @@ def noise_level(F: np.ndarray, fs: int, axis=-1) -> np.ndarray:
 
     noise = mad(F, axis=axis) / np.sqrt(fs)
     return noise * 100
+
+
+def mua(T: np.ndarray, *, fs: int = 30, size_win: float = 0.125):
+    """
+    Compute "multi-unit" activity from a Transient matrix. The T matrix is a
+    binary matrix of transient (True), calculated from a dF matrix (see: 
+    function "transient"). Individual traces are first smoothed and then summed 
+    to finally have the multi-unit activity.
+
+    Parameters
+    ----------
+    T : np.ndarray (n_roi , n_samples)
+        Binary transient matrix
+    fs : int, optional
+        sampling rate of the T matrix, by default 30
+    size_win : float, optional
+        half-window of the smotthing to perform on the T, by default 0.125
+    """
+
+    # calculate the size of the smoothing window
+    half_win = nearest_even(size_win * fs)
+
+    # smooth everything
+    T_s = smooth_1d(T.astype(int), kernel_half_width=half_win)
+
+    # zscore this in oder to compensate for different level of activity
+    T_s = zscore(T_s, axis=1)
+
+    # sum everything and return
+    return bn.nansum(T_s, axis=0)

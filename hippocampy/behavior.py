@@ -102,7 +102,7 @@ def find_lap_1d(
     return out
 
 
-def find_active(
+def find_quiet(
     speed: np.ndarray,
     speed_thresh: float = 2.0,
     min_min_n_samples: int = 0,
@@ -110,7 +110,7 @@ def find_active(
     smooth_half_win: int = 10,
 ) -> np.ndarray:
     """
-    find_active find active period from a vector of speed
+    find_quiet find quiet period from a vector of speed
 
     Parameters
     ----------
@@ -138,10 +138,11 @@ def find_active(
     else:
         speed_s = speed
 
-    speed_b = np.abs(speed_s) >= speed_thresh
+    speed_b = np.abs(speed_s) <= speed_thresh
 
-    # merge very close activity periodes
+    # merge very close quiet periodes
     speed_b = remove_holes(speed_b, min_inter_samples)
+
     # remove periods that are too small
     return remove_small_objects(speed_b, min_min_n_samples)
 

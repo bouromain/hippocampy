@@ -75,6 +75,10 @@ def find_ripples(
     https://github.com/michael-zugaro/FMAToolbox/blob/master/Analyses/FindRipples.m
     https://github.com/Eden-Kramer-Lab/ripple_detection/blob/master/ripple_detection/detectors.py
 
+    TODO
+    include the calculation of EMG form LFP as done in the following ref.
+    https://github.com/ecarmichael/CEH2/blob/fdfc37a41a178779320b97802d0283b8bd0c9070/Common_functions/MS_infer_EMG.m
+    https://github.com/buzsakilab/buzcode/blob/05a8bd55ac48a6d50069c3f392d55fdc6e8cd5ec/detectors/bz_EMGFromLFP.m
     """
     # check input
     assert min_len > 0, "Minimum ripple duration should be positive"
