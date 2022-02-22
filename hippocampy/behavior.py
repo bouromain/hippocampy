@@ -107,7 +107,7 @@ def find_quiet(
     speed_thresh: float = 2.0,
     min_min_n_samples: int = 0,
     min_inter_samples: int = 0,
-    smooth_half_win: int = 10,
+    smooth_half_win: int = 60,
 ) -> np.ndarray:
     """
     find_quiet find quiet period from a vector of speed

@@ -2,7 +2,7 @@ import bottleneck as bn
 import numpy as np
 from numba import jit
 
-from hippocampy.matrix_utils import circ_shift, smooth_1d, circ_shift_idx
+from hippocampy.matrix_utils import circ_shift, smooth_1d, circ_shift_idx, smooth_2d
 from hippocampy.utils.type_utils import float_to_int
 
 
@@ -17,7 +17,7 @@ def rate_map(
     smooth_axis: int = 0,
     smooth_pad_type: str = "reflect",
     method: str = "point_process",
-    preserve_nan_opt: bool = True
+    preserve_nan_opt: bool = True,
 ):
     """
     rate_map [summary]
@@ -126,7 +126,7 @@ def boostrap_1d(
     smooth_axis: int = 0,
     smooth_pad_type: str = "reflect",
     method: str = "point_process",
-    preserve_nan_opt: bool = True
+    preserve_nan_opt: bool = True,
 ):
     # check inputs
     var = np.asarray(var)
@@ -224,7 +224,7 @@ def ccg(
         - conditional: probability of spk2 knowing spk1
         - probability: sum to one
     safe : bool, optional
-        assume sorted if unsafe, otherwise it will sort the 
+        assume sorted if unsafe, otherwise it will sort the
         inputs all the time, by default False
 
     Returns
@@ -354,6 +354,79 @@ def ccg_heart(spikes1, spikes2, binsize=1e-3, max_lag=1000e-3):
                 C[idx_C] += 1
                 idx2_H += 1
     return C, E
+
+
+def psth_2d(
+    mat: np.ndarray,
+    events_idx: np.ndarray,
+    n_bins_bef: int = 20,
+    n_bins_aft: int = 20,
+    method: str = "mean",
+    kernel_half_width: int = 0,
+    axis=-1,
+):
+    # check inputs
+    if method not in ["mean", "median"]:
+        raise NotImplementedError(f"Method {method} not implemented")
+
+    # to be sure we have floats here, this can create problems with nan later
+    mat = mat.astype(np.float, casting="safe")
+
+    # initialise values
+    sz = mat.shape
+    idx_to_take = [np.arange(e - n_bins_bef, e + n_bins_aft, 1) for e in events_idx]
+    idx_to_take = np.concatenate(idx_to_take)
+
+    # fix problems in case we have negative or out of shape indices
+    neg_idx = idx_to_take < 0
+    out_idx = idx_to_take > sz[axis] - 1
+    pad_before = bn.nansum(neg_idx)
+    pad_after = bn.nansum(out_idx)
+    idx_to_take = idx_to_take[~np.logical_or(neg_idx, out_idx)]
+
+    temp_mat = np.take(mat, idx_to_take[:, None], axis=axis).squeeze()
+    npad = [[0, 0], [0, 0]]
+    npad[axis] = [pad_before, pad_after]
+    temp_mat = np.pad(temp_mat, pad_width=npad, mode="constant", constant_values=np.nan)
+
+    # make a 3d matrix (n_bins,-1,n_events)
+    # this axis change  is not super elegant
+    if axis == 1 or axis == -1:
+        new_shape = [
+            -1,
+            len(events_idx),
+            n_bins_bef + n_bins_aft,
+        ]
+    elif axis == 0:
+        print("potentially false here")
+        new_shape = [
+            n_bins_bef + n_bins_aft,
+            -1,
+            len(events_idx),
+        ]
+
+    temp_mat = np.reshape(temp_mat, new_shape)
+
+    # now we perform the average/median along the correct dimension
+    if method == "mean":
+        out = bn.nanmean(temp_mat, 1)
+    elif method == "median":
+        out = bn.nanmedian(temp_mat, 1)
+
+    if kernel_half_width > 0:
+        out = smooth_2d(out, kernel_half_width=kernel_half_width)
+
+    return out
+
+
+n_bins_bef = 20
+n_bins_aft = 20
+method = "mean"
+kernel_half_width = 0
+axis = -1
+
+mat = np.arange(1000).reshape(20, -1)
+events_idx = [10, 30, 45]
 
 
 # def continuous_ccg(spikes1, spikes2, tau=10e-3, max_lag=100e-3):

@@ -119,7 +119,7 @@ def smooth_1d(
     return data_c
 
 
-def smooth2D(
+def smooth_2d(
     data,
     kernel_half_width=3,
     kernel_type="gauss",
@@ -201,7 +201,7 @@ def corr_mat(a: np.ndarray, axis=-1) -> np.ndarray:
         correlation matrix
 
     TODO modify this function in order to take two array as an input
-    
+
     Reference
     ---------
     https://en.wikipedia.org/wiki/Pearson_correlation_coefficient
@@ -253,9 +253,9 @@ def norm_axis(matrix: np.ndarray, method="max", axis=-1) -> np.ndarray:
     method : str, optional
         normalisation method, by default "max"
             max: normalize such as the new max per row/column is 1
-            one: normalize such as the sum of the values per row/column 
+            one: normalize such as the sum of the values per row/column
                 sums to one (eg: become a probability distribution)
-            zscore: compute the row/column wise zscore 
+            zscore: compute the row/column wise zscore
     axis : int, optional
         axis along which the function is performed, by default -1
 
@@ -283,7 +283,7 @@ def norm_axis(matrix: np.ndarray, method="max", axis=-1) -> np.ndarray:
 
 def circ_shift(M: np.ndarray, max_shift: int = None, axis: int = -1):
     """
-    circ_shift circularly shift a matrix along a given dimension 
+    circ_shift circularly shift a matrix along a given dimension
 
 
     Parameters
@@ -324,7 +324,7 @@ def circ_shift_idx(
 ):
     """
     circ_shift_idx Circularly shift the rows or column of a matrix
-    in given indexes. It treats contiguous non nan regions of the 
+    in given indexes. It treats contiguous non nan regions of the
     idx vector as different part to circularly shift
 
     Parameters
@@ -375,7 +375,10 @@ def circ_shift_idx(
         s_idx = np.atleast_2d(s_idx)
         tmp_idx = np.atleast_2d(np.nonzero(tmp_idx)[0]).squeeze()
         np.put_along_axis(
-            M_out, s_idx, np.take(M, tmp_idx, axis=axis), axis=axis,
+            M_out,
+            s_idx,
+            np.take(M, tmp_idx, axis=axis),
+            axis=axis,
         )
     return M_out
 
@@ -404,7 +407,7 @@ def label(v, axis=-1, *, unique_label=False) -> np.array:
     ------
     ValueError
         If the vector is not 1d
-    
+
     Reference
     ---------
     https://github.com/ml31415/numpy-groupies/blob/master/numpy_groupies/utils_numpy.py
@@ -416,7 +419,7 @@ def label(v, axis=-1, *, unique_label=False) -> np.array:
     >>> label(np.array([1,1,1,0,0,0,1,0,0,1],dtype=bool))
     >>> array([1, 1, 1, 0, 0, 0, 2, 0, 0, 3])
 
-    or for other types 
+    or for other types
     >>> label(np.array([1,1,1,2,2,3,4,5,5,6]))
     >>> array([1, 1, 1, 2, 2, 3, 4, 5, 5, 6])
 
@@ -507,7 +510,7 @@ def first_true(v: np.ndarray, axis=-1):
     Returns
     -------
     out
-        boolean array only containing first true value occuring 
+        boolean array only containing first true value occuring
         along one axis
     """
     v = np.array(v, ndmin=2)
@@ -542,7 +545,7 @@ def last_true(v: np.ndarray, axis=-1):
     Returns
     -------
     out
-        boolean array only containing last true value occuring 
+        boolean array only containing last true value occuring
         along one axis
     """
     v = np.array(v, ndmin=2)
@@ -576,8 +579,8 @@ def remove_small_objects(M, min_size=3, axis=-1):
     -------
     np.array only with connected components bigger than min_size
 
-    TODO: 
-    -make this function work for 2D. it should be doable by using 
+    TODO:
+    -make this function work for 2D. it should be doable by using
     ravel and reshaping at the end
     """
     M[np.isnan(M)] = 0
@@ -623,13 +626,13 @@ def mean_at(idx, vals, fillvalue=np.nan, dtype=np.dtype(np.float64)) -> np.array
     """
     mean_at [summary]
     It will mean value in vector vals at
-    index in vector idx. This is usefull for resampling
-    according to the 2p frame index for example
+    index in vector idx. This function mimics the behavior of matlab
+    acumarray in a sens
 
     Parameters
     ----------
     idx : [type]
-        input, 
+        input,
     vals : [type]
         [description]
     fillvalue : [type], optional
@@ -648,7 +651,7 @@ def mean_at(idx, vals, fillvalue=np.nan, dtype=np.dtype(np.float64)) -> np.array
         [description]
     ValueError
         [description]
-    
+
     Reference
     ---------
     https://gist.github.com/d1manson/5f78561c0f52d3073fe8
@@ -682,12 +685,12 @@ def moving_win(
     endvalue: float = 0,
 ) -> np.ndarray:
     """
-    moving_win Generate a view of the input array (or a copy if needed) with the 
+    moving_win Generate a view of the input array (or a copy if needed) with the
     specified window length and overlap.
     It is particularly useful to perform some rolling window like operation.
 
     However it worth checking other types of function that are more optimized such
-    as moving window function of bottleneck (mean, std, median,...) or pandas/dask 
+    as moving window function of bottleneck (mean, std, median,...) or pandas/dask
     dataframe.rolling functions
 
     Parameters
@@ -708,7 +711,7 @@ def moving_win(
     Returns
     -------
     np.ndarray
-        view of the input array (or a copy if needed) with the 
+        view of the input array (or a copy if needed) with the
         specified window length and overlap
 
     Example
@@ -732,7 +735,7 @@ def moving_win(
     TODO
     ----
     make a symmetric padding
-    check if we could avoid the try, except by checking if the stride is correct 
+    check if we could avoid the try, except by checking if the stride is correct
     before initializing the array
     """
 
@@ -819,7 +822,7 @@ def rolling_quantile(data, window_len, quantile):
     """
     rolling_quantile Calculate a rolling quantile a a window of size window len
 
-    Note: For now, the pandas method seem convenient and fast. 
+    Note: For now, the pandas method seem convenient and fast.
     It seem to be faster than numpy strides
     To Do:
     this function should take an axis input
