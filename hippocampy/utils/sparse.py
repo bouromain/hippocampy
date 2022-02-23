@@ -3,8 +3,10 @@ import numpy as np
 
 
 def var_s(a, axis=-1, ddof=1):
-    """ Variance of sparse matrix a
-    var = mean(a**2) - mean(a)**2
+    """ 
+    Variance of sparse matrix allow to keep the data sparse while computing 
+    the variance following this equation:
+            var = mean(a**2) - mean(a)**2
     """
     n = a.shape[axis]
     a_squared = a.copy()
@@ -15,8 +17,9 @@ def var_s(a, axis=-1, ddof=1):
 
 
 def std_s(a, axis=-1, ddof=1):
-    """ Standard deviation of sparse matrix a
-    std = sqrt(var(a))
+    """ 
+    Standard deviation of sparse matrix.
+        std = sqrt(var(a))
     """
     return np.sqrt(var_s(a, axis=axis, ddof=ddof))
 
@@ -68,17 +71,34 @@ def corr_stack_s(a: sparse.csr_matrix, b: sparse.csr_matrix):
     # compute the correlation matrix
     Corr = Cov / (a_s.dot(b_s.T))
 
-    return Corr
+    return np.array(Corr)
 
 
 def overlap_s(a: sparse.csr_matrix, b: sparse.csr_matrix):
+    """
+    Calculate the overlaps between all the pairs of rows between the matrices 
+    a and b. The result correspond to the number of overlaps (eg: it is not 
+    normalized). See the jacquard_s function for a normalized version.
+
+    Parameters
+    ----------
+    a : sparse.csr_matrix 
+        first sparse matrix (n_var, n_samples)
+    b : sparse.csr_matrix
+        other sparse matrix (n_var, n_samples)
+
+    Returns
+    -------
+    overlap: np.ndarray
+        overlap matrix (n_var(a), n_var(b))
+    """
 
     if not sparse.issparse(a):
         a = sparse.csr_matrix(a)
     if not sparse.issparse(b):
         b = sparse.csr_matrix(b)
 
-    return a @ b.T
+    return (a @ b.T).toarray()
 
 
 def jacquard_s(a: sparse.csr_matrix, b: sparse.csr_matrix):
@@ -86,14 +106,21 @@ def jacquard_s(a: sparse.csr_matrix, b: sparse.csr_matrix):
     Jacquard distance can be written as:
             (A ∩ B) / (A ∪ B)
 
-    which can be rewriten as:
+    which can be rewritten as:
             (A ∩ B) / (A + B  - (A ∩ B) )
+
     Parameters
     ----------
     a : [type]
-        first sparse matrix
+        first sparse matrix (n_var, n_samples)
     b : [type]
-        second sparse matrix 
+        second sparse matrix (n_var, n_samples)
+    
+    Returns
+    -------
+    jacquard: np.ndarray
+        jacquard matrix (n_var(a), n_var(b))
+
     """
     if not sparse.issparse(a):
         a = sparse.csr_matrix(a)
@@ -106,4 +133,4 @@ def jacquard_s(a: sparse.csr_matrix, b: sparse.csr_matrix):
     a_inter_b = overlap_s(a, b)
     divisor = a_sz + b_sz.T
 
-    return a_inter_b / (divisor - a_inter_b)
+    return np.array(a_inter_b / (divisor - a_inter_b))

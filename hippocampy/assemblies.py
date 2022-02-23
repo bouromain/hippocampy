@@ -5,11 +5,36 @@ a population of neurons.
 
 References
 ----------
-Lopes-dos-Santos V, Ribeiro S, Tort ABL Detecting cell assemblies 
-in large neuronal populations,(2013) Journal of Neuroscience Methods.
 
-TO DO
+[1] Peyrache A, Benchenane K, Khamassi M, Wiener SI, Battaglia FP. Principal
+    component analysis of ensemble recordings reveals cell assemblies at high
+    temporal resolution. J Comput Neurosci. 2010 Aug;29(1-2):309-325. 
+    doi: 10.1007/s10827-009-0154-6
+
+[2] Lopes-dos-Santos V, Conde-Ocazionez S, Nicolelis MA, Ribeiro ST, 
+    Tort AB. Neuronal assembly detection and cell membership specification 
+    by principal component analysis. PLoS One. 2011;6(6):e20996. 
+    doi: 10.1371/journal.pone.0020996. 
+
+[3] An integrated calcium imaging processing toolbox for the analysis of neuronal 
+    population dynamics. Sebastián A. Romano, Verónica Pérez-Schuster, 
+    Adrien Jouary, Jonathan Boulanger-Weill, Alessia Candeo, Thomas Pietri, 
+    Germán Sumbre
+    Plos Comp Biol 2017, https://doi.org/10.1371/journal.pcbi.1005526
+
+[4] Tracy CA, Widom H. Level-Spacing Distributions and the Airy Kernel. 
+    Commun Math Phys. 1992;159: 35. https://doi.org/10.1016/0370-2693(93)91114-3
+
+[5] van de Ven GM, Trouche S, McNamara CG, Allen K, Dupret D. Hippocampal 
+    Offline Reactivation Consolidates Recently Formed Cell Assembly Patterns 
+    during Sharp Wave-Ripples. Neuron. 2016 Dec 7;92(5):968-974. 
+    doi: 10.1016/j.neuron.2016.10.020. 
+
+TODO
 -----
+see if we can speed up the cross correlation matrices by transforming binned 
+spike/transient matrices to sparse ones
+
 https://elifesciences.org/articles/19428 
 
 Latent Ensemble Recruitment from Sparks, Liao, et al., NatComms (2020)
@@ -28,9 +53,7 @@ def calc_template(
     spike_count: np.ndarray, method: str = "ICA", correction: bool = False
 ):
     """
-    Calculate assemblies pattern as described in Lopes-dos-Santos V,
-    Ribeiro S, Tort ABL Detecting cell assemblies in large neuronal populations,
-    (2013) Journal of Neuroscience Methods.
+    Calculate assemblies pattern as described in ref [1-2]
 
     Parameters
     ----------
@@ -41,7 +64,7 @@ def calc_template(
         as it will take into account neurons that can be in multiple
         assemblies
     correction: bool
-        Tracy-Widom correction as described in Ref [1,2]
+        Tracy-Widom correction as described in Ref [3,4]
 
     Return
     ------
@@ -50,16 +73,6 @@ def calc_template(
     correlation_matrix
         (n_cells,n_cells)
     
-    Reference
-    ---------
-    [1] An integrated calcium imaging processing toolbox for the analysis of neuronal 
-        population dynamics. Sebastián A. Romano, Verónica Pérez-Schuster, 
-        Adrien Jouary, Jonathan Boulanger-Weill, Alessia Candeo, Thomas Pietri, 
-        Germán Sumbre
-        Plos Comp Biol 2017, https://doi.org/10.1371/journal.pcbi.1005526
-
-    [2] Tracy CA, Widom H. Level-Spacing Distributions and the Airy Kernel. 
-        Commun Math Phys. 1992;159: 35. https://doi.org/10.1016/0370-2693(93)91114-3
 
     Nota bene
     ---------
@@ -138,7 +151,7 @@ def calc_activity(spike_count, template, kernel_half_width=None):
 
     Note
     ----
-    For a nice visual explanation see also fig S2 of van de Ven et al 2016
+    For a nice visual explanation see also fig S2 of ref [5]
     """
 
     spike_count = np.asarray(spike_count)
@@ -161,13 +174,14 @@ def calc_activity(spike_count, template, kernel_half_width=None):
         np.fill_diagonal(projector, 0)
 
         # calculate assembly pattern expression strength
-        # as defined in Lopez-dos-Santos 2013 R(b)= Z(b).T * P * Z(b)
+        # as defined in ref [2]:
+        #               R(b)= Z(b).T * P * Z(b)
         activity[i, :] = bn.nansum(
             spike_count_z.T.dot(projector) * spike_count_z.T, axis=1
         )
 
     # here we could convolve the spike_count_z with a gaussian
-    # cf Van de Ven 2016
+    # cf ref [5]
     if kernel_half_width is not None:
         activity = smooth_1d(
             activity, kernel_half_width=kernel_half_width, kernel_type="gauss"
