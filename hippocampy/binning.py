@@ -359,6 +359,7 @@ def ccg_heart(spikes1, spikes2, binsize=1e-3, max_lag=1000e-3):
 def psth_2d(
     mat: np.ndarray,
     events_idx: np.ndarray,
+    *,
     n_bins_bef: int = 20,
     n_bins_aft: int = 20,
     method: str = "mean",
@@ -398,20 +399,19 @@ def psth_2d(
             n_bins_bef + n_bins_aft,
         ]
     elif axis == 0:
-        print("potentially false here")
         new_shape = [
+            len(events_idx),
             n_bins_bef + n_bins_aft,
             -1,
-            len(events_idx),
         ]
 
     temp_mat = np.reshape(temp_mat, new_shape)
 
     # now we perform the average/median along the correct dimension
     if method == "mean":
-        out = bn.nanmean(temp_mat, 1)
+        out = bn.nanmean(temp_mat, axis)
     elif method == "median":
-        out = bn.nanmedian(temp_mat, 1)
+        out = bn.nanmedian(temp_mat, axis)
 
     if kernel_half_width > 0:
         out = smooth_2d(out, kernel_half_width=kernel_half_width)
@@ -419,14 +419,10 @@ def psth_2d(
     return out
 
 
-n_bins_bef = 20
-n_bins_aft = 20
-method = "mean"
-kernel_half_width = 0
-axis = -1
+# mat = np.arange(80).reshape( -1,20)
+# events_idx = [2, 10, 18]
 
-mat = np.arange(1000).reshape(20, -1)
-events_idx = [10, 30, 45]
+# o = psth_2d(mat.T, events_idx, n_bins_bef=5, n_bins_aft=6, axis=0)
 
 
 # def continuous_ccg(spikes1, spikes2, tau=10e-3, max_lag=100e-3):

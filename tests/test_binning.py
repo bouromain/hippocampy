@@ -129,3 +129,36 @@ class TestBinning(unittest.TestCase):
         assert np.testing.assert_equal(occ, good_occ.T) == None
         assert np.testing.assert_equal(act, good_act.T) == None
         assert np.testing.assert_equal(rate, good_rate.T) == None
+
+    def test_psth_2d(self):
+        mat = np.arange(80).reshape(-1, 20)
+        events_idx = [2, 10, 18]
+
+        expected_out = np.array(
+            [
+                [9.0, 10.0, 11.0, 8.0, 9.0, 10.0, 11.0, 8.0, 9.0, 10.0, 11.0],
+                [29.0, 30.0, 31.0, 28.0, 29.0, 30.0, 31.0, 28.0, 29.0, 30.0, 31.0],
+                [49.0, 50.0, 51.0, 48.0, 49.0, 50.0, 51.0, 48.0, 49.0, 50.0, 51.0],
+                [69.0, 70.0, 71.0, 68.0, 69.0, 70.0, 71.0, 68.0, 69.0, 70.0, 71.0],
+            ]
+        )
+        out = binning.psth_2d(
+            mat,
+            events_idx,
+            n_bins_bef=5,
+            n_bins_aft=6,
+            method="mean",
+            kernel_half_width=0,
+            axis=1,
+        )
+        out_t = binning.psth_2d(
+            mat.T,
+            events_idx,
+            n_bins_bef=5,
+            n_bins_aft=6,
+            method="mean",
+            kernel_half_width=0,
+            axis=0,
+        )
+        assert np.testing.assert_equal(out, expected_out) == None
+        assert np.testing.assert_equal(out_t, expected_out.T) == None
