@@ -2,6 +2,24 @@ from scipy import sparse
 import numpy as np
 
 
+def sparsity(mat: np.ndarray):
+    """
+    sparsity calculate the sparcity of a matrix. The sparcity of a matrix
+    is defined as the percentage of zero elements it contains 
+
+    Parameters
+    ----------
+    mat : np.ndarray
+        input matrix 
+
+    Returns
+    -------
+    sparcity
+        level of sparcity [0-1]
+    """
+    return 1 - (np.count_nonzero(mat) / mat.size)
+
+
 def var_s(a, axis=-1, ddof=1):
     """ 
     Variance of sparse matrix allow to keep the data sparse while computing 

@@ -4,6 +4,9 @@ from astropy.convolution import convolve
 from skimage import measure
 import pandas as pd
 import tqdm as tqdm
+from hippocampy.utils.nan import remove_nan
+
+from hippocampy.utils.type_utils import float_to_int
 
 #%% SMOOTH
 def smooth_1d(
@@ -375,10 +378,7 @@ def circ_shift_idx(
         s_idx = np.atleast_2d(s_idx)
         tmp_idx = np.atleast_2d(np.nonzero(tmp_idx)[0]).squeeze()
         np.put_along_axis(
-            M_out,
-            s_idx,
-            np.take(M, tmp_idx, axis=axis),
-            axis=axis,
+            M_out, s_idx, np.take(M, tmp_idx, axis=axis), axis=axis,
         )
     return M_out
 
@@ -663,6 +663,12 @@ def mean_at(idx, vals, fillvalue=np.nan, dtype=np.dtype(np.float64)) -> np.array
         raise ValueError("Inputs should be have only one dimension")
     if len(idx) != len(vals):
         raise ValueError("Inputs should have the same length")
+    # coerce idx to ints
+    if idx.dtype.kind != "i":
+        idx = float_to_int(idx)
+    # remove nans
+    if any(np.isnan(vals)):
+        idx, vals = remove_nan(idx, vals, paired=True)
 
     minlen = len(np.unique(idx))
     count_idx = np.bincount(idx, minlength=minlen)
