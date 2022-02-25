@@ -158,7 +158,12 @@ def calc_dF(
 
 
 def transient(
-    F: np.ndarray, S: np.ndarray, threshold=1.1, fs: int = 30, spike_norm="mad",
+    F: np.ndarray,
+    S: np.ndarray,
+    threshold: float = 1.1,
+    min_len_event: int = 3,
+    fs: int = 30,
+    spike_norm="mad",
 ):
     """
     Transient detection inspired from Grosmark 2020.
@@ -183,6 +188,9 @@ def transient(
         This can be given as a float or a vector if you need different 
         threshold for different epoch (activity, inactivity). Grosmark 2021 set
         a treshold of 1.5 during active epoch and 1.25 during rest. 
+    min_len_event: int
+        minimum number of frame crossing the threshold to be kept as a potential 
+        event
     fs : int, optional
         sampling rate of the traces, by default 30
     spike_norm : str, optional
@@ -217,6 +225,9 @@ def transient(
         S_b = np.greater_equal(S_b, threshold)
     else:
         S_b = S_b > threshold
+
+    # remove short events
+    S_b = remove_small_objects(S_b, min_size=min_len_event, axis=1)
 
     # in case multiple successive samples cross the threshold, only keep the first
     S_b = first_true(S_b)
