@@ -9,3 +9,6 @@ testpy.py
 *.eggs/
 *.egg-info/
 .coverage
+
+# Sphinx documentation
+docs/_build/
