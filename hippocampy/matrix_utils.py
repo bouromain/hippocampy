@@ -937,3 +937,25 @@ def find_peaks(M, min_amplitude=None):
     peaks_idx = [np.squeeze(np.nonzero(valP)) for itP, valP in enumerate(peaks)]
 
     return peaks, peaks_idx
+
+
+def fill_diag_slice(mat: np.array, val: np.float = np.nan):
+    """
+    Fill the diagonal 
+
+    Parameters
+    ----------
+    mat : np.array
+        _description_
+    val : np.float, optional
+        _description_, by default np.nan
+    """
+    mat = np.array(mat)
+    sz = mat.shape
+
+    # mat = np.reshape(mat, [sz[0], -1])
+    # mat[:, :: sz[1] + 1] = np.nan
+    # mat = np.reshape(mat, sz)
+    mat.reshape([sz[0], -1])[:, :: sz[1] + 1] = val
+
+    return mat
