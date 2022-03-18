@@ -1,12 +1,15 @@
+from typing import Union
+
 import bottleneck as bn
 import numpy as np
-from astropy.convolution import convolve
-from skimage import measure
 import pandas as pd
 import tqdm as tqdm
-from hippocampy.utils.nan import remove_nan
+from astropy.convolution import convolve
+from skimage import measure
 
+from hippocampy.utils.nan import remove_nan
 from hippocampy.utils.type_utils import float_to_int
+
 
 #%% SMOOTH
 def smooth_1d(
@@ -187,14 +190,18 @@ def smooth_2d(
 
 
 #%% STATISTICS
-def corr_mat(a: np.ndarray, axis=-1) -> np.ndarray:
+def corr_mat(a: np.ndarray, b: Union[None, np.ndarray] = None, axis=-1) -> np.ndarray:
     """
-    Compute correlation between all the rows (or column) of a given matrix
+    Compute correlation between a two matrices in a particular dimension. If only 
+    one matrix is provided an autocorrelation will be returned. 
 
     Parameters
     ----------
     a : np.ndarray
         input matrix for example [unit, samples]
+
+    b : np.ndarray
+        input matrix for example [other_unit, samples]
     axis : int, optional
         axis along which the function is performed, by default -1
 
@@ -203,21 +210,32 @@ def corr_mat(a: np.ndarray, axis=-1) -> np.ndarray:
     np.ndarray
         correlation matrix
 
-    TODO modify this function in order to take two array as an input
-
     Reference
     ---------
     https://en.wikipedia.org/wiki/Pearson_correlation_coefficient
     """
-    a = np.asarray(a)
 
-    a_z = zscore(a, axis=axis)
+    a = np.array(a, ndmin=2)
     n = a.shape[axis]
 
-    if axis == 0:
-        return (1 / (n - 1)) * (a_z.T @ a_z)
+    if a.ndim > 2:
+        raise ValueError("Input should have a max 2 dimensions")
+
+    a_z = zscore(a, axis=axis)
+
+    if b is None:
+        b_z = a_z
     else:
-        return (1 / (n - 1)) * (a_z @ a_z.T)
+        if a.ndim > 2:
+            raise ValueError("Input should have a max 2 dimensions")
+
+        b = np.array(b, ndmin=2)
+        b_z = zscore(b, axis=axis)
+
+    if axis == 0:
+        return np.squeeze((1 / (n - 1)) * (a_z.T @ b_z))
+    else:
+        return np.squeeze((1 / (n - 1)) * (a_z @ b_z.T))
 
 
 def zscore(matrix, axis=-1):
@@ -939,7 +957,7 @@ def find_peaks(M, min_amplitude=None):
     return peaks, peaks_idx
 
 
-def fill_diag_slice(mat: np.array, val: np.float = np.nan):
+def fill_diag_slice(mat: np.array, val: float = np.nan):
     """
     Fill the diagonal 
 

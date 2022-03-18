@@ -107,3 +107,56 @@ class TestSmooth1D(unittest.TestCase):
     # fmt: on
         assert (np.testing.assert_array_almost_equal(v_s,exp_v) == None)
 
+class TestCorrMat(unittest.TestCase):
+    def test_vect_corr(self):
+        # this example is taken from numpy corrcoef function docstring
+        rng = np.random.default_rng(seed=42)
+        xarr = rng.random((3, 3))
+
+        a = matrix_utils.corr_mat(xarr[0,:],xarr[1,:],axis = 1)
+        b = np.corrcoef(xarr[0,:],xarr[1,:])[0,1]
+
+        self.assertAlmostEqual(a,b,places=9)
+
+    def test_vect_rows(self):
+        # this example is taken from numpy corrcoef function docstring
+        rng = np.random.default_rng(seed=42)
+        xarr = rng.random((3, 3))
+
+        a = matrix_utils.corr_mat(xarr, axis = 1)
+        b = np.corrcoef(xarr)
+
+        np.testing.assert_array_almost_equal(a,b)
+
+    def test_vect_col(self):
+        # this example is taken from numpy corrcoef function docstring
+        rng = np.random.default_rng(seed=42)
+        xarr = rng.random((3, 3))
+
+        a = matrix_utils.corr_mat(xarr, axis = 0)
+        b = np.corrcoef(xarr.T)
+
+        np.testing.assert_array_almost_equal(a,b.T)
+
+    
+
+
+
+
+
+# %%
+
+# import numpy as np
+# from hippocampy.matrix_utils import corr_mat
+# rng = np.random.default_rng(seed=42)
+# xarr = rng.random((3, 3))
+
+# a = corr_mat(xarr, axis = 1)
+# b = np.corrcoef(xarr)
+
+# sel
+
+
+
+
+# %%

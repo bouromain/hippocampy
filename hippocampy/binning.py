@@ -371,7 +371,7 @@ def psth_2d(
         raise NotImplementedError(f"Method {method} not implemented")
 
     # to be sure we have floats here, this can create problems with nan later
-    mat = mat.astype(np.float, casting="safe")
+    mat = mat.astype(float, casting="safe")
 
     # initialise values
     sz = mat.shape
