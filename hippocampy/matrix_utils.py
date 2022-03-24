@@ -981,8 +981,12 @@ def fill_diag_slice(mat: np.array, val: float = np.nan):
 
 def diagonality(mat: np.ndarray) -> float:
     """
-    diagonality _summary_
+    diagonality 
+    This function compute a diagonality coefficient. It will credit values being
+    concentrated on or around a diagonal. 
 
+    a value of 1 correspond to a clustering around the main diagonal, -1 around 
+    the other diagonal. 0 reflect no clustering of the value
     Parameters
     ----------
     mat : np.ndarray

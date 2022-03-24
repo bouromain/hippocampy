@@ -155,6 +155,18 @@ class Testdiagonality(unittest.TestCase):
         a = np.array([[2,1,0,0,0],[1,3,2,0,0],[0,2,3,4,0],[0,0,1,2,3],[0,0,0,1,1]])
         d = matrix_utils.diagonality(a)
         self.assertAlmostEqual(d,0.812383,places=6)
+    
+    def test_transpose(self):
+        a = np.array([[6,1,0],[1,5,2],[1,3,6]])
+        d = matrix_utils.diagonality(a)
+        d_t = matrix_utils.diagonality(a.T)
+        self. assertEqual(d,d_t)
+
+    def test_opositdiag(self):
+        a = np.array([[6,1,0],[1,5,2],[1,3,6]])
+        d = matrix_utils.diagonality(a)
+        d_op = matrix_utils.diagonality(np.rot90(a))
+        self. assertEqual(d,-d_op)
 
 
 
