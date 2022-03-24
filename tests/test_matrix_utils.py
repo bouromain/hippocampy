@@ -140,22 +140,21 @@ class TestCorrMat(unittest.TestCase):
 
     
 
+class Testdiagonality(unittest.TestCase):
+    def test_mat(self):
+        a = np.array([[6,1,0],[1,5,2],[1,3,6]])
+        d = matrix_utils.diagonality(a)
+        self.assertAlmostEqual(d,0.674149,places=6)
+    
+    def test_nan(self):
+        a_n = np.array([[6,1,np.nan],[1,5,2],[1,3,6]])
+        with self.assertRaises(ValueError):
+            matrix_utils.diagonality(a_n)
 
-
-
-
-# %%
-
-# import numpy as np
-# from hippocampy.matrix_utils import corr_mat
-# rng = np.random.default_rng(seed=42)
-# xarr = rng.random((3, 3))
-
-# a = corr_mat(xarr, axis = 1)
-# b = np.corrcoef(xarr)
-
-# sel
-
+    def test_tridiag(self):
+        a = np.array([[2,1,0,0,0],[1,3,2,0,0],[0,2,3,4,0],[0,0,1,2,3],[0,0,0,1,1]])
+        d = matrix_utils.diagonality(a)
+        self.assertAlmostEqual(d,0.812383,places=6)
 
 
 

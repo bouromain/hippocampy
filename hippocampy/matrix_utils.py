@@ -977,3 +977,65 @@ def fill_diag_slice(mat: np.array, val: float = np.nan):
     mat.reshape([sz[0], -1])[:, :: sz[1] + 1] = val
 
     return mat
+
+
+def diagonality(mat: np.ndarray) -> float:
+    """
+    diagonality _summary_
+
+    Parameters
+    ----------
+    mat : np.ndarray
+        input square matrix
+
+    Returns
+    -------
+    float
+        diagonality coefficient
+
+    Raises
+    ------
+    ValueError
+        if you have any nan in the input matrix. Setting them to 0 could lead 
+        to artificial "diagonality" (if you have a zero on the other side). 
+        Do it if this is not problematic for you
+    ValueError
+        if the matrix is not square
+    ValueError
+        if the matrix is not 2 dimensional
+
+
+    Reference
+    ---------
+    found by S. Kiewiett:
+    https://math.stackexchange.com/questions/1392491/measure-of-how-much-diagonal-a-matrix-is/1393907#1393907
+    """
+    mat = np.array(mat)
+    s = mat.shape
+
+    if (np.isnan(mat)).any():
+        raise ValueError(
+            "Input matrix should not conntain nan. See doc to deal with it"
+        )
+
+    if mat.ndim != 2:
+        raise ValueError("Input matrix should be have 2 dimensions")
+
+    if s[0] != s[1]:
+        raise ValueError("Input matrix should be square")
+    else:
+        d = s[0]
+
+    r = np.arange(d) + 1
+    j = np.ones_like(r)
+
+    n = bn.nansum(mat)
+    sx = r[None, :] @ mat @ j[:, None]
+    sy = j[None, :] @ mat @ r[:, None]
+    sx2 = r[None, :] ** 2 @ mat @ j[:, None]
+    sy2 = j[None, :] @ mat @ r[:, None] ** 2
+    sxy = r[None, :] @ mat @ r[:, None]
+
+    nom = (n * sxy) - (sx * sy)
+    denom = np.sqrt(n * sx2 - (sx) ** 2) * np.sqrt(n * sy2 - (sy) ** 2)
+    return float(nom / denom)
