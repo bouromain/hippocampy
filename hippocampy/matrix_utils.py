@@ -985,8 +985,9 @@ def diagonality(mat: np.ndarray) -> float:
     This function compute a diagonality coefficient. It will credit values being
     concentrated on or around a diagonal. 
 
-    a value of 1 correspond to a clustering around the main diagonal, -1 around 
-    the other diagonal. 0 reflect no clustering of the value
+    A value of 1 correspond to a clustering around the main diagonal, -1 around 
+    the other diagonal. 0 reflect no clustering of the values
+
     Parameters
     ----------
     mat : np.ndarray
@@ -1011,7 +1012,7 @@ def diagonality(mat: np.ndarray) -> float:
 
     Reference
     ---------
-    found by S. Kiewiett:
+    Found by S. Kiewiett:
     https://math.stackexchange.com/questions/1392491/measure-of-how-much-diagonal-a-matrix-is/1393907#1393907
     """
     mat = np.array(mat)
