@@ -427,8 +427,8 @@ def confusion_matrix_full(x_true: np.ndarray, P: np.ndarray, method: str = "mean
 
     """
 
-    if method not in [None, "median", "mean"]:
-        raise ValueError("Method should be either [None, median,mean] ")
+    if method not in ["median", "mean"]:
+        raise ValueError("Method should be either [median,mean] ")
 
     x_true = np.array(x_true)
     P = np.array(P)
