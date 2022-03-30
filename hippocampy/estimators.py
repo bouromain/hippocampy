@@ -84,4 +84,3 @@ def spatial_info(rate: np.ndarray, occ: np.ndarray, method="bit_sec"):
     if method == "bit_sec_hertz":
         SI = SI / rate_m
     return SI
-
