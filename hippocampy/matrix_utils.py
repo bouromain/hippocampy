@@ -396,7 +396,10 @@ def circ_shift_idx(
         s_idx = np.atleast_2d(s_idx)
         tmp_idx = np.atleast_2d(np.nonzero(tmp_idx)[0]).squeeze()
         np.put_along_axis(
-            M_out, s_idx, np.take(M, tmp_idx, axis=axis), axis=axis,
+            M_out,
+            s_idx,
+            np.take(M, tmp_idx, axis=axis),
+            axis=axis,
         )
     return M_out
 
@@ -959,7 +962,7 @@ def find_peaks(M, min_amplitude=None):
 
 def fill_diag_slice(mat: np.array, val: float = np.nan):
     """
-    Fill the diagonal 
+    Fill the diagonal
 
     Parameters
     ----------

@@ -5,6 +5,7 @@ from hippocampy.binning import rate_map
 
 from hippocampy.utils.type_utils import float_to_int
 from hippocampy.stats.distance import cos_sim, pairwise_euclidian
+from scipy.sparse import coo_matrix
 
 
 def cross_validate(
@@ -94,13 +95,13 @@ def bayesian_1d(Q: np.ndarray, Tc: np.ndarray, prior=None, method="caim") -> np.
 
     Reference
     ---------
-    [1] Etter, G., Manseau, F. & Williams, S. A probabilistic framework 
-        for decoding behavior from in vivo calcium imaging data. 
+    [1] Etter, G., Manseau, F. & Williams, S. A probabilistic framework
+        for decoding behavior from in vivo calcium imaging data.
         Front. Neural Circuits 14, (2020).
 
-    [2] Zhang, K., Ginzburg, I., McNaughton, B. L., and Sejnowski, T. J. (1998). 
-        Interpreting neuronal population activity by reconstruction: unified 
-        framework with application to hippocampal place cells. 
+    [2] Zhang, K., Ginzburg, I., McNaughton, B. L., and Sejnowski, T. J. (1998).
+        Interpreting neuronal population activity by reconstruction: unified
+        framework with application to hippocampal place cells.
         J. Neurophysiol. 79, 1017–1044. doi: 10.1152/jn.1998.79.2.1017
 
     Note
@@ -164,8 +165,8 @@ def bayesian_1d(Q: np.ndarray, Tc: np.ndarray, prior=None, method="caim") -> np.
 
 def frv(Q: np.ndarray, Tc: np.ndarray, *, method="pearson") -> np.ndarray:
     """
-    Decode by doing the similarity of the activity of each time steps 
-    with a template activity. This decoding is similar to the one performed 
+    Decode by doing the similarity of the activity of each time steps
+    with a template activity. This decoding is similar to the one performed
     in ref [1] or [2]
 
     Parameters
@@ -181,20 +182,20 @@ def frv(Q: np.ndarray, Tc: np.ndarray, *, method="pearson") -> np.ndarray:
     Returns
     -------
     np.ndarray
-        matrix of correlation of temporal bin activity with template activity 
+        matrix of correlation of temporal bin activity with template activity
         accross time
-    
+
     Note
     ----
     this code can also be generalized in 2D by raveling input and reshaping at the end
-    
+
     Reference
     ---------
-    [1] Middleton SJ, McHugh TJ. Silencing CA3 disrupts temporal coding 
+    [1] Middleton SJ, McHugh TJ. Silencing CA3 disrupts temporal coding
         in the CA1 ensemble.
-        Nat Neurosci. 2016 Jul;19(7):945-51. doi: 10.1038/nn.4311. 
-    [2] Wilson MA, McNaughton BL. Dynamics of the hippocampal ensemble 
-        code for space. Science. 1993 Aug 20;261(5124):1055-8. 
+        Nat Neurosci. 2016 Jul;19(7):945-51. doi: 10.1038/nn.4311.
+    [2] Wilson MA, McNaughton BL. Dynamics of the hippocampal ensemble
+        code for space. Science. 1993 Aug 20;261(5124):1055-8.
         doi: 10.1126/science.8351520.
     [3] https://en.wikipedia.org/wiki/Pearson_correlation_coefficient
     """
@@ -240,17 +241,14 @@ def decoded_state(P: np.ndarray, method: str = "max") -> np.ndarray:
         raise ValueError("Method not recognized")
 
     tmp = np.empty((P.shape[1]))
-    tmp.fill(np.nan)
     mask_nan = np.all(np.isnan(P), axis=0)
 
     if method == "max":
         tmp[~mask_nan] = bn.nanargmax(P[:, ~mask_nan], axis=0)
     elif method == "com":
-        tmp[~mask_nan] = (
-            P[~mask_nan]
-            * np.arange(P.shape[0])[:, None]
-            / bn.nansum(P[~mask_nan], axis=0)
-        )
+        tmp = ((np.arange(P.shape[0])[None, :] @ P) / bn.nansum(P, axis=0)).squeeze()
+
+    tmp[mask_nan] = np.nan
 
     return tmp
 
@@ -293,47 +291,159 @@ def decoded_error(var_real: np.ndarray, var_decoded: np.ndarray) -> np.ndarray:
 
 
 def confusion_matrix(
-    true_vals: np.ndarray, decoded: np.ndarray, full_posterior=None
+    x_true: np.ndarray,
+    x_predicted: np.ndarray,
+    *,
+    sample_weight=None,
+    labels=None,
+    normalize=None,
 ) -> np.ndarray:
     """
-    TODO need to be re-written the input is to prone to problem, it should take 
-    digitized inputs, already binned
-    compute confusion_matrix or full posterior confusion matrix
+    confusion_matrix _summary_
 
     Parameters
     ----------
-    true_vals : np.ndarray
-        vector of true values 
-    decoded : np.ndarray
-        either a posterior matrix or a vector of decoded values
-    full_posterior : str, optional
-        method to compute the full posterior, by default None
+    x_true : np.ndarray
+        true values
+    x_predicted : np.ndarray
+        predicted values
+    labels : _type_, optional
+        label corresponding to the values, by default None
+    normalize : _type_, optional
+        _description_, by default None
 
     Returns
     -------
     np.ndarray
-        confusion matrix
+        _description_
+
+    Raises
+    ------
+    ValueError
+        _description_
+    ValueError
+        _description_
+    ValueError
+        _description_
+
+    Reference
+    ---------
+    Mostly taken from:
+    https://github.com/scikit-learn/scikit-learn/blob/37ac6788c/sklearn/metrics/_classification.py#L222
+    """
+    # check input
+    x_true = np.array(x_true)
+    x_predicted = np.array(x_predicted)
+
+    # for now we will only accept integer input (eg index of real and predicted values).
+    # categorical and or float value need stronger check, that it slightly more
+    # complicated but I am not sure this is needed. I'll implement it later
+    if x_true.dtype.kind != "i":
+        x_true = float_to_int(x_true)
+    if x_predicted.dtype.kind != "i":
+        x_predicted = float_to_int(x_predicted)
+
+    if labels is None:
+        labels = np.unique(x_true)
+    else:
+        labels = np.array(labels)
+        # if we did not input labels check the user provided ones
+        if not all([True if l in x_true else False for l in labels]):
+            raise ValueError("All label should be in x_true")
+        if not all([True if l in x_predicted else False for l in labels]):
+            raise ValueError("All label should be in x_predicted")
+
+    if sample_weight is None:
+        sample_weight = np.ones(x_true.shape[0], dtype=np.int64)
+    else:
+        sample_weight = np.asarray(sample_weight)
+
+    if normalize not in ["true", "pred", "all", None]:
+        raise ValueError("normalize should either be 'true', 'pred', 'all', None")
+
+    n_labels = labels.size
+    # If labels are not consecutive integers starting from zero, then
+    # y_true and y_pred must be converted into index form
+    need_index_conversion = not (
+        labels.dtype.kind in {"i", "u", "b"}
+        and np.all(labels == np.arange(n_labels))
+        and x_true.min() >= 0
+        and x_predicted.min() >= 0
+    )
+    if need_index_conversion:
+        label_to_ind = {y: x for x, y in enumerate(labels)}
+        x_predicted = np.array([label_to_ind.get(x, n_labels + 1) for x in x_predicted])
+        x_true = np.array([label_to_ind.get(x, n_labels + 1) for x in x_true])
+
+    # intersect y_pred, y_true with labels, eliminate items not in labels
+    ind = np.logical_and(x_predicted < n_labels, x_true < n_labels)
+    if not np.all(ind):
+        x_predicted = x_predicted[ind]
+        x_true = x_true[ind]
+        # also eliminate weights of eliminated items
+        sample_weight = sample_weight[ind]
+
+    # check if we need to bin or digitize x_true, x_predicted
+    # bin them with the sparse matrix trick
+    if sample_weight.dtype.kind in {"i", "u", "b"}:
+        dtype = np.int64
+    else:
+        dtype = np.float64
+
+    cm = coo_matrix(
+        (sample_weight, (x_true, x_predicted)),
+        shape=(n_labels, n_labels),
+        dtype=dtype,
+    ).toarray()
+
+    with np.errstate(all="ignore"):
+        # to avoid division errors display
+        if normalize == "true":
+            cm = cm / bn.nansum(cm, axis=1)
+        elif normalize == "pred":
+            cm = cm / bn.nansum(cm, axis=0)
+        elif normalize == "all":
+            cm = cm / bn.nansum(cm)
+    return cm
+
+
+def confusion_matrix_full(x_true: np.ndarray, P: np.ndarray, method: str = "mean"):
+    """
+    confusion_matrix_full average the posterior probability matrix for each true value.
+
+    Parameters
+    ----------
+    x_true : np.ndarray
+        vector of true values
+    P : np.ndarray
+        Posterior probability matrix for each true values
+    method : str, optional
+        method to average the posterior probability matrix [ "median", "mean"],
+        by default "mean"
+
+    Returns
+    -------
+    confusion_matrix: np.ndarray
+
     """
 
-    if full_posterior not in [None, "median", "mean"]:
-        raise ValueError("Method should be either [None, median,mean] ")
+    if method not in ["median", "mean"]:
+        raise ValueError("Method should be either [median,mean] ")
 
-    if full_posterior is None:
-        bins = np.unique(np.hstack((decoded.ravel(), true_vals.ravel())))
-        bin_edges = np.append(bins, bins[-1] + 1)
-        conf_mat, E = np.histogramdd(
-            np.array([decoded, true_vals]).T, (bin_edges, bin_edges)
-        )
+    x_true = np.array(x_true)
+    P = np.array(P)
 
-    else:
-        n_bins, n_sample = decoded.shape
-        true_vals = float_to_int(true_vals)
-        full_conf_mat = np.empty((n_bins, n_bins, n_sample)) * np.nan
-        full_conf_mat[:, true_vals, :] = decoded
+    n_bins, n_sample = P.shape
 
-        if full_posterior == "mean":
-            conf_mat = bn.nanmean(full_conf_mat, axis=2)
-        elif full_posterior == "median":
-            conf_mat = bn.nanmedian(full_conf_mat, axis=2)
+    if x_true.dtype.kind != "i":
+        x_true = float_to_int(x_true)
 
-    return conf_mat / bn.nansum(conf_mat, axis=0)
+    full_conf_mat = np.empty((n_bins, n_bins, n_sample)) * np.nan
+    full_conf_mat[:, x_true, range(n_sample)] = P
+
+    if method == "mean":
+        cm = bn.nanmean(full_conf_mat, axis=2)
+    elif method == "median":
+        cm = bn.nanmedian(full_conf_mat, axis=2)
+
+    return cm / bn.nansum(cm, axis=0)

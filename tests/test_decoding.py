@@ -1,0 +1,29 @@
+from hippocampy import decoding
+import unittest
+import numpy as np
+
+
+class TestDecoding(unittest.TestCase):
+    def test_decoded_state_max(self):
+        i = np.random.randint(0, 20, (100))
+        P_mat = np.zeros((20, 100))
+        P_mat[i, range(100)] = 1
+        dec = decoding.decoded_state(P_mat, method="max")
+        dec_com = decoding.decoded_state(P_mat, method="com")
+
+        assert all(dec == i)
+        assert all(dec_com == i)
+
+    def test_confmat(self):
+        y_true = [2, 0, 2, 2, 0, 1]
+        y_pred = [0, 0, 2, 2, 0, 2]
+        expected_out = np.array([[2, 0, 0], [0, 0, 1], [1, 0, 2]])
+        cm = decoding.confusion_matrix(y_true, y_pred)
+        assert all(expected_out.ravel() == cm.ravel())
+
+    def test_confmat_full(self):
+        x_true = [2, 0, 2, 2, 0, 1]
+        P = np.array([[1, 0, 0, 0, 1, 0], [0, 0, 0, 0, 1, 1], [0, 1, 0, 4, 1, 1]])
+        exp_cm = np.array([[0.25, 0.0, 0.2], [0.25, 0.5, 0.0], [0.5, 0.5, 0.8]])
+        cm = decoding.confusion_matrix_full(x_true, P, method="mean")
+        assert all(cm.ravel() == exp_cm.ravel())
