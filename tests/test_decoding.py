@@ -27,3 +27,6 @@ class TestDecoding(unittest.TestCase):
         exp_cm = np.array([[0.25, 0.0, 0.2], [0.25, 0.5, 0.0], [0.5, 0.5, 0.8]])
         cm = decoding.confusion_matrix_full(x_true, P, method="mean")
         assert all(cm.ravel() == exp_cm.ravel())
+
+
+gi
