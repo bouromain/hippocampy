@@ -6,6 +6,7 @@ import pandas as pd
 import tqdm as tqdm
 from astropy.convolution import convolve
 from skimage import measure
+from warnings import warn
 
 from hippocampy.utils.nan import remove_nan
 from hippocampy.utils.type_utils import float_to_int
@@ -257,6 +258,10 @@ def zscore(matrix, axis=-1):
     mu = bn.nanmean(matrix, axis=axis)
     sigma = bn.nanstd(matrix, axis=axis, ddof=1)
 
+    # warn about zero divisions
+    if any(sigma == 0):
+        warn("Incorrect value encountered for division")
+
     if isinstance(mu, np.ndarray):
         mu = np.expand_dims(mu, axis=axis)
         sigma = np.expand_dims(sigma, axis=axis)
@@ -396,10 +401,7 @@ def circ_shift_idx(
         s_idx = np.atleast_2d(s_idx)
         tmp_idx = np.atleast_2d(np.nonzero(tmp_idx)[0]).squeeze()
         np.put_along_axis(
-            M_out,
-            s_idx,
-            np.take(M, tmp_idx, axis=axis),
-            axis=axis,
+            M_out, s_idx, np.take(M, tmp_idx, axis=axis), axis=axis,
         )
     return M_out
 

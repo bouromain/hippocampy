@@ -1,3 +1,4 @@
+from typing import Tuple
 import bottleneck as bn
 import hippocampy as hp
 import numpy as np
@@ -45,7 +46,9 @@ def gen_pc_gauss_oi(t, pos, centers, sigma=10, amplitude=1, omega_theta=8):
     return amplitude * G * L
 
 
-def gaussian_envelope(pos, centers, sigma=10, amplitude=1):
+def gaussian_envelope(
+    pos: np.ndarray, centers: float, sigma: float = 10, amplitude: float = 1
+):
     """
     generate intensity function with a gaussian envelope
     with given centers and sigma
@@ -64,22 +67,32 @@ def gaussian_envelope(pos, centers, sigma=10, amplitude=1):
     return amplitude * np.exp(-bn.nansum(expo, 0))
 
 
-def gen_lin_path(time_max, v=20, range_x=200, Fs=50, up_down=True):
+def gen_lin_path(
+    time_max: int, v: float = 20, range_x: int = 200, Fs: int = 50, up_down: bool = True
+) -> tuple((np.ndarray, np.ndarray)):
     """
-    Generate synthetic linear path
+    gen_lin_path Generate synthetic linear path
 
-    Parameters:
-            - time_max: max time of the path
-            - v: constant speed
-            - range_x: length of the linear track
-            - Fs: sampling rate of the path
-            - up_down: does the animal goes only up or up and down
+    Parameters
+    ----------
+    time_max : int
+        max time of the path
+    v : float, optional
+        constant speed, by default 20
+    range_x : int, optional
+        length of the linear track, by default 200
+    Fs : int, optional
+        sampling rate of the path, by default 50
+    up_down : bool, optional
+        does the animal goes only up or up and down, by default True
 
-    Returns:
-            -x: synthetic path
-            -t: time vector for the synthetic path
+    Returns
+    -------
+    x: np.ndarray
+        synthetic path
+    t: np.ndarray
+        corresponding time vector
     """
-
     t = np.linspace(0, time_max, time_max * Fs)
     d = v * t
 
@@ -225,3 +238,51 @@ def inhomogeneous_poisson_process(rate, time, refractory_period=None, method="un
     uniform[uniform < avg_prob] = 0
 
     return uniform
+
+
+def gen_lin_place_cell(
+    centers: np.ndarray = np.array([20, 50, 70]),
+    sigma: np.ndarray = 10,
+    amplitude: np.ndarray = 1,
+    length: int = 100,
+):
+    """
+    gen_lin_place_cell generate rate map with gaussian place fields
+    at position indicated by centers.
+
+    Parameters
+    ----------
+    centers : np.ndarray, optional
+        position of place fields centers, by default np.array([20, 50, 70])
+    sigma : np.ndarray, optional
+        width of place fields, by default 10
+    amplitude : np.ndarray, optional
+        amplitudes of place fields, by default 1
+    length : int, optional
+        number of position bins, by default 100
+
+    Returns
+    -------
+    rm: np.ndarray
+        stack of rate maps
+    """
+    # prepare variables
+    centers = np.array(centers)
+    sigma = np.array(sigma)
+    amplitude = np.array(amplitude)
+
+    n_cell = centers.shape[0]
+
+    if sigma.ndim == 0:
+        sigma = np.repeat(sigma, n_cell)[:, None]
+
+    if amplitude.ndim == 0:
+        amplitude = np.repeat(amplitude, n_cell)[:, None]
+
+    rm = np.arange(length)
+    rm = np.repeat(rm[None, :], n_cell, axis=0)
+
+    rm = np.exp(-((rm - centers[:, None]) ** 2) / (2 * sigma))
+    rm = rm * amplitude
+
+    return rm

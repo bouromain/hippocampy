@@ -163,7 +163,7 @@ def bayesian_1d(Q: np.ndarray, Tc: np.ndarray, prior=None, method="caim") -> np.
     return P
 
 
-def frv(Q: np.ndarray, Tc: np.ndarray, *, method="pearson") -> np.ndarray:
+def frv(Q: np.ndarray, template: np.ndarray, *, method="pearson") -> np.ndarray:
     """
     Decode by doing the similarity of the activity of each time steps
     with a template activity. This decoding is similar to the one performed
@@ -173,8 +173,8 @@ def frv(Q: np.ndarray, Tc: np.ndarray, *, method="pearson") -> np.ndarray:
     ----------
     Q : np.ndarray
         activity matrix Q [n_neurons, n_samples]
-    Tc : np.ndarray
-        tunning curves matrix Tc [n_neurons, n_bins]
+    template : np.ndarray
+        template matrix [n_neurons, n_bins]
     method : str
         method to use to compute the firing rate vector similarity
         [pearson, cosine, euclidian]
@@ -199,9 +199,9 @@ def frv(Q: np.ndarray, Tc: np.ndarray, *, method="pearson") -> np.ndarray:
         doi: 10.1126/science.8351520.
     [3] https://en.wikipedia.org/wiki/Pearson_correlation_coefficient
     """
-    if Q.shape[0] != Tc.shape[0]:
+    if Q.shape[0] != template.shape[0]:
         raise ValueError(
-            "Q and tunning curve matrix should share their 0th dimension (n samples)"
+            "Q and template matrix should share their 0th dimension (eg: n_neurons)"
         )
 
     if method not in ["pearson", "cosine", "euclidian"]:
@@ -209,16 +209,16 @@ def frv(Q: np.ndarray, Tc: np.ndarray, *, method="pearson") -> np.ndarray:
 
     if method == "pearson":
         n = Q.shape[0]
-        Tc_z = zscore(Tc, axis=0)
+        template_z = zscore(template, axis=0)
         Q_z = zscore(Q, axis=0)
 
-        return (1 / (n - 1)) * (Tc_z.T @ Q_z)
+        return (1 / (n - 1)) * (template_z.T @ Q_z)
 
     elif method == "cosine":
-        return cos_sim(Q, Tc)
+        return cos_sim(template.T, Q.T)
 
     elif method == "euclidian":
-        return pairwise_euclidian(Tc.T, Q)
+        return pairwise_euclidian(Q, template)
 
 
 def decoded_state(P: np.ndarray, method: str = "max") -> np.ndarray:
@@ -391,9 +391,7 @@ def confusion_matrix(
         dtype = np.float64
 
     cm = coo_matrix(
-        (sample_weight, (x_true, x_predicted)),
-        shape=(n_labels, n_labels),
-        dtype=dtype,
+        (sample_weight, (x_true, x_predicted)), shape=(n_labels, n_labels), dtype=dtype,
     ).toarray()
 
     with np.errstate(all="ignore"):

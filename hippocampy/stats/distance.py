@@ -73,9 +73,12 @@ def pairwise_euclidian(a: np.ndarray, b: np.ndarray):
     ---------
     https://codereview.stackexchange.com/a/77270    
     """
-    a = np.atleast_2d(a)
-    b = np.atleast_2d(b)
+    a = np.array(a)
+    b = np.array(b)
 
-    d = bn.nansum((a ** 2), axis=-1)[:, np.newaxis] + bn.nansum(b ** 2, axis=-1)
-    d -= 2 * np.squeeze(a @ b.T)
-    return np.sqrt(d)
+    d = (
+        np.array(bn.nansum(b ** 2, axis=0), ndmin=1)[:, None]
+        + np.array(bn.nansum(a ** 2, axis=0), ndmin=1)[None, :]
+    )
+    d -= 2 * (b.T @ a)
+    return np.sqrt(d).squeeze()
