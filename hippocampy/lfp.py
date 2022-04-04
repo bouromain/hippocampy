@@ -130,7 +130,7 @@ def find_ripples(
     cand_event.merge(gap=n_sample_gap, overlap=0.0, max_len=n_sample_max_len)
 
     # remove small intervals
-    too_small = cand_event.stops - cand_event.starts > min_len * 10e-3 * fs
+    too_small = (cand_event.stops - cand_event.starts) > (min_len * 10e-3 * fs)
     cand_event = cand_event[~too_small]
 
     # remove event with values above the high-threshold

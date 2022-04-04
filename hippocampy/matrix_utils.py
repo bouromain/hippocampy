@@ -259,7 +259,7 @@ def zscore(matrix, axis=-1):
     sigma = bn.nanstd(matrix, axis=axis, ddof=1)
 
     # warn about zero divisions
-    if any(sigma == 0):
+    if (np.array([sigma]) == 0).any():
         warn("Incorrect value encountered for division")
 
     if isinstance(mu, np.ndarray):
