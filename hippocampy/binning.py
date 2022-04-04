@@ -364,14 +364,15 @@ def psth_2d(
     n_bins_aft: int = 20,
     method: str = "mean",
     kernel_half_width: int = 0,
-    axis=-1,
+    axis=1,
 ):
     # check inputs
     if method not in ["mean", "median"]:
         raise NotImplementedError(f"Method {method} not implemented")
 
     # to be sure we have floats here, this can create problems with nan later
-    mat = mat.astype(float, casting="safe")
+    mat = np.array(mat, dtype=float)
+    events_idx = float_to_int(events_idx)
 
     # initialise values
     sz = mat.shape
@@ -409,20 +410,14 @@ def psth_2d(
 
     # now we perform the average/median along the correct dimension
     if method == "mean":
-        out = bn.nanmean(temp_mat, axis)
+        out = bn.nanmean(temp_mat, axis=axis)
     elif method == "median":
-        out = bn.nanmedian(temp_mat, axis)
+        out = bn.nanmedian(temp_mat, axis=axis)
 
     if kernel_half_width > 0:
         out = smooth_2d(out, kernel_half_width=kernel_half_width)
 
     return out
-
-
-# mat = np.arange(80).reshape( -1,20)
-# events_idx = [2, 10, 18]
-
-# o = psth_2d(mat.T, events_idx, n_bins_bef=5, n_bins_aft=6, axis=0)
 
 
 # def continuous_ccg(spikes1, spikes2, tau=10e-3, max_lag=100e-3):
