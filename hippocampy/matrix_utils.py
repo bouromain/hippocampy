@@ -90,7 +90,7 @@ def smooth_1d(
         data_c = bn.move_mean(
             data_p, kernel_half_width * 2 + 1, min_count=kernel_half_width, axis=axis
         )
-        idx = np.arange(0, data_p.shape[axis] - (kernel_half_width * 2))
+        idx = np.arange((kernel_half_width * 2), data_p.shape[axis])
         data_c = np.take(data_c, idx, axis=axis)
 
         if preserve_nan_opt:

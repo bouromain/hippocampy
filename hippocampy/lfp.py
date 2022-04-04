@@ -130,16 +130,16 @@ def find_ripples(
     cand_event.merge(gap=n_sample_gap, overlap=0.0, max_len=n_sample_max_len)
 
     # remove small intervals
-    too_small = (cand_event.stops - cand_event.starts) > (min_len * 10e-3 * fs)
-    cand_event = cand_event[~too_small]
+    too_small = (cand_event.stops - cand_event.starts) < (min_len * 10e-3 * fs)
+    cand_event = cand_event[too_small]
 
-    # remove event with values above the high-threshold
+    # Keep events only if they have values above the high-threshold
     thresholded_high = squared_sig > high_threshold
     high_event = Iv().from_bool(thresholded_high)
     mask = cand_event.contain(high_event)
     cand_event = cand_event[mask]
 
-    # if we sk to restrict to some particular times
+    # if we want to restrict to some particular time epoch
     if restrict is not None:
         Iv_to_mask = Iv().from_bool(restrict)
         mask = cand_event.contain(Iv_to_mask)
