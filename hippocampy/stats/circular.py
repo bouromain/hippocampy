@@ -136,42 +136,54 @@ def circ_std(alpha, weight=None, d=False, dim=0):
 ########################################################################
 
 
-def corr_cc(alpha, beta, tail="two-sided", uniformity_correction=False):
+def corr_cc(
+    alpha: np.ndarray,
+    beta: np.ndarray,
+    tail: str = "two-sided",
+    uniformity_correction: bool = False,
+):
     """
-    Function that  compute correlation between two circular variables
-    Inputs:
-            - alpha (1D array):
-                    first vector of circular variables (in radian)
-            - beta (1D array):
-                    second vector of circular variables (in radian)
-            - tail (string, default: 'two-sided'):
-                    determine is on or two sided p-value should be returned
-            - uniformity_correction (bool, default=False):
-                    Define if a correction for uniform variables
-                    should be used.
-    Return:
-            - rho (float): circular correlation coefficient
-            - pval(float): two sided p-value
-
+     Function that  compute correlation between two circular variables
     Adapted from Ref[1-3]
 
     From Ref [3] Jammalamadaka, S. R., & Sengupta, A. (2001).
     Topics in circular statistics p. 180
 
-    from hippocampy.stats import circ_stats
-    import numpy as np
+    Parameters
+    ----------
+    alpha : np.ndarray
+        first vector of circular variables (in radian)
+    beta : np.ndarray
+        second vector of circular variables (in radian)
+    tail : str, optional
+        determine is on or two sided p-value should be returned, by default "two-sided"
+    uniformity_correction : bool, optional
+        Define if a correction for uniform variables should be used., by default False
 
-    Theta = [356,97,211,232,343,292,157,302,335,302,324,85,324,340,157,238,254,146,232,122,329]
-    Phi = [119,162,221,259,270,29,97,292,40,313,94,45,47,108,221,270,119,248,270,45,23]
+    Returns
+    -------
+    rho: float
+        circular correlation coefficient
+    pval: float
+        one/two sided p-value
 
-    rTheta = np.deg2rad(Theta)
-    rPhi = np.deg2rad(Phi)
+    Example
+    -------
+    >>> from hippocampy.stats import circ_stats
+    >>> import numpy as np
 
-    r, pval = circ_stats.corr_cc(rTheta,rPhi)
-    print(round(r, 3), round(pval, 4))
-    0.27 0.2247
+    >>> Theta = [356,97,211,232,343,292,157,302,335,302,324,85,324,340,157,238,254,146,232,122,329]
+    >>> Phi = [119,162,221,259,270,29,97,292,40,313,94,45,47,108,221,270,119,248,270,45,23]
 
+    >>> rTheta = np.deg2rad(Theta)
+    >>> rPhi = np.deg2rad(Phi)
+
+    >>> r, pval = circ_stats.corr_cc(rTheta,rPhi)
+    >>> print(round(r, 3), round(pval, 4))
+    >>> 0.27 0.2247
+        
     """
+
     alpha = np.asarray(alpha)
     beta = np.asarray(beta)
 

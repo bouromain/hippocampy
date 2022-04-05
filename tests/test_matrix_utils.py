@@ -1,4 +1,5 @@
 #%% Import
+import warnings
 from hippocampy import matrix_utils
 import unittest
 import numpy as np
@@ -106,6 +107,20 @@ class TestSmooth1D(unittest.TestCase):
         [0., 0., 0., 0.32710442, 0.34579116,0.32710442, 0., 0., 0.32710442, 0.34579116]])
     # fmt: on
         assert (np.testing.assert_array_almost_equal(v_s,exp_v) == None)
+    
+    def test_smooth_float(self):
+        v = np.array([[0,0,0,0,1,0,0,0,0,1],[0,0,0,0,1,0,0,0,0,1]])
+
+        exp_v = np.array([[0., 0., 0., 0.32710442, 0.34579116,0.32710442, 0., 0., 0.32710442, 0.34579116],
+        [0., 0., 0., 0.32710442, 0.34579116,0.32710442, 0., 0., 0.32710442, 0.34579116]])
+    # fmt: on
+        with self.assertWarns(Warning):
+            v_s = matrix_utils.smooth_1d(v,2.1)
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            v_s = matrix_utils.smooth_1d(v,2.1)
+            assert (np.testing.assert_array_almost_equal(v_s,exp_v) == None)
 
 class TestCorrMat(unittest.TestCase):
     def test_vect_corr(self):

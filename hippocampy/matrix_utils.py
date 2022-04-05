@@ -1,3 +1,4 @@
+from logging import warning
 from typing import Union
 
 import bottleneck as bn
@@ -10,7 +11,7 @@ from warnings import warn
 
 from hippocampy.utils.nan import remove_nan
 from hippocampy.utils.type_utils import float_to_int
-
+from warnings import warn
 
 #%% SMOOTH
 def smooth_1d(
@@ -72,8 +73,12 @@ def smooth_1d(
     if padtype not in ["reflect", "symmetric", "wrap", "mean", "median", "edge"]:
         raise ValueError(f"Pad type value {padtype} not recognized")
 
-    if kernel_half_width.dtype.kind != "i":
-        kernel_half_width = np.floor(kernel_half_width)
+    if int(kernel_half_width) != kernel_half_width:
+        warn(
+            f"Smoothing kernel half wight is not an integer. Half window \
+            rounded to {int(kernel_half_width)} "
+        )
+    kernel_half_width = int(kernel_half_width)
 
     if kernel_half_width % 2 != 1:
         kernel_half_width += 1
