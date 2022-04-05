@@ -142,7 +142,7 @@ class TestBinning(unittest.TestCase):
                 [69.0, 70.0, 71.0, 68.0, 69.0, 70.0, 71.0, 68.0, 69.0, 70.0, 71.0],
             ]
         )
-        out = binning.psth_2d(
+        out = binning.psth(
             mat,
             events_idx,
             n_bins_bef=5,
@@ -151,7 +151,7 @@ class TestBinning(unittest.TestCase):
             kernel_half_width=0,
             axis=1,
         )
-        out_t = binning.psth_2d(
+        out_t = binning.psth(
             mat.T,
             events_idx,
             n_bins_bef=5,
@@ -162,3 +162,22 @@ class TestBinning(unittest.TestCase):
         )
         assert np.testing.assert_equal(out, expected_out) == None
         assert np.testing.assert_equal(out_t, expected_out.T) == None
+
+    def test_psth_1d(self):
+        mat = np.arange(20)
+        events_idx = [2, 10, 18]
+
+        expected_out = np.array(
+            [9.0, 10.0, 11.0, 8.0, 9.0, 10.0, 11.0, 8.0, 9.0, 10.0, 11.0]
+        )
+        out = binning.psth(
+            mat,
+            events_idx,
+            n_bins_bef=5,
+            n_bins_aft=6,
+            method="mean",
+            kernel_half_width=0,
+            axis=1,
+        )
+        print(out)
+        assert np.testing.assert_equal(out, expected_out) == None

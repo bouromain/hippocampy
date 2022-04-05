@@ -356,7 +356,7 @@ def ccg_heart(spikes1, spikes2, binsize=1e-3, max_lag=1000e-3):
     return C, E
 
 
-def psth_2d(
+def psth(
     mat: np.ndarray,
     events_idx: np.ndarray,
     *,
@@ -367,11 +367,14 @@ def psth_2d(
     axis=1,
 ):
     # check inputs
-    if method not in ["mean", "median"]:
+    if method not in ["mean", "median", "sum"]:
         raise NotImplementedError(f"Method {method} not implemented")
 
+    if mat.ndim > 2:
+        raise ValueError("Input should have a maximum of two dimensions")
+
     # to be sure we have floats here, this can create problems with nan later
-    mat = np.array(mat, dtype=float)
+    mat = np.array(mat, dtype=float, ndmin=2)
     events_idx = float_to_int(events_idx)
 
     # initialise values
@@ -387,9 +390,20 @@ def psth_2d(
     idx_to_take = idx_to_take[~np.logical_or(neg_idx, out_idx)]
 
     temp_mat = np.take(mat, idx_to_take[:, None], axis=axis).squeeze()
-    npad = [[0, 0], [0, 0]]
-    npad[axis] = [pad_before, pad_after]
-    temp_mat = np.pad(temp_mat, pad_width=npad, mode="constant", constant_values=np.nan)
+
+    if temp_mat.ndim == 1:
+        temp_mat = np.pad(
+            temp_mat,
+            pad_width=[pad_before, pad_after],
+            mode="constant",
+            constant_values=np.nan,
+        )
+    else:
+        npad = [[0, 0], [0, 0]]
+        npad[axis] = [pad_before, pad_after]
+        temp_mat = np.pad(
+            temp_mat, pad_width=npad, mode="constant", constant_values=np.nan
+        )
 
     # make a 3d matrix (n_bins,-1,n_events)
     # this axis change  is not super elegant
@@ -413,11 +427,13 @@ def psth_2d(
         out = bn.nanmean(temp_mat, axis=axis)
     elif method == "median":
         out = bn.nanmedian(temp_mat, axis=axis)
+    elif method == "sum":
+        out = bn.nansum(temp_mat, axis=axis)
 
     if kernel_half_width > 0:
         out = smooth_2d(out, kernel_half_width=kernel_half_width)
 
-    return out
+    return out.squeeze()
 
 
 # def continuous_ccg(spikes1, spikes2, tau=10e-3, max_lag=100e-3):
