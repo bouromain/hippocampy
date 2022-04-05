@@ -72,6 +72,9 @@ def smooth_1d(
     if padtype not in ["reflect", "symmetric", "wrap", "mean", "median", "edge"]:
         raise ValueError(f"Pad type value {padtype} not recognized")
 
+    if kernel_half_width.dtype.kind != "i":
+        kernel_half_width = np.floor(kernel_half_width)
+
     if kernel_half_width % 2 != 1:
         kernel_half_width += 1
 

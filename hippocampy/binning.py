@@ -2,7 +2,7 @@ import bottleneck as bn
 import numpy as np
 from numba import jit
 
-from hippocampy.matrix_utils import circ_shift, smooth_1d, circ_shift_idx, smooth_2d
+from hippocampy.matrix_utils import zscore, smooth_1d, circ_shift_idx, smooth_2d
 from hippocampy.utils.type_utils import float_to_int
 
 
@@ -366,6 +366,32 @@ def psth(
     kernel_half_width: int = 0,
     axis=1,
 ):
+    """
+    psth _summary_
+
+    Parameters
+    ----------
+    mat : np.ndarray
+        input array (1 or 2d)
+    events_idx : np.ndarray
+        list of indexes where to perform the psth in a given axis
+    n_bins_bef : int, optional
+        number of bins to take before, by default 20
+    n_bins_aft : int, optional
+        number of bins to take after, by default 20
+    method : str, optional
+        method to perform in the psth ["mean", "median", "sum"], by default "mean"
+    kernel_half_width : int, optional
+        half width of the smoothing, by default 0
+    axis : int, optional
+        axis along which the function is performed, by default 1
+
+    Returns
+    -------
+    out: np.ndarray
+        output psth
+
+    """
     # check inputs
     if method not in ["mean", "median", "sum"]:
         raise NotImplementedError(f"Method {method} not implemented")
@@ -434,6 +460,53 @@ def psth(
         out = smooth_2d(out, kernel_half_width=kernel_half_width)
 
     return out.squeeze()
+
+
+def mua(
+    mat: np.ndarray,
+    *,
+    axis: int = -1,
+    smooth_first: bool = True,
+    kernel_half_width: int = 10,
+):
+    """
+    Compute "multi-unit" activity from a Transient matrix. 
+    The input matrix can be binary matrix of transient or spikes (True), or 
+    rate vectors
+    Individual traces are first smoothed and then summed 
+    to finally have the multi-unit activity.
+
+    Parameters
+    ----------
+    mat : np.nd_array
+        input matrix, can be binary matrix of transient or spikes (True), or 
+        rate vectors
+    axis : int, optional
+        axis along which the function is performed, by default -1
+    smooth_first : bool, optional
+        if we fist sooth individual neuron activities or only at the end,
+        by default True
+    kernel_half_width : int, optional
+        size of the smoothing half window (in samples), by default 10
+
+    Returns
+    -------
+    mua_act
+        _description_
+    """
+
+    mua_act = np.array(mat)
+
+    if smooth_first:
+        mua_act = smooth_1d(mua_act, kernel_half_width=kernel_half_width, axis=axis)
+
+    mua_act = zscore(mua_act, axis=axis)
+    mua_act = bn.nansum(mua_act, axis=axis)
+
+    if not smooth_first:
+        mua_act = smooth_1d(mua_act, kernel_half_width=kernel_half_width, axis=axis)
+
+    return mua_act
 
 
 # def continuous_ccg(spikes1, spikes2, tau=10e-3, max_lag=100e-3):

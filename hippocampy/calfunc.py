@@ -343,33 +343,3 @@ def noise_level(F: np.ndarray, fs: int, axis=-1) -> np.ndarray:
 
     noise = mad(F, axis=axis) / np.sqrt(fs)
     return noise * 100
-
-
-def mua(T: np.ndarray, *, fs: int = 30, size_win: float = 0.125):
-    """
-    Compute "multi-unit" activity from a Transient matrix. The T matrix is a
-    binary matrix of transient (True), calculated from a dF matrix (see: 
-    function "transient"). Individual traces are first smoothed and then summed 
-    to finally have the multi-unit activity.
-
-    Parameters
-    ----------
-    T : np.ndarray (n_roi , n_samples)
-        Binary transient matrix
-    fs : int, optional
-        sampling rate of the T matrix, by default 30
-    size_win : float, optional
-        half-window of the smotthing to perform on the T, by default 0.125
-    """
-
-    # calculate the size of the smoothing window
-    half_win = nearest_even(size_win * fs)
-
-    # smooth everything
-    T_s = smooth_1d(T.astype(int), kernel_half_width=half_win)
-
-    # zscore this in oder to compensate for different level of activity
-    T_s = zscore(T_s, axis=1)
-
-    # sum everything and return
-    return bn.nansum(T_s, axis=0)
