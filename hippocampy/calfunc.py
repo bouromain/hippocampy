@@ -162,7 +162,6 @@ def transient(
     S: np.ndarray,
     threshold: float = 1.1,
     min_len_event: int = 3,
-    fs: int = 30,
     spike_norm="mad",
 ):
     """
@@ -191,8 +190,6 @@ def transient(
     min_len_event: int
         minimum number of frame crossing the threshold to be kept as a potential 
         event
-    fs : int, optional
-        sampling rate of the traces, by default 30
     spike_norm : str, optional
         normalisation of the deconvolved spikes, by default "mad"
 
