@@ -396,6 +396,17 @@ class Iv:
 
         return self
 
+    def to_bool(self):
+        """
+        return a boolean vector over the domain of the IV
+        TODO a dt/ step could be required in some usecase
+        her the function assume a step of 1
+        """
+        bool_vec = np.zeros(self.domain[1]).astype(bool)
+        for it_c in self:
+            bool_vec[it_c.min : it_c.max] = True
+        return bool_vec
+
     def merge(self, *, gap=0.0, overlap=0.0, max_len=np.Inf):
         """ merge overlaping intervals"""
 

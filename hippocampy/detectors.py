@@ -7,12 +7,13 @@ from hippocampy.core.Iv import Iv
 
 
 def mua_event(
-    mat: np.nd_array,
+    mat: np.ndarray,
     fs: int = 1,
     axis: int = -1,
     threshold_low: float = 1,
     threshold_high: float = 3.5,
     sample_gap: float = 0.2,
+    min_len: int = 2,
     smooth_first: bool = True,
     kernel_half_width: float = 0.120,
 ):
@@ -70,6 +71,11 @@ def mua_event(
     n_sample_gap = sample_gap * fs
     cand_SCE.merge(gap=n_sample_gap, overlap=0.0)
 
+    # remove very small event
+    n_min_samples = min_len * fs
+    mask_small = cand_SCE.stops - cand_SCE.starts > n_min_samples
+    cand_SCE = cand_SCE[mask_small]
+
     # keep only event with peaks above 3.5
     mua_peaks = mua_z > threshold_high
     high_event = Iv().from_bool(mua_peaks)
@@ -77,9 +83,12 @@ def mua_event(
 
     cand_SCE = cand_SCE[mask]
 
+    # make the boolean vector and store peak location
+    peak_times = np.empty(len(cand_SCE))
     cand_SCE_mask = np.zeros_like(mua_z).astype(bool)
-    for it_c in cand_SCE:
+
+    for i, it_c in enumerate(cand_SCE):
         cand_SCE_mask[it_c.min : it_c.max] = True
+        peak_times[i] = it_c.starts + bn.nanargmax(mua_z[it_c.min : it_c.max])
 
-    return cand_SCE
-
+    return cand_SCE, cand_SCE_mask, peak_times
