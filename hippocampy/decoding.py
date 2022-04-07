@@ -335,14 +335,6 @@ def confusion_matrix(
     x_true = np.array(x_true)
     x_predicted = np.array(x_predicted)
 
-    # for now we will only accept integer input (eg index of real and predicted values).
-    # categorical and or float value need stronger check, that it slightly more
-    # complicated but I am not sure this is needed. I'll implement it later
-    if x_true.dtype.kind != "i":
-        x_true = float_to_int(x_true)
-    if x_predicted.dtype.kind != "i":
-        x_predicted = float_to_int(x_predicted)
-
     if labels is None:
         labels = np.unique(x_true)
     else:
