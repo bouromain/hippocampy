@@ -1,4 +1,3 @@
-from re import template
 from hippocampy import decoding
 import unittest
 import numpy as np
