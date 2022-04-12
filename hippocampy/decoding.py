@@ -432,8 +432,6 @@ def confusion_matrix_full(x_true: np.ndarray, P: np.ndarray, method: str = "mean
     full_conf_mat[:, x_true, range(n_sample)] = P
 
     if method == "mean":
-        cm = bn.nanmean(full_conf_mat, axis=2)
+        return bn.nanmean(full_conf_mat, axis=2)
     elif method == "median":
-        cm = bn.nanmedian(full_conf_mat, axis=2)
-
-    return cm / bn.nansum(cm, axis=0)
+        return bn.nanmedian(full_conf_mat, axis=2)
