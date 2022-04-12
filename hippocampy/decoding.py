@@ -389,7 +389,7 @@ def confusion_matrix(
     with np.errstate(all="ignore"):
         # to avoid division errors display
         if normalize == "true":
-            cm = cm / bn.nansum(cm, axis=1)
+            cm = cm / bn.nansum(cm, axis=0)
         elif normalize == "pred":
             cm = cm / bn.nansum(cm, axis=0)
         elif normalize == "all":

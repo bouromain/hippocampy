@@ -222,6 +222,9 @@ def corr_mat(a: np.ndarray, b: Union[None, np.ndarray] = None, axis=-1) -> np.nd
     Reference
     ---------
     https://en.wikipedia.org/wiki/Pearson_correlation_coefficient
+
+    TODO
+    better handling of nans warning/ min quantity of values....
     """
 
     a = np.array(a, ndmin=2)

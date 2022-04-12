@@ -47,7 +47,7 @@ def cos_sim(a: np.ndarray, b: np.ndarray) -> float:
     if not np.array_equal(a.shape[1], b.shape[1]):
         raise ValueError("inputs should have the same shape")
 
-    return a @ b.T / np.outer(norm(a, axis=1), norm(b, axis=1))
+    return (a @ b.T / np.outer(norm(a, axis=1), norm(b, axis=1))).squeeze()
 
 
 def pairwise_euclidian(a: np.ndarray, b: np.ndarray):
