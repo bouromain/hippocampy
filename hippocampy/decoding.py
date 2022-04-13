@@ -429,19 +429,19 @@ def confusion_matrix_full(
 
     x_true = np.array(x_true)
     P = np.array(P)
+    x_true_idx = np.empty_like(x_true)
 
-    n_bins, n_sample = P.shape
+    n = P.shape[0]
+    cm = np.empty((n, n))
 
-    if x_true.dtype.kind != "i":
-        x_true = float_to_int(x_true)
+    for i, it_p in enumerate(np.unique(x_true)):
+        x_true_idx[x_true == it_p] = i
 
-    full_conf_mat = np.empty((n_bins, n_bins, n_sample)) * np.nan
-    full_conf_mat[:, x_true, range(n_sample)] = P
-
-    if method == "mean":
-        cm = bn.nanmean(full_conf_mat, axis=2)
-    elif method == "median":
-        cm = bn.nanmedian(full_conf_mat, axis=2)
+    for it_lev in range(n):
+        if method == "mean":
+            cm[it_lev, :] = bn.nanmean(P[:, x_true_idx == it_lev], axis=1)
+        elif method == "median":
+            cm[it_lev, :] = bn.nanmedian(P[:, x_true_idx == it_lev], axis=1)
 
     with np.errstate(all="ignore"):
         # to avoid division errors display
