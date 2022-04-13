@@ -397,7 +397,9 @@ def confusion_matrix(
     return cm
 
 
-def confusion_matrix_full(x_true: np.ndarray, P: np.ndarray, method: str = "mean"):
+def confusion_matrix_full(
+    x_true: np.ndarray, P: np.ndarray, method: str = "mean", normalize=None,
+):
     """
     confusion_matrix_full average the posterior probability matrix for each true value.
 
@@ -410,6 +412,8 @@ def confusion_matrix_full(x_true: np.ndarray, P: np.ndarray, method: str = "mean
     method : str, optional
         method to average the posterior probability matrix [ "median", "mean"],
         by default "mean"
+    normalize : _type_, optional
+        _description_, by default None
 
     Returns
     -------
@@ -419,6 +423,9 @@ def confusion_matrix_full(x_true: np.ndarray, P: np.ndarray, method: str = "mean
 
     if method not in ["median", "mean"]:
         raise ValueError("Method should be either [median,mean] ")
+
+    if normalize not in ["true", "pred", "all", None]:
+        raise ValueError("normalize should either be 'true', 'pred', 'all', None")
 
     x_true = np.array(x_true)
     P = np.array(P)
@@ -432,6 +439,16 @@ def confusion_matrix_full(x_true: np.ndarray, P: np.ndarray, method: str = "mean
     full_conf_mat[:, x_true, range(n_sample)] = P
 
     if method == "mean":
-        return bn.nanmean(full_conf_mat, axis=2)
+        cm = bn.nanmean(full_conf_mat, axis=2)
     elif method == "median":
-        return bn.nanmedian(full_conf_mat, axis=2)
+        cm = bn.nanmedian(full_conf_mat, axis=2)
+
+    with np.errstate(all="ignore"):
+        # to avoid division errors display
+        if normalize == "true":
+            cm = cm / bn.nansum(cm, axis=0)
+        elif normalize == "pred":
+            cm = cm / bn.nansum(cm, axis=0)
+        elif normalize == "all":
+            cm = cm / bn.nansum(cm)
+    return cm

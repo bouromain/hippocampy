@@ -24,8 +24,8 @@ class TestDecoding(unittest.TestCase):
 
     def test_confmat_full(self):
         x_true = [2, 0, 2, 2, 0, 1]
-        P = np.array([[1, 0, 0, 0, 1, 0], [0, 0, 0, 0, 1, 1], [0, 1, 0, 4, 1, 1]])
-        exp_cm = np.array([[0.25, 0.0, 0.2], [0.25, 0.5, 0.0], [0.5, 0.5, 0.8]])
+        P = np.array([[2, 0, 0, 1, 2, 0], [0, 0, 0, 0, 1, 1], [0, 1, 0, 6, 1, 1]])
+        exp_cm = np.array([[1.0, 0.0, 1.0], [0.5, 1.0, 0.0], [1.0, 1.0, 2.0]])
         cm = decoding.confusion_matrix_full(x_true, P, method="mean")
         assert all(cm.ravel() == exp_cm.ravel())
 
