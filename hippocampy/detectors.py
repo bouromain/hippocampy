@@ -52,7 +52,7 @@ def mua_event(
     [1] Grosmark, A.D., Sparks, F.T., Davis, M.J. et al. Reactivation predicts 
         the consolidation of unbiased long-term cognitive maps. Nat Neurosci 24, 
         1574–1585 (2021). https://doi.org/10.1038/s41593-021-00920-7
-    
+
     """
 
     smooth_kern = np.floor(fs * (kernel_half_width))
@@ -92,3 +92,85 @@ def mua_event(
         peak_times[i] = it_c.starts + bn.nanargmax(mua_z[it_c.min : it_c.max])
 
     return cand_SCE, cand_SCE_mask, peak_times
+
+
+def sce(
+    T: np.ndarray,
+    fs: int = 1,
+    restrict: np.ndarray = None,
+    window_len: float = 0.2,
+    min_n_cells: int = 5,
+    intersample: float = 0.2,
+    perc_threshold: int = 99,
+    n_shuffle=100,
+):
+    """
+    sce _summary_
+
+    Parameters
+    ----------
+    T : np.ndarray
+        _description_
+    fs : int, optional
+        _description_, by default 1
+    restrict : np.ndarray, optional
+        _description_, by default None
+    window_len : float, optional
+        _description_, by default 0.2
+    min_n_cells : int, optional
+        _description_, by default 5
+    perc_threshold : int, optional
+        _description_, by default 3
+    n_shuffle : int, optional
+        _description_, by default 100
+
+
+    Reference
+    ---------
+    [1] Malvache A, Reichinnek S, Villette V, Haimerl C, Cossart R. 
+        Awake hippocampal reactivations project onto orthogonal neuronal 
+        assemblies. Science. 2016 Sep 16;353(6305):1280-3. 
+        doi: 10.1126/science.aaf3319
+    """
+
+    ## TO DO
+    # check the IV from and to bool it seem wrong
+    # incorporate the restrict to quiet period
+    T = np.array(T)
+    window_len_samples = int(window_len * fs)
+    n_cells, n_samples = T.shape
+
+    T_shuff = np.empty((n_cells, n_samples, n_shuffle))
+    for it_shuff in range(n_shuffle):
+        for it_cell in range(n_cells):
+            T_shuff[it_cell, :, it_shuff] = np.roll(
+                T[it_cell, :], np.random.randint(0, n_samples)
+            )
+
+    T_sum = bn.move_sum(T, window_len_samples, axis=1)
+    T_sum_shuff = bn.move_sum(T_shuff, window_len_samples, axis=1)  # , min_count=1
+
+    # now we could to a percentile of the shuffling
+    avg = bn.nansum(T_sum, axis=0)
+    avg_shuff = bn.nansum(T_sum_shuff, axis=0)
+
+    # 3sd correspond to ~99 percentile
+    T_thresh = np.nanpercentile(avg_shuff, perc_threshold, axis=1)
+    # pure zeros can come from performing percentile
+    # operation on nans only. Could be written in a better way
+    T_thresh[T_thresh == 0] = np.nan
+
+    # now SCE are defined as epoch of the summeed activity (in a temporal window)
+    # higher than chance and with more than a certain number of cells
+    cand_SCE = Iv().from_bool(avg > T_thresh)
+    cand_SCE.merge(gap=intersample * fs)
+
+    m = np.empty(len(cand_SCE))
+    for it_c, c in cand_SCE:
+        m[it_c] = bn.nanmax(avg[c.min : c.max])
+
+    # only keep enevnt with a minimum of cells
+    cand_SCE = cand_SCE[m > min_n_cells]
+
+    return cand_SCE.to_bool()
+

@@ -392,7 +392,7 @@ class Iv:
             starts = np.nonzero(starts)[0]
             stops = np.nonzero(stops)[0]
             self._data = np.vstack((starts, stops)).T
-            self._domain = [0, len(starts)]
+            self._domain = [0, len(bool_vec)]
 
         return self
 
@@ -402,9 +402,9 @@ class Iv:
         TODO a dt/ step could be required in some usecase
         her the function assume a step of 1
         """
-        bool_vec = np.zeros(self.domain[1]).astype(bool)
+        bool_vec = np.zeros(int(bn.nanmax(self.domain.data)), dtype=bool)
         for it_c in self:
-            bool_vec[it_c.min : it_c.max] = True
+            bool_vec[int(it_c.min) : int(it_c.max)] = True
         return bool_vec
 
     def merge(self, *, gap=0.0, overlap=0.0, max_len=np.Inf):
