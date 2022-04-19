@@ -5,6 +5,9 @@ import json
 
 from torch import float32
 from hippocampy.io.matlab import matlab_string2dict
+import cv2
+import bottleneck as bn
+import numpy as np
 
 
 def get_tiff_metadata(file_path: str):
@@ -210,56 +213,72 @@ def tiff2h5(
     h5_f.close()
 
 
-def tiff2mp4(
-    tiff_path: str,
+def bin2mp4(
+    bin_path: str,
     dest_path: str = None,
     fs_out: int = 30,
+    Ly: int = 512,
+    Lx: int = 512,
     time_smooth_sample: int = 30,
 ):
-    ...
+
+    ## init
+    if format not in ["mp4", "avi"]:
+        raise ValueError("Format should be either ['mp4', 'avi'] ")
+
+    if format == "mp4":
+        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+        # fourcc = cv2.VideoWriter_fourcc(*'h264')
+    elif format == "avi":
+        fourcc = cv2.VideoWriter_fourcc("F", "M", "P", "4")
+
+    if dest_path is None:
+        dest_path = tiff_path.replace(".tif", f".{format}")
+
+    halfwin_sample = int(np.floor(time_smooth_sample / 2))
+
+    # we may have problem for very big tiff
+    # data = get_tiff_data(tiff_path)
+    # data = data.astype(np.uint8)
+
+    #####
+    with open(bin_path, mode="rb") as fio:
+        data = np.fromfile(fio, np.int16).reshape((-1, Ly, Lx))
+    data = cv2.convertScaleAbs(data)  # convert to uint8
+
+    out = cv2.VideoWriter(dest_path, fourcc, fs_out, ((data.shape[1:])))
+    for it_im in range(1000):  # data.shape[0]):
+        # rotate the buffer
+        idx = np.arange(it_im - halfwin_sample, it_im + halfwin_sample)
+        idx = idx[idx >= 0]
+        idx = idx[idx < data.shape[0] - 1]
+
+        buffer = data[idx, :, :]
+        im_m = bn.nanmean(buffer, axis=0).astype(np.uint8)
+        im_m = cv2.equalizeHist(im_m)
+        out.write(cv2.cvtColor(im_m, cv2.COLOR_GRAY2BGR))
+    out.release()
 
 
-# ### for dev
-# import cv2
-# import bottleneck as bn
-# import numpy as np
-
+### for dev
 # tiff_path = "/home/bouromain/Documents/tmpData/tmp2p/m4368_20200210_00001.tif"
 # bin_path = "/home/bouromain/Documents/tmpData/tmp2p/suite2p/plane0/data.bin"
 # fs_out = 30
 # time_smooth_sample = 30
+# Ly:int = 512,
+# Lx:int= 512,
 # format = "mp4"
 # dest_path = None
-# ### end dev
 
-# ## init
-# if format not in ["mp4", "avi"]:
-#     raise ValueError("Format should be either ['mp4', 'avi'] ")
 
-# if format == "mp4":
-#     fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-#     # fourcc = cv2.VideoWriter_fourcc(*'h264')
-# elif format == "avi":
-#     fourcc = cv2.VideoWriter_fourcc("F", "M", "P", "4")
+# bin2mp4(
+#     bin_path,
+#     dest_path= None,
+#     fs_out  = 30,
+#     Ly = 512,
+#     Lx= 512,
+#     time_smooth_sample = 30,
+# )
 
-# if dest_path is None:
-#     dest_path = tiff_path.replace(".tif", f".{format}")
-
-# halfwin_sample = int(np.floor(time_smooth_sample/2))
-
-# # we may have problem for very big tiff
-# data = get_tiff_data(tiff_path)
-# # data = data.astype(np.uint8)
-
-# out = cv2.VideoWriter(dest_path, fourcc, fs_out, ((data.shape[1:])))
-# for it_im in range(data.shape[0]):
-#     # rotate the buffer
-#     idx = np.arange(it_im-halfwin_sample, it_im+halfwin_sample)
-#     idx = idx[idx>=0]
-#     idx = idx[idx<data.shape[0]-1]
-
-#     buffer = data[idx,:,:]
-#     im_m = bn.nanmean(buffer, axis =0).astype(np.uint8)
-#     out.write(cv2.cvtColor(im_m, cv2.COLOR_GRAY2BGR))
-# out.release()
+### end dev
 
