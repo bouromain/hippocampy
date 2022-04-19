@@ -28,5 +28,6 @@ setup(
         "oasis @ git+https://github.com/j-friedrich/OASIS",
         "cvxpy",
         "PyWavelets",
+        "opencv-python",
     ],
 )

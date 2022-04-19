@@ -10,6 +10,7 @@ dependencies:
   - scikit-learn
   - h5py=2.10.0
   - cython
+  - opencv-python
   - pip:
     - scipy
     - astropy

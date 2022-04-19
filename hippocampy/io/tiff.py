@@ -233,7 +233,7 @@ def bin2mp4(
         fourcc = cv2.VideoWriter_fourcc("F", "M", "P", "4")
 
     if dest_path is None:
-        dest_path = tiff_path.replace(".tif", f".{format}")
+        dest_path = bin_path.replace(".bin", f".{format}")
 
     halfwin_sample = int(np.floor(time_smooth_sample / 2))
 
