@@ -10,7 +10,6 @@ dependencies:
   - scikit-learn
   - h5py=2.10.0
   - cython
-  - opencv-python
   - pip:
     - scipy
     - astropy
@@ -26,3 +25,4 @@ dependencies:
     - git+https://github.com/j-friedrich/OASIS
     - cvxpy
     - PyWavelets
+    - opencv-python
