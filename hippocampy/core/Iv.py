@@ -404,7 +404,7 @@ class Iv:
         """
         bool_vec = np.zeros(int(bn.nanmax(self.domain.data)), dtype=bool)
         for it_c in self:
-            bool_vec[int(it_c.min) : int(it_c.max)] = True
+            bool_vec[int(it_c.min) : int(it_c.max) + 1] = True
         return bool_vec
 
     def merge(self, *, gap=0.0, overlap=0.0, max_len=np.Inf):

@@ -340,3 +340,4 @@ def noise_level(F: np.ndarray, fs: int, axis=-1) -> np.ndarray:
 
     noise = mad(F, axis=axis) / np.sqrt(fs)
     return noise * 100
+

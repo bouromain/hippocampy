@@ -169,7 +169,7 @@ def sce(
     for it_c, c in cand_SCE:
         m[it_c] = bn.nanmax(avg[c.min : c.max])
 
-    # only keep enevnt with a minimum of cells
+    # only keep envent with a minimum of cells
     cand_SCE = cand_SCE[m > min_n_cells]
 
     return cand_SCE.to_bool()
