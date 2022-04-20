@@ -3,7 +3,6 @@ import h5py
 import os
 import json
 
-from torch import float32
 from hippocampy.io.matlab import matlab_string2dict
 import cv2
 import bottleneck as bn
@@ -40,7 +39,7 @@ def get_tiff_metadata(file_path: str):
 
 def get_tiff_fs(file_path: str) -> int:
     """
-    get_tiff_fs deduce tiff sampling rate from the second 
+    get_tiff_fs deduce tiff sampling rate from the second
     frame metadata. It seem to be faster than searching the
     file metadata on some big files
 
@@ -281,4 +280,3 @@ def bin2mp4(
 # )
 
 ### end dev
-
