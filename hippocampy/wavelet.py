@@ -88,7 +88,7 @@ def _calc_sigma(coeffs, scaling, axis):
 def wden(
     data,
     *,
-    wavelet_name="sym5",
+    wavelet_name="sym4",
     level=None,
     noise_est_method="sqtwolog",
     scaling="mln",
