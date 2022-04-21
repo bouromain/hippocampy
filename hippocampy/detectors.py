@@ -18,17 +18,17 @@ def mua_event(
     kernel_half_width: float = 0.120,
 ):
     """
-    mua_event identify putative Population Synchronous Events as defined in [1] 
+    mua_event identify putative Population Synchronous Events as defined in [1]
     (and other papers).
     A PSE is defined as moments during which the zscored mua activity exceeds
-    3.5 SD with borders of the event edges extended to the location where the 
+    3.5 SD with borders of the event edges extended to the location where the
     signal reaches 1SD. These PSE should  have a inter-event interval of at least
     0.2 s.
 
     Parameters
     ----------
     mat : np.nd_array
-        input matrix, can be binary matrix of transient or spikes (True), or 
+        input matrix, can be binary matrix of transient or spikes (True), or
         rate vectors
     fs : int
         sampling frequency of the input matrix
@@ -37,10 +37,10 @@ def mua_event(
     threshold_low : int, optional
         low threshold where the edges will be extended, by default 1
     threshold_high : int, optional
-        high threshold should be exceeded during the SCE to be kept , 
+        high threshold should be exceeded during the SCE to be kept ,
         by default 3.5
     sample_gap : float
-        minimum inter-event interval in second for the SCE to be kept 
+        minimum inter-event interval in second for the SCE to be kept
     smooth_first : bool, optional
         _description_, by default True
     kernel_half_width : int, optional
@@ -49,8 +49,8 @@ def mua_event(
 
     Reference
     ---------
-    [1] Grosmark, A.D., Sparks, F.T., Davis, M.J. et al. Reactivation predicts 
-        the consolidation of unbiased long-term cognitive maps. Nat Neurosci 24, 
+    [1] Grosmark, A.D., Sparks, F.T., Davis, M.J. et al. Reactivation predicts
+        the consolidation of unbiased long-term cognitive maps. Nat Neurosci 24,
         1574–1585 (2021). https://doi.org/10.1038/s41593-021-00920-7
 
     """
@@ -103,6 +103,7 @@ def sce(
     intersample: float = 0.2,
     perc_threshold: int = 99,
     n_shuffle=100,
+    max_shuff=60,
 ):
     """
     sce _summary_
@@ -123,13 +124,15 @@ def sce(
         _description_, by default 3
     n_shuffle : int, optional
         _description_, by default 100
-
+    max_shuff: (float, None), default 60
+        maximum shift of the shuffled distribution in second if None
+        max_shuff will be equal to the number of samples
 
     Reference
     ---------
-    [1] Malvache A, Reichinnek S, Villette V, Haimerl C, Cossart R. 
-        Awake hippocampal reactivations project onto orthogonal neuronal 
-        assemblies. Science. 2016 Sep 16;353(6305):1280-3. 
+    [1] Malvache A, Reichinnek S, Villette V, Haimerl C, Cossart R.
+        Awake hippocampal reactivations project onto orthogonal neuronal
+        assemblies. Science. 2016 Sep 16;353(6305):1280-3.
         doi: 10.1126/science.aaf3319
     """
 
@@ -140,11 +143,19 @@ def sce(
     window_len_samples = int(window_len * fs)
     n_cells, n_samples = T.shape
 
-    T_shuff = np.zeros((n_cells, n_samples, n_shuffle), dtype=bool)
+    if max_shuff is None:
+        max_shuff_sample = n_samples
+
+    max_shuff_sample = int(max_shuff * fs)
+
+    if max_shuff_sample > n_samples - 1:
+        max_shuff_sample = n_samples - 1
+
+    T_shuff = np.empty((n_cells, n_samples, n_shuffle))
     for it_shuff in range(n_shuffle):
         for it_cell in range(n_cells):
             T_shuff[it_cell, :, it_shuff] = np.roll(
-                T[it_cell, :], np.random.randint(0, n_samples)
+                T[it_cell, :], np.random.randint(0, max_shuff)
             )
 
     T_sum = bn.move_sum(T, window_len_samples, axis=1)
@@ -175,4 +186,3 @@ def sce(
     cand_SCE = cand_SCE[m > min_n_cells]
 
     return cand_SCE.to_bool()
-

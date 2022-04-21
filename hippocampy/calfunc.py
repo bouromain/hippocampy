@@ -124,7 +124,7 @@ def calc_dF(
     F: np.ndarray, window: int, *, type_win="median", quantile: float = 0.08, axis=-1
 ):
     """
-    calc_dF calculate dF/F as F - F_0 / F0 with F_0 defined as 
+    calc_dF calculate dF/F as F - F_0 / F0 with F_0 defined as
     the mean, median in a sliding time window
 
     Parameters
@@ -167,9 +167,9 @@ def transient(
     """
     Transient detection inspired from Grosmark 2020.
     It will take the traces, slightly denoise them to them deconvolve them
-    Events are then defined as deconvolved signal higher than Threshold time 
-    the level of estimated noise. This noise is defined as the 
-    median absolute deviation between the initial trace and the traces 
+    Events are then defined as deconvolved signal higher than Threshold time
+    the level of estimated noise. This noise is defined as the
+    median absolute deviation between the initial trace and the traces
     reconstructed with the deconvolution algorithm OASIS
 
     Parameters
@@ -177,18 +177,18 @@ def transient(
     F : np.ndarray
         calcium traces [n_traces, n_samples]
     S : np.ndarray
-        deconvolved traces. It is easier to provide the deconvolved traces here 
-        in order to be able to feed deconvolved traces from different deconvolution 
+        deconvolved traces. It is easier to provide the deconvolved traces here
+        in order to be able to feed deconvolved traces from different deconvolution
         algo such as OASIS or CASCADE
     threshold : float, optional
         threshold to detect event. Defined as threshold  times the "mad"
-        or "zscore" of the deconvolved trace, by default 1.1 
+        or "zscore" of the deconvolved trace, by default 1.1
 
-        This can be given as a float or a vector if you need different 
+        This can be given as a float or a vector if you need different
         threshold for different epoch (activity, inactivity). Grosmark 2021 set
-        a treshold of 1.5 during active epoch and 1.25 during rest. 
+        a treshold of 1.5 during active epoch and 1.25 during rest.
     min_len_event: int
-        minimum number of frame crossing the threshold to be kept as a potential 
+        minimum number of frame crossing the threshold to be kept as a potential
         event
     spike_norm : str, optional
         normalisation of the deconvolved spikes, by default "mad"
@@ -213,7 +213,7 @@ def transient(
         # estimate noise as the mad of the residuals of the difference between
         #  the initial traces and the denoised ones. Then normalize the spike estimate
         noise = mad(F_reconvolved - F, axis=1)
-        S_b = S / noise[:, None]
+        S_b = F_reconvolved / noise[:, None]
     elif spike_norm == "zscore":
         S_b = zscore(S, axis=1)
 
@@ -240,7 +240,7 @@ def transient_simple(
     F: np.ndarray, threshold: float = 2.5, min_length: int = 5, axis: int = -1
 ) -> list:
     """
-    transientRoy 
+    transientRoy
     find transient as in Roy 2017
     Ca 2+ events were detected by applying a threshold (greater than 2 standard
     deviations from the dF/F signal) at the local maxima of the dF/F signal.
@@ -290,7 +290,7 @@ def detrend_F(F, win_size, quantile=0.08):
     does it as describes in Dombeck 2010. It calculates the 8th percentile in
     a window of size win_size around each sample time to define a baseline. This
     baseline can then be substracted from the raw signal to correct it.
-    
+
     Parameters
     ----------
     -F: fluorescence trace [n_cells, n_samples]
@@ -305,8 +305,8 @@ def detrend_F(F, win_size, quantile=0.08):
     ---------
     Dombeck 2010
 
-    Slow time-scale changes in the fluorescence traces were removed by 
-    examining the distribution of fluorescence in a ~15-s interval around 
+    Slow time-scale changes in the fluorescence traces were removed by
+    examining the distribution of fluorescence in a ~15-s interval around
     each sample time point and subtracting the 8% percentile value.
     """
     Q = rolling_quantile(F, win_size, quantile)
@@ -333,11 +333,10 @@ def noise_level(F: np.ndarray, fs: int, axis=-1) -> np.ndarray:
     Reference
     ---------
     [1] Rupprecht P, Carta S, Hoffmann A, Echizen M, Blot A, AC Kwan, Dan Y,
-        Hofer SB, Kitamura K, Helmchen F*, Friedrich RW*, 
-        A database and deep learning toolbox for noise-optimized, generalized 
+        Hofer SB, Kitamura K, Helmchen F*, Friedrich RW*,
+        A database and deep learning toolbox for noise-optimized, generalized
         spike inference from calcium imaging, Nature Neuroscience (2021)
     """
 
     noise = mad(F, axis=axis) / np.sqrt(fs)
     return noise * 100
-
