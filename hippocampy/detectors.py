@@ -139,7 +139,7 @@ def sce(
     ## TO DO
     # check the IV from and to bool it seem wrong
     # incorporate the restrict to quiet period
-    T = np.array(T)
+    T = np.array(T, dtype=bool)
     window_len_samples = int(window_len * fs)
     n_cells, n_samples = T.shape
 
@@ -159,7 +159,9 @@ def sce(
             )
 
     T_sum = bn.move_sum(T, window_len_samples, axis=1)
-    T_sum_shuff = bn.move_sum(T_shuff, window_len_samples, axis=1)  # , min_count=1
+    T_sum_shuff = bn.move_sum(T_shuff, window_len_samples, axis=1)  # , min_count=12
+
+    # we could restrict the previous vectors here
 
     # now we could to a percentile of the shuffling
     avg = bn.nansum(T_sum, axis=0)
