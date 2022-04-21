@@ -47,7 +47,7 @@ def start_stop(B: np.ndarray, axis=-1):
     stops: np.ndarray
         boolean array with True values for stops     
     """
-    B = np.array(B, dtype=bool, ndmin=2)
+    B = np.array(B, ndmin=2)
     start = np.empty_like(B, dtype=bool)
     stop = np.empty_like(B, dtype=bool)
 
