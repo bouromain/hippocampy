@@ -124,14 +124,16 @@ def find_ripples(
     thresholded = squared_sig > low_threshold
     cand_event = Iv().from_bool(thresholded)
 
-    n_sample_gap = min_inter * 10e-3 * fs
-    n_sample_max_len = max_len * 10e-3 * fs
+    n_sample_gap = min_inter * 1e-3 * fs
+    n_sample_max_len = max_len * 1e-3 * fs
 
     cand_event.merge(gap=n_sample_gap, overlap=0.0, max_len=n_sample_max_len)
 
     # remove small intervals
-    too_small = (cand_event.stops - cand_event.starts) < (min_len * 10e-3 * fs)
-    cand_event = cand_event[too_small]
+    too_small = (cand_event.stops - cand_event.starts) < (min_len * 1e-3 * fs)
+    too_big = (cand_event.stops - cand_event.starts) > (max_len * 1e-3 * fs)
+    good = np.logical_and(~too_small, ~too_big)
+    cand_event = cand_event[good]
 
     # Keep events only if they have values above the high-threshold
     thresholded_high = squared_sig > high_threshold
