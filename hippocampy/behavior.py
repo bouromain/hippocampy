@@ -47,7 +47,7 @@ def find_lap_1d(
 
     # check inputs
     if np.squeeze(pos).ndim > 1:
-        raise ValueError("Positon vector should be 1 D")
+        raise ValueError("Position vector should be 1D")
 
     # to define a minimum distance per lap (remove small artefactual laps)
     if len_maze is None:

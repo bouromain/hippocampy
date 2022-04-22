@@ -8,12 +8,9 @@ from hippocampy.matrix_utils import (
     first_true,
     remove_small_objects,
     rolling_quantile,
-    smooth_1d,
     zscore,
 )
 from hippocampy.stats.stats import mad
-from hippocampy.utils.gen_utils import nearest_even
-from hippocampy.wavelet import wden
 
 
 def subtract_neuropil(Froi, Fneu, *, method="fixed", downsample_ratio=10):
@@ -21,7 +18,7 @@ def subtract_neuropil(Froi, Fneu, *, method="fixed", downsample_ratio=10):
     This function will perform neuropil substraction from a given fluorescence
     trace F = Froi - (c * Fneu). The constant c can be defined as a fixed value
     (classically 0.7) or calculated by a bounded robust regression between Froi
-    and Fneu (see Chen 2013b)
+    and Fneu (see Ref 1)
 
     Parameters
     ----------
@@ -39,9 +36,9 @@ def subtract_neuropil(Froi, Fneu, *, method="fixed", downsample_ratio=10):
 
     Reference
     ---------
-    - Ultrasensitive fluorescent proteins for imaging neuronal activity,
-    TW Chen TJ Wardill Y Sun SR Pulver SL Renninger A Baohan ER Schreiter
-    RA Kerr MB Orger V Jayaraman LL Looger K Svoboda DS Kim  (2013b)
+    [1] Ultrasensitive fluorescent proteins for imaging neuronal activity,
+        TW Chen TJ Wardill Y Sun SR Pulver SL Renninger A Baohan ER Schreiter
+        RA Kerr MB Orger V Jayaraman LL Looger K Svoboda DS Kim  (2013b)
     """
     Froi = np.asarray(Froi)
     Fneu = np.asarray(Fneu)
