@@ -1060,3 +1060,33 @@ def diagonality(mat: np.ndarray) -> float:
     nom = (n * sxy) - (sx * sy)
     denom = np.sqrt(n * sx2 - (sx) ** 2) * np.sqrt(n * sy2 - (sy) ** 2)
     return float(nom / denom)
+
+
+def average_diag(mat: np.ndarray):
+    """
+    average_diag calculate the average along all possible diagonals of a 
+    squared matrix
+
+    Parameters
+    ----------
+    mat : np.ndarray
+        input matrix
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
+
+    if mat.shape[0] != mat.shape[1]:
+        raise ValueError("This function only work for square matrices")
+
+    l = mat.shape[0]
+    # np trace calculate the sum over a diagonal with an offset k
+    # we do it over all the possible diagonals
+    b = np.array([np.trace(mat, k) for k in np.arange(-l + 1, l)])
+    # calculate the number of element in each diag
+    n = -np.abs(np.arange(-l + 1, l)) + l
+    # calculate the average
+    return b / n
+
