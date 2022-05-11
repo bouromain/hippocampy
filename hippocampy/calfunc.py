@@ -1,7 +1,8 @@
 import bottleneck as bn
 import numpy as np
 import tqdm as tqdm
-from oasis.functions import deconvolve as _deconvolve
+
+# from oasis.functions import deconvolve as _deconvolve
 from sklearn.linear_model import RANSACRegressor
 
 from hippocampy.matrix_utils import (
@@ -11,6 +12,7 @@ from hippocampy.matrix_utils import (
     zscore,
 )
 from hippocampy.stats.stats import mad
+import pandas as pd
 
 
 def subtract_neuropil(Froi, Fneu, *, method="fixed", downsample_ratio=10):
@@ -77,44 +79,44 @@ def subtract_neuropil(Froi, Fneu, *, method="fixed", downsample_ratio=10):
     return F
 
 
-def deconvolve(F: np.ndarray, fs: int = 30, tau: float = 0.7, verbose: bool = True):
-    """
-    deconvolve calcium traces using oasis algorithm
+# def deconvolve(F: np.ndarray, fs: int = 30, tau: float = 0.7, verbose: bool = True):
+#     """
+#     deconvolve calcium traces using oasis algorithm
 
-    Parameters
-    ----------
-    F : np.ndarray
-        calcium traces [n_traces, n_samples]
-    fs : int, optional
-        sampling frequency, by default 30
-    tau : float, optional
-        decay time constant in sec, by default 0.7
-    verbose : bool, optional
-        make this function chatty, by default True
+#     Parameters
+#     ----------
+#     F : np.ndarray
+#         calcium traces [n_traces, n_samples]
+#     fs : int, optional
+#         sampling frequency, by default 30
+#     tau : float, optional
+#         decay time constant in sec, by default 0.7
+#     verbose : bool, optional
+#         make this function chatty, by default True
 
-    Returns
-    -------
-    c : np.ndarray
-        denoised calcium traces [n_traces, n_samples]
-    s : np.ndarray
-        deconvolved calcium traces [n_traces, n_samples]
-    b : np.ndarray
-        deconvolved calcium traces baseline
-    """
+#     Returns
+#     -------
+#     c : np.ndarray
+#         denoised calcium traces [n_traces, n_samples]
+#     s : np.ndarray
+#         deconvolved calcium traces [n_traces, n_samples]
+#     b : np.ndarray
+#         deconvolved calcium traces baseline
+#     """
 
-    g = np.exp(-(1 / (fs * tau)))
+#     g = np.exp(-(1 / (fs * tau)))
 
-    c = np.empty_like(F)
-    s = np.empty_like(F)
-    b = np.empty((F.shape[0], 1))
-    if verbose:
-        for itf, f in tqdm.tqdm(enumerate(F), total=F.shape[0]):
-            c[itf, :], s[itf, :], b[itf], _, _ = _deconvolve(f, g=[g])
-    else:
-        for itf, f in enumerate(F):
-            c[itf, :], s[itf, :], b[itf], _, _ = _deconvolve(f, g=[g])
+#     c = np.empty_like(F)
+#     s = np.empty_like(F)
+#     b = np.empty((F.shape[0], 1))
+#     if verbose:
+#         for itf, f in tqdm.tqdm(enumerate(F), total=F.shape[0]):
+#             c[itf, :], s[itf, :], b[itf], _, _ = _deconvolve(f, g=[g])
+#     else:
+#         for itf, f in enumerate(F):
+#             c[itf, :], s[itf, :], b[itf], _, _ = _deconvolve(f, g=[g])
 
-    return c, s, b
+#     return c, s, b
 
 
 def calc_dF(
@@ -159,7 +161,8 @@ def transient(
     S: np.ndarray,
     threshold: float = 1.1,
     min_len_event: int = 3,
-    spike_norm="mad",
+    spike_norm: str = "sliding",
+    sliding_win_len: int = 18000,
 ):
     """
     Transient detection inspired from Grosmark 2020.
@@ -188,7 +191,10 @@ def transient(
         minimum number of frame crossing the threshold to be kept as a potential
         event
     spike_norm : str, optional
-        normalisation of the deconvolved spikes, by default "mad"
+        normalisation of the deconvolved spikes: ["mad", "zscore","sliding",
+        by default "sliding"
+    sliding_win_len: int, optional (only for option sliding)
+        define the size of the sliding window
 
     Returns
     -------
@@ -202,17 +208,37 @@ def transient(
     ValueError
         [description]
     """
-    if spike_norm not in ["mad", "zscore"]:
+    if spike_norm not in ["mad", "zscore", "sliding"]:
         raise ValueError(f"{spike_norm} not a valid spike normalization ")
+
+    n_cells, _ = F.shape
 
     if spike_norm == "mad":
         F_reconvolved = F * S
         # estimate noise as the mad of the residuals of the difference between
         #  the initial traces and the denoised ones. Then normalize the spike estimate
         noise = mad(F_reconvolved - F, axis=1)
-        S_b = F_reconvolved / noise[:, None]
+        S_b = S / noise[:, None]
     elif spike_norm == "zscore":
         S_b = zscore(S, axis=1)
+    elif spike_norm == "sliding":
+        F_reconvolved = F * S
+        noise = F_reconvolved - F
+        for i, x in tqdm.tqdm(enumerate(noise), total=n_cells):
+            tmp = (
+                pd.DataFrame(x)
+                .rolling(sliding_win_len, center=True, min_periods=1)
+                .quantile(quantile=0.5)
+                .squeeze()
+            )
+            tmp = np.abs(tmp - noise[i, :])
+            noise[i, :] = (
+                pd.DataFrame(tmp)
+                .rolling(sliding_win_len, center=True, min_periods=1)
+                .quantile(quantile=0.5)
+                .squeeze()
+            )
+        S_b = S / noise
 
     # threshold the spike estimate
     if isinstance(threshold, np.ndarray):

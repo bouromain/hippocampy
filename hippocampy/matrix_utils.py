@@ -915,7 +915,7 @@ def row_closest_idx_to_val(v, zero_val=None):
     tmp = np.squeeze(np.nonzero(v))
 
     if tmp.size > 0:
-        return tmp[np.argmin(abs(tmp - zero_val))]
+        return tmp[bn.nanargmin(abs(tmp - zero_val))]
     else:
         return np.nan
 
