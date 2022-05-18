@@ -79,12 +79,12 @@ def rate_map(
     # and is necessary to take into account non explored areas
     no_occ = occ <= min_occ
     occ[no_occ] = np.nan
-    occ = occ / fs  # convert in Hz
 
     if method == "continuous":
         act, _ = np.histogramdd(var, bins, weights=samples)
         act /= occ
     elif method == "point_process":
+        occ = occ / fs  # convert in Hz
         act, _ = np.histogramdd(var[samples], bins)
 
     if smooth_half_win > 0:
