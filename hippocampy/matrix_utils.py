@@ -313,6 +313,7 @@ def norm_axis(matrix: np.ndarray, method="max", axis=-1) -> np.ndarray:
     elif method == "max":
         divisor = bn.nanmax(matrix, axis=axis)
         off = bn.nanmin(matrix, axis=axis)
+        divisor -= off
         return (matrix - np.expand_dims(off, axis=axis)) / np.expand_dims(
             divisor, axis=axis
         )
