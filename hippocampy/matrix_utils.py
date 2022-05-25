@@ -344,17 +344,17 @@ def circ_shift(M: np.ndarray, max_shift: int = None, axis: int = -1):
     else:
         assert max_shift < sz[axis]
 
-    new_x, new_y = np.meshgrid(np.arange(sz[0]), np.arange(sz[1]))
+    new_y, new_x = np.meshgrid(np.arange(sz[1]), np.arange(sz[0]))
 
     if axis == 0:
-        shifts = np.random.randint(max_shift, size=(sz[1], 1))
+        shifts = np.random.randint(max_shift, size=(1, sz[1]))
         new_x = np.mod(new_x + shifts, sz[axis])
 
     elif axis == 1 or axis == -1:
-        shifts = np.random.randint(max_shift, size=(1, sz[0]))
+        shifts = np.random.randint(max_shift, size=(sz[0], 1))
         new_y = np.mod(new_y + shifts, sz[axis])
 
-    return M[new_x, new_y].T
+    return M[new_x, new_y]
 
 
 def circ_shift_idx(
