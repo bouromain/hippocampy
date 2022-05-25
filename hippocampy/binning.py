@@ -113,88 +113,88 @@ def rate_map(
     return rate_s, act_s, occ_s
 
 
-def boostrap_1d(
-    var: np.ndarray,
-    samples: np.ndarray,
-    boot_var: np.ndarray,
-    bins: np.ndarray,
-    *,
-    n_rep: int = 1000,
-    fs: int = 1,
-    min_occ: float = 0,
-    smooth_half_win: int = 0,
-    smooth_axis: int = 0,
-    smooth_pad_type: str = "reflect",
-    method: str = "point_process",
-    preserve_nan_opt: bool = True,
-):
-    # check inputs
-    var = np.asarray(var)
-    samples = np.asarray(samples)
-    boot_var = np.asarray(boot_var)
+# def boostrap_1d(
+#     var: np.ndarray,
+#     samples: np.ndarray,
+#     boot_var: np.ndarray,
+#     bins: np.ndarray,
+#     *,
+#     n_rep: int = 1000,
+#     fs: int = 1,
+#     min_occ: float = 0,
+#     smooth_half_win: int = 0,
+#     smooth_axis: int = 0,
+#     smooth_pad_type: str = "reflect",
+#     method: str = "point_process",
+#     preserve_nan_opt: bool = True,
+# ):
+#     # check inputs
+#     var = np.asarray(var)
+#     samples = np.asarray(samples)
+#     boot_var = np.asarray(boot_var)
 
-    if not method in ["point_process", "continuous"]:
-        raise ValueError("Method should be either continuous or point_process")
-    if method == "point_process" and samples.dtype.kind != "i":
-        samples = float_to_int(samples)
+#     if not method in ["point_process", "continuous"]:
+#         raise ValueError("Method should be either continuous or point_process")
+#     if method == "point_process" and samples.dtype.kind != "i":
+#         samples = float_to_int(samples)
 
-    # first take care of the bins
-    if isinstance(bins, (list, np.ndarray)):
-        bins = [bins]
-    elif isinstance(bins, tuple):
-        bins = [*bins]
+#     # first take care of the bins
+#     if isinstance(bins, (list, np.ndarray)):
+#         bins = [bins]
+#     elif isinstance(bins, tuple):
+#         bins = [*bins]
 
-    # calculate occupancy
-    occ, _ = np.histogramdd(var, bins)
+#     # calculate occupancy
+#     occ, _ = np.histogramdd(var, bins)
 
-    # affect no occupancy to nan. This avoid zero division later
-    # and is necessary to take into account non explored areas
-    no_occ = occ <= min_occ
-    occ[no_occ] = np.nan
-    occ = occ / fs  # convert in Hz
+#     # affect no occupancy to nan. This avoid zero division later
+#     # and is necessary to take into account non explored areas
+#     no_occ = occ <= min_occ
+#     occ[no_occ] = np.nan
+#     occ = occ / fs  # convert in Hz
 
-    # calculate normal rate maps
-    if method == "continuous":
-        act, _ = np.histogramdd(var, bins, weights=samples)
-    elif method == "point_process":
-        act, _ = np.histogramdd(var[samples], bins)
+#     # calculate normal rate maps
+#     if method == "continuous":
+#         act, _ = np.histogramdd(var, bins, weights=samples)
+#     elif method == "point_process":
+#         act, _ = np.histogramdd(var[samples], bins)
 
-    if smooth_half_win > 0:
-        act_s = smooth_1d(
-            act,
-            smooth_half_win,
-            axis=smooth_axis,
-            padtype=smooth_pad_type,
-            preserve_nan_opt=preserve_nan_opt,
-        )
-        occ_s = smooth_1d(
-            occ,
-            smooth_half_win,
-            axis=smooth_axis,
-            padtype=smooth_pad_type,
-            preserve_nan_opt=preserve_nan_opt,
-        )
-    else:
-        act_s, occ_s = act, occ
+#     if smooth_half_win > 0:
+#         act_s = smooth_1d(
+#             act,
+#             smooth_half_win,
+#             axis=smooth_axis,
+#             padtype=smooth_pad_type,
+#             preserve_nan_opt=preserve_nan_opt,
+#         )
+#         occ_s = smooth_1d(
+#             occ,
+#             smooth_half_win,
+#             axis=smooth_axis,
+#             padtype=smooth_pad_type,
+#             preserve_nan_opt=preserve_nan_opt,
+#         )
+#     else:
+#         act_s, occ_s = act, occ
 
-    if method == "point_process":
-        rate_s = act_s / occ_s
-    elif method == "continuous":
-        act_s /= occ
-        rate_s = act_s
+#     if method == "point_process":
+#         rate_s = act_s / occ_s
+#     elif method == "continuous":
+#         act_s /= occ
+#         rate_s = act_s
 
-    # calculate the bootstrap
-    boot_mat = np.zeros((act.shape[0], act.shape[1], n_rep))
-    for it_rep in np.arange(n_rep):
-        var_shifted = circ_shift_idx(var, boot_var)
-        if method == "continuous":
-            boot_mat[:, :, it_rep], _ = np.histogramdd(
-                var_shifted, bins, weights=samples
-            )
-        elif method == "point_process":
-            boot_mat[:, :, it_rep], _ = np.histogramdd(var_shifted[samples], bins)
+#     # calculate the bootstrap
+#     boot_mat = np.zeros((act.shape[0], act.shape[1], n_rep))
+#     for it_rep in np.arange(n_rep):
+#         var_shifted = circ_shift_idx(var, boot_var)
+#         if method == "continuous":
+#             boot_mat[:, :, it_rep], _ = np.histogramdd(
+#                 var_shifted, bins, weights=samples
+#             )
+#         elif method == "point_process":
+#             boot_mat[:, :, it_rep], _ = np.histogramdd(var_shifted[samples], bins)
 
-    return rate_s, act_s, occ_s, boot_mat
+#     return rate_s, act_s, occ_s, boot_mat
 
 
 def ccg(
