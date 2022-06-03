@@ -1,5 +1,6 @@
 import bottleneck as bn
 import numpy as np
+from scipy.optimize import curve_fit
 
 
 def mad(x: np.ndarray, scale: float = None, axis: int = -1):
@@ -46,4 +47,3 @@ def mad(x: np.ndarray, scale: float = None, axis: int = -1):
         med = np.expand_dims(med, axis=axis)
 
     return bn.nanmedian(np.abs(x - med), axis=axis) * scale
-
