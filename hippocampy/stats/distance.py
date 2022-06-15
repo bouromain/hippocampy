@@ -40,6 +40,9 @@ def cos_sim(a: np.ndarray, b: np.ndarray) -> float:
     https://en.wikipedia.org/wiki/Cosine_similarity
     https://stackoverflow.com/questions/18424228/cosine-similarity-between-2-number-lists
 
+    TODO:
+    take into account 3 dimensional inputs
+
     """
     a = np.atleast_2d(a)
     b = np.atleast_2d(b)
