@@ -66,6 +66,12 @@ def rate_map(
     if method == "point_process" and samples.dtype.kind != "i":
         samples = float_to_int(samples)
 
+    if type(smooth_axis) == int:
+        smooth_axis = [smooth_axis]  # to make it iterable
+
+    if type(smooth_axis) not in [int, np.ndarray, list]:
+        raise ValueError("Smooth axis should be int, np.array or list")
+
     # first take care of the bins
     if isinstance(bins, (list, np.ndarray)):
         bins = [bins]
@@ -89,7 +95,7 @@ def rate_map(
 
     act_s, occ_s = act, occ
     if smooth_half_win > 0:
-        for curr_axis in smooth_axis:
+        for curr_axis in np.array(smooth_axis):
             act_s = smooth_1d(
                 act_s,
                 smooth_half_win,
