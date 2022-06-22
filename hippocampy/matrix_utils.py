@@ -701,19 +701,20 @@ def mean_at(idx, vals, fillvalue=np.nan, dtype=np.dtype(np.float64)) -> np.array
     # coerce idx to ints
     if idx.dtype.kind != "i":
         idx = float_to_int(idx)
+
+    minlen = len(np.unique(idx))
+
     # remove nans
     if any(np.isnan(vals)):
         idx, vals = remove_nan(idx, vals, paired=True)
 
-    minlen = len(np.unique(idx))
     count_idx = np.bincount(idx, minlength=minlen)
     sum_vals = np.bincount(idx, weights=vals, minlength=minlen)
 
     with np.errstate(divide="ignore", invalid="ignore"):
         ret = sum_vals.astype(dtype) / count_idx
 
-    if not np.isnan(fillvalue):
-        ret[count_idx == 0] = fillvalue
+    ret[count_idx == 0] = fillvalue
     return ret
 
 

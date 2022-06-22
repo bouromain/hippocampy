@@ -1,6 +1,11 @@
 import bottleneck as bn
 import numpy as np
 from scipy.optimize import curve_fit
+from scipy.stats import binomtest
+
+################################################################################
+#  NON PARMETRIC
+################################################################################
 
 
 def mad(x: np.ndarray, scale: float = None, axis: int = -1):
@@ -47,3 +52,23 @@ def mad(x: np.ndarray, scale: float = None, axis: int = -1):
         med = np.expand_dims(med, axis=axis)
 
     return bn.nanmedian(np.abs(x - med), axis=axis) * scale
+
+
+def sign_test(arr, mu: float = 0, alternative: str = "two-sided", p: float = 0.5):
+
+    alternative_arr = ["two-sided", "greater", "less"]
+    if alternative not in alternative_arr:
+        raise ValueError(
+            f"alternative {alternative} not recognized. \n Should be either {alternative_arr}"
+        )
+
+    arr = np.asarray(arr)
+    pos = bn.nansum(arr > 0)
+    neg = bn.nansum(arr < 0)
+    M = (pos - neg) / 2
+
+    p_value = binomtest(
+        bn.nanmin([pos, neg]), pos + neg, p, alternative=alternative
+    ).pvalue
+
+    return M, p_value
