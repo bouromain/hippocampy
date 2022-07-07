@@ -250,7 +250,7 @@ def corr_mat(a: np.ndarray, b: Union[None, np.ndarray] = None, axis=-1) -> np.nd
         return np.squeeze((1 / (n - 1)) * (a_z @ b_z.T))
 
 
-def zscore(matrix, axis=-1):
+def zscore(matrix, axis=-1, do_warn=False):
     """
     Compute zscores along one axis.
 
@@ -261,6 +261,9 @@ def zscore(matrix, axis=-1):
     ax: int
         axis along which the function is performed, by default -1
 
+    do_warn: bool
+        if we should warn in case of zero division
+        
     Returns
     -------
     z: np.array()
@@ -270,13 +273,17 @@ def zscore(matrix, axis=-1):
     sigma = bn.nanstd(matrix, axis=axis, ddof=1)
 
     # warn about zero divisions
-    if (np.array([sigma]) == 0).any():
+    if do_warn and (np.array([sigma]) == 0).any():
         warn("Incorrect value encountered for division")
 
     if isinstance(mu, np.ndarray):
         mu = np.expand_dims(mu, axis=axis)
         sigma = np.expand_dims(sigma, axis=axis)
-    return (matrix - mu) / sigma
+
+    with np.errstate(divide="ignore", invalid="ignore"):
+        z = (matrix - mu) / sigma
+
+    return z
 
 
 def norm_axis(matrix: np.ndarray, method="max", axis=-1) -> np.ndarray:
