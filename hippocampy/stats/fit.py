@@ -61,10 +61,23 @@ def fit_pdf(
 def fit(
     x: np.ndarray, y: np.ndarray, dist_type: str = "logistic", n_bins_out: int = 100
 ):
-    if dist_type not in ["logistic", "lognormal"]:
+    if dist_type not in ["linear", "logistic", "lognormal"]:
         raise ValueError(f"Distribution type {dist_type} not recognized")
-    if n_bins_out is None:
-        n_bins_out = n_bins
+
+    if dist_type == "logistic":
+        dist_to_fit = logifunc
+    elif dist_type == "lognormal":
+        dist_to_fit = lognormal
+    elif dist_type == "linear":
+        dist_to_fit = linfunc
+
+    sol, _ = curve_fit(dist_to_fit, x, y)
+
+    # calculate errors of the model
+    E = bn.nanmean((dist_to_fit(y, *sol) - y) ** 2)
+    centers_out = np.linspace(bn.nanmin(x), bn, np.nanmax(x), n_bins_out)
+
+    return dist_to_fit(centers_out, *sol), centers_out, sol, E
 
 
 def robust_regression(
