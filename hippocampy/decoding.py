@@ -6,6 +6,7 @@ from hippocampy.binning import rate_map
 from hippocampy.utils.type_utils import float_to_int
 from hippocampy.stats.distance import cos_sim, pairwise_euclidian
 from scipy.sparse import coo_matrix
+from tqdm import trange
 
 
 def cross_validate(
@@ -132,34 +133,40 @@ def bayesian_1d(Q: np.ndarray, Tc: np.ndarray, prior=None, method="caim") -> np.
     prob_active_knowing_bin = Tc / bn.nansum(Tc, axis=1)[:, None]
     prob_active = bn.nansum(Q, axis=1) / n_samples
 
+    # in caim decoding we use the probability that a cell is active
+    # but also that it is inactive
+    # turn tuning curves into probabilities
+    # calculate the bayes prob for each time steps
+    pTc = (prob_active_knowing_bin * prior) / prob_active[:, None]
+
     if method == "caim":
-        # in caim decoding we use the probability that a cell is active
-        # but also that it is inactive
-        # turn tuning curves into probabilities
-        # calculate the bayes prob for each time steps
-        pTc = (prob_active_knowing_bin * prior) / prob_active[:, None]
         n_pTc = ((1 - prob_active_knowing_bin) * prior) / (1 - prob_active[:, None])
 
-        # here it is a bit tricky, we do a 3D matrix to replicate the previous
-        # probability in time.
-        # However, as we multiply by Q (1 active, 0 not active) the probability will
-        # be replicated only when the cell is active (for step prod act, the reverse for
-        # step_prod_nact). So then we can sum them to obtain the correct step probability.
+    # here it is a bit tricky, we do a 3D matrix to replicate the previous
+    # probability in time.
+    # However, as we multiply by Q (1 active, 0 not active) the probability will
+    # be replicated only when the cell is active (for step prod act, the reverse for
+    # step_prod_nact). So then we can sum them to obtain the correct step probability.
 
-        step_prod_act = pTc[:, :, None] * Q[:, None, :]
-        step_prod_nact = n_pTc[:, :, None] * ~Q[:, None, :]
-        step_prod = step_prod_act + step_prod_nact
+    # we need to loop over bins to avoid out of memory error but this could
+    # be done in one go for small matrices
 
-    elif method == "classic":
+    # step_prod_act = pTc[:, :, None] * Q[:, None, :]
+    # step_prod_nact = n_pTc[:, :, None] * ~Q[:, None, :]
+    # step_prod = step_prod_act + step_prod_nact
+
+    P = np.empty((n_bins, n_samples), dtype=np.float32)
+    for it_bin in trange(n_bins):
+        step_prod_act = pTc[:, it_bin][:, None] * Q
+        if method == "caim":
+            step_prod_nact = n_pTc[:, it_bin][:, None] * ~Q
+            step_prod = step_prod_act + step_prod_nact
+        else:
+            step_prod = step_prod_act
         # calculate the bayes prob for each time steps
-        pTc = (prob_active_knowing_bin * prior) / prob_active[:, None]
-        step_prod = pTc[:, :, None] * Q[:, None, :]
+        P[it_bin, :] = np.expm1(bn.nansum(np.log1p(step_prod), axis=0))
 
-    # to avoid numerical overflow we use exp( log( x + 1 ) - 1)
-    P = np.expm1(bn.nansum(np.log1p(step_prod), axis=0))
-    # re-normalize to have a probability for each time step
     P = P / bn.nansum(P, axis=0)
-
     return P
 
 
