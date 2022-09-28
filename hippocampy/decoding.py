@@ -194,8 +194,7 @@ def frv(Q: np.ndarray, template: np.ndarray, *, method="pearson") -> np.ndarray:
 
     Note
     ----
-    this code can also be generalized in 2D by raveling input and reshaping at the end
-
+    this code can also be generalized in 2D by raveling input and reshaping at the end89
     Reference
     ---------
     [1] Middleton SJ, McHugh TJ. Silencing CA3 disrupts temporal coding
@@ -388,10 +387,6 @@ def confusion_matrix(
         dtype = np.int64
     else:
         dtype = np.float64
-
-    cm = coo_matrix(
-        (sample_weight, (x_true, x_predicted)), shape=(n_labels, n_labels), dtype=dtype,
-    ).toarray()
 
     with np.errstate(all="ignore"):
         # to avoid division errors display

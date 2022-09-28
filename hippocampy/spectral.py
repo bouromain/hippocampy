@@ -61,7 +61,7 @@ def cwt_spectrogram(data, freqs, Fs, *, wavelet="cmorl3-7", method="fft", axis=-
     Compute the wavelet transform of the input signal.
 
     Parameters
-    ----------
+    ---------
     - data: array_like
         signal to be computed
     - freqs: array_like
@@ -84,8 +84,10 @@ def cwt_spectrogram(data, freqs, Fs, *, wavelet="cmorl3-7", method="fft", axis=-
     ----------
     https://github.com/alsauve/scaleogram
     """
+    freqs = np.array(freqs)
+
     if any(freqs <= 0):
-        freqs[freqs <= 0] = 1
+        freqs[freqs <= 0] = 10e-5
 
     dt = 1 / Fs
     scales = freqs2scales(freqs, wavelet=wavelet, dt=dt)

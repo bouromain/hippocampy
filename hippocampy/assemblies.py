@@ -125,7 +125,7 @@ def calc_template(
         ica.fit_transform(spike_count_z.T)
         template = ica.mixing_
     else:
-        raise NotImplementedError("Method not implented")
+        raise NotImplementedError("Method not implemented")
 
     return template, correlation_matrix
 
@@ -188,6 +188,33 @@ def calc_activity(spike_count, template, kernel_half_width=None):
         )
 
     return activity
+
+
+def cells_in_template(template: np.ndarray, n_std: float = 2.0):
+    """
+    cells_in_template 
+    Find cells that are belonging to each template
+
+    It seem to be done is various papers. Here I used the threshold from 
+    Van de Veen paper.
+
+    Parameters
+    ----------
+    template : np.ndarray
+        template assemblies vestors. Output of calc_template
+    n_std : float, optional
+        number of std above the mean need to be crossed to be part of the 
+        template assembly, by default 2.0
+
+    Returns
+    -------
+    output: np.ndarray
+        logical matrix telling if a cell is part of a template
+    """
+    m = bn.nanmean(template, axis=0)
+    s = bn.nanstd(template, axis=0)
+
+    return template - m[None, :] > 2 * s[None, :]
 
 
 def sim_assemblies(
