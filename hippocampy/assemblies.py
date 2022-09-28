@@ -214,7 +214,10 @@ def cells_in_template(template: np.ndarray, n_std: float = 2.0):
     m = bn.nanmean(template, axis=0)
     s = bn.nanstd(template, axis=0)
 
-    return template - m[None, :] > 2 * s[None, :]
+    return np.logical_or(
+        template - m[None, :] > n_std * s[None, :],
+        template - m[None, :] < -n_std * s[None, :],
+    )
 
 
 def sim_assemblies(
