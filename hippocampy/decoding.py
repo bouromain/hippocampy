@@ -388,6 +388,10 @@ def confusion_matrix(
     else:
         dtype = np.float64
 
+    cm = coo_matrix(
+        (sample_weight, (x_true, x_predicted)), shape=(n_labels, n_labels), dtype=dtype,
+    ).toarray()
+
     with np.errstate(all="ignore"):
         # to avoid division errors display
         if normalize == "true":
