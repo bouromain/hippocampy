@@ -300,6 +300,8 @@ def norm_axis(matrix: np.ndarray, method="max", axis=-1) -> np.ndarray:
             one: normalize such as the sum of the values per row/column
                 sums to one (eg: become a probability distribution)
             zscore: compute the row/column wise zscore
+            perc: normalise such that 0 = 5th percentile and 1 = 95th percentile 
+            of the original distribution
     axis : int, optional
         axis along which the function is performed, by default -1
 
@@ -309,7 +311,7 @@ def norm_axis(matrix: np.ndarray, method="max", axis=-1) -> np.ndarray:
         normalized matrix
 
     """
-    if method.lower() not in ["max", "one", "zscore"]:
+    if method.lower() not in ["max", "one", "zscore", "perc"]:
         raise ValueError(f"Method {method} not recognized")
 
     if method == "zscore":
@@ -320,6 +322,13 @@ def norm_axis(matrix: np.ndarray, method="max", axis=-1) -> np.ndarray:
     elif method == "max":
         divisor = bn.nanmax(matrix, axis=axis)
         off = bn.nanmin(matrix, axis=axis)
+        divisor -= off
+        return (matrix - np.expand_dims(off, axis=axis)) / np.expand_dims(
+            divisor, axis=axis
+        )
+    elif method == "perc":
+        divisor = np.nanpercentile(matrix, 95, axis=axis)
+        off = np.nanpercentile(matrix, 5, axis=axis)
         divisor -= off
         return (matrix - np.expand_dims(off, axis=axis)) / np.expand_dims(
             divisor, axis=axis

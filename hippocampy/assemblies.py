@@ -211,13 +211,19 @@ def cells_in_template(template: np.ndarray, n_std: float = 2.0):
     output: np.ndarray
         logical matrix telling if a cell is part of a template
     """
-    m = bn.nanmean(template, axis=0)
-    s = bn.nanstd(template, axis=0)
+    template_fixed = template.copy()
 
-    return np.logical_or(
-        template - m[None, :] > n_std * s[None, :],
-        template - m[None, :] < -n_std * s[None, :],
-    )
+    max = bn.nanmax(template, axis=0)
+    min = bn.nanmin(template, axis=0)
+
+    to_flip = np.abs(min) > max
+
+    template_fixed[:, to_flip] = -template[:, to_flip]
+
+    m = bn.nanmean(template_fixed, axis=0)
+    s = bn.nanstd(template_fixed, axis=0)
+
+    return template_fixed - m[None, :] > n_std * s[None, :]
 
 
 def sim_assemblies(
