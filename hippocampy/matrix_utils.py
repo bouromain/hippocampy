@@ -11,7 +11,7 @@ from warnings import warn
 
 from hippocampy.utils.nan import remove_nan
 from hippocampy.utils.type_utils import float_to_int
-from warnings import warn
+
 
 #%% SMOOTH
 def smooth_1d(
@@ -59,7 +59,7 @@ def smooth_1d(
             used to pad the end and the end values are used to pad the beginning.
 
     preserve_nan_opt : bool, optional
-        Define if nan value from the input data ae perserved in the output, by default True
+        Define if nan value from the input data ae preserved in the output, by default True
 
     Returns
     -------
@@ -272,9 +272,9 @@ def zscore(matrix, axis=-1, do_warn=False):
     mu = bn.nanmean(matrix, axis=axis)
     sigma = bn.nanstd(matrix, axis=axis, ddof=1)
 
-    # warn about zero divisions
-    if do_warn and (np.array([sigma]) == 0).any():
-        warn("Incorrect value encountered for division")
+    # fix zero divisions
+    if (np.array([sigma]) == 0).any():
+        sigma += 1e-10
 
     if isinstance(mu, np.ndarray):
         mu = np.expand_dims(mu, axis=axis)
@@ -288,7 +288,7 @@ def zscore(matrix, axis=-1, do_warn=False):
 
 def norm_axis(matrix: np.ndarray, method="max", axis=-1) -> np.ndarray:
     """
-    normalize a matrix collumn or rawwise with a given method
+    normalize a matrix column or raw-wise with a given method
 
     Parameters
     ----------
@@ -300,7 +300,7 @@ def norm_axis(matrix: np.ndarray, method="max", axis=-1) -> np.ndarray:
             one: normalize such as the sum of the values per row/column
                 sums to one (eg: become a probability distribution)
             zscore: compute the row/column wise zscore
-            perc: normalise such that 0 = 5th percentile and 1 = 95th percentile 
+            perc: normalize such that 0 = 5th percentile and 1 = 95th percentile 
             of the original distribution
     axis : int, optional
         axis along which the function is performed, by default -1
@@ -758,7 +758,7 @@ def moving_win(
     win_length : int
         length of the moving window (in samples)
     overlap : int, optional
-        number of overlaping samples between consecutive windows, by default 0
+        number of overlapping samples between consecutive windows, by default 0
     axis : int, optional
         axis along which the function is performed, by default None
     padding : str, optional
@@ -978,8 +978,10 @@ def find_peaks(M, min_amplitude=None):
     P_idx = [array(2), array(3)]
     """
 
-    bef = np.hstack((np.atleast_2d(M[:, 0]).T, M[:, :-1]))
-    aft = np.hstack((M[:, 1:], np.atleast_2d(M[:, -1]).T))
+    M = np.array(M, ndmin=2)
+
+    bef = np.hstack((M[:, 0].T, M[:, :-1]))
+    aft = np.hstack((M[:, 1:], M[:, -1].T))
 
     if min_amplitude is None:
         peaks = np.logical_and(M - bef >= 0, M - aft >= 0)
