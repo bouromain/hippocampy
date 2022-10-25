@@ -160,10 +160,15 @@ def calc_activity(spike_count, template, kernel_half_width=None):
     template = np.asarray(template)
     [_, n_components] = template.shape
 
+    # here we could convolve the spike_count_z with a gaussian
+    # cf ref [5]
+    if kernel_half_width is not None:
+        spike_count = smooth_1d(
+            spike_count, kernel_half_width=kernel_half_width, kernel_type="gauss"
+        )
+
     # compute correlation matrix of binned spikes matrix
-    spike_count_z = (
-        spike_count - bn.nanmean(spike_count, axis=1)[:, None]
-    ) / bn.nanstd(spike_count, ddof=1, axis=1)[:, None]
+    spike_count_z = zscore(spike_count, axis=1)
 
     activity = np.zeros((n_components, n_samples))
     for i, template_i in enumerate(template.T):
@@ -178,13 +183,6 @@ def calc_activity(spike_count, template, kernel_half_width=None):
         #               R(b)= Z(b).T * P * Z(b)
         activity[i, :] = bn.nansum(
             spike_count_z.T.dot(projector) * spike_count_z.T, axis=1
-        )
-
-    # here we could convolve the spike_count_z with a gaussian
-    # cf ref [5]
-    if kernel_half_width is not None:
-        activity = smooth_1d(
-            activity, kernel_half_width=kernel_half_width, kernel_type="gauss"
         )
 
     return activity

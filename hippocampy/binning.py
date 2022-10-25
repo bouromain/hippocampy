@@ -179,17 +179,17 @@ def ccg(
 
 
 @jit(nopython=True)
-def ccg_heart(spikes1, spikes2, binsize=1e-3, max_lag=1000e-3):
+def ccg_heart(spikes1: np.ndarray, spikes2: np.ndarray, binsize=1e-3, max_lag=1000e-3):
     """
-    Fast crosscorrelation code:
+    Fast cross-correlation code:
     Assume that the spike trains are sorted
 
     Parameters
     ----------
     spikes1:
-        first time serie of spikes
+        first time serie of spikes/indexes
     spikes2:
-        second time serie of spikes
+        second time serie of spikes/indexes
     binsize:
         size of one bin
     max_lag:
