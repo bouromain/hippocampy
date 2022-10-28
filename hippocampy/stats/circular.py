@@ -88,8 +88,32 @@ def circ_mean(alpha, weight=None, dim=0):
     return mu
 
 
-def circ_r(alpha, weight=None, d=None, dim=0):
-    """"""
+def circ_r(
+    alpha: np.ndarray,
+    weight: Union[None, np.ndarray] = None,
+    d: Union[None, float] = None,
+    dim=0,
+):
+    """
+    circ_r Calculate the mean resultant vector length of circular data
+
+    Parameters
+    ----------
+    alpha : np.ndarray
+       vector of circular data
+    weight : Union[None, np.ndarray], optional
+        weight corresponding to alpha (for binned data), by default None
+    d : float, optional
+        spacing of bin centers in radian. Apply a bias correction method as
+        described in Zar, by default None
+    dim : int, optional
+        _description_, by default 0
+
+    Returns
+    -------
+    circular_resultant vector lenght 
+    """
+
     alpha = np.asarray(alpha)
     if weight is None:
         weight = np.ones_like(alpha)
@@ -352,16 +376,18 @@ def rayleigh_test(
     d: Union[None, float] = None,
 ):
     """
-    rayleigh_test [summary]
+    rayleigh_test test the uniformity of a circular distribution 
 
     Parameters
     ----------
     alpha : np.ndarray
+        array of circular values
     
     weight : np.ndarray
-        [description]
-    d : [type]
-        [description]
+        weight to apply to the alpha vector (eg:in case of binned data)
+    d : float, optional
+        spacing of bin centers in radian. Apply a bias correction method as
+        described in Zar, by default None
 
     References
     ----------

@@ -243,7 +243,7 @@ def ccg_heart(spikes1: np.ndarray, spikes2: np.ndarray, binsize=1e-3, max_lag=10
             # search for the max index in spike 2 in window:
             while idx2 < sz2 and spikes2[idx2] < l_bound:
                 idx2 += 1
-            while idx2 > 1 and spikes2[idx2 - 1] > l_bound:
+            while idx2 > 0 and spikes2[idx2 - 1] > l_bound:
                 idx2 -= 1
             # now we have this index we can accumulate value
             # in the ccg as long as we are in the window
@@ -264,7 +264,7 @@ def ccg_heart(spikes1: np.ndarray, spikes2: np.ndarray, binsize=1e-3, max_lag=10
             # search for the max index in spike 2 in window:
             while idx2 < sz1 and spikes1[idx2] < l_bound:
                 idx2 += 1
-            while idx2 > 1 and spikes1[idx2 - 1] > l_bound:
+            while idx2 > 0 and spikes1[idx2 - 1] > l_bound:
                 idx2 -= 1
             # now we have this index we can accumulate value
             # in the ccg as long as we are in the window

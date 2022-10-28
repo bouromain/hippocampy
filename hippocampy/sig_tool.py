@@ -3,6 +3,7 @@ from scipy.fftpack import next_fast_len
 from scipy.signal import butter, cheby2, filtfilt
 from scipy.signal import decimate as _decimate, resample_poly
 from scipy.signal.signaltools import hilbert
+from hippocampy.utils.gen_utils import value_cross
 
 ########################################################################
 ## Down and resampling
@@ -208,6 +209,11 @@ def phase(sig, method="hilbert", axis=-1) -> np.ndarray:
         input values
     method : str, optional
         method to compute the phase, by default "hilbert"
+            - hilbert: only use hilbert transform
+            - peak: perform linear interpolation between peaks 
+            - asymmetric: perform linear interpolation between peaks and through 
+                    can be useful to preserve an asymmetric oscillation 
+                    (eg: for theta oscillation )
     axis : int, optional
         axis along which the function is performed, by default -1
 
@@ -217,22 +223,39 @@ def phase(sig, method="hilbert", axis=-1) -> np.ndarray:
         [description]
         
 
-    TO DO: implement linear interpolation and shape preserving phase
+    TODO: implement shape preserving phase
     """
+
+    if method not in ["hilbert", "peak", "asymmetric"]:
+        raise ValueError("Method should be hilbert,peak or asymmetric")
+
     sig = np.array(sig, ndmin=2)
 
-    if method == "hilbert":
-        n_samples = sig.shape[axis]
-        bestLen = next_fast_len(n_samples)
-        analytic_signal = hilbert(sig, bestLen)
-        # remove padding
-        analytic_signal = np.take(analytic_signal, np.arange(n_samples), axis=axis)
-        analytic_signal = np.mod(np.angle(analytic_signal) + 2 * np.pi, 2 * np.pi)
-        amplitude_envelope = np.abs(analytic_signal)
-    else:
-        raise NotImplementedError("phase method not implemented")
+    n_samples = sig.shape[axis]
+    bestLen = next_fast_len(n_samples)
+    analytic_signal = hilbert(sig, bestLen)
+    # remove padding
+    analytic_signal = np.take(analytic_signal, np.arange(n_samples), axis=axis)
+    sig_phase = np.mod(np.angle(analytic_signal), 2 * np.pi)
+    sig_envelope = np.abs(analytic_signal)
 
-    return analytic_signal, amplitude_envelope
+    if method in ["peak", "asymmetric"]:
+
+        up, down = value_cross(sig_phase, np.pi)
+        phase_u = np.unwrap(sig_phase.squeeze())
+
+        if method == "peak":
+            up_down = down
+
+        elif method == "asymmetric":
+            up_down = np.logical_or(up, down)
+
+        sig_phase = np.interp(
+            np.arange(len(up_down)), np.nonzero(up_down)[0], phase_u[up_down]
+        )
+        sig_phase = np.mod(sig_phase, 2 * np.pi)
+
+    return sig_phase.squeeze(), sig_envelope.squeeze()
 
 
 def envelope(sig: np.ndarray, axis: int = -1) -> np.ndarray:
