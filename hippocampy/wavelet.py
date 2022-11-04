@@ -173,7 +173,7 @@ def wden(
 def swt_denoise(data, *, wavelet_name="sym4", level=5, axis=-1):
     """
     swt_denoise is made to mach matlab option 'modwtsqtwolog' in wden.
-    Note that modwt is a synonym of stationay wavelet transform [1]
+    Note that modwt is a synonym of stationary wavelet transform [1]
 
     Reference
     ---------

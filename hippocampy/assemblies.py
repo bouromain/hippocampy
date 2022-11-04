@@ -167,7 +167,7 @@ def calc_activity(spike_count, template, kernel_half_width=None):
             spike_count, kernel_half_width=kernel_half_width, kernel_type="gauss"
         )
 
-    # compute correlation matrix of binned spikes matrix
+    # z matrix of binned spikes matrix
     spike_count_z = zscore(spike_count, axis=1)
 
     activity = np.zeros((n_components, n_samples))
@@ -211,6 +211,8 @@ def cells_in_template(template: np.ndarray, n_std: float = 2.0):
     """
     template_fixed = template.copy()
 
+    # Flip the signs of the template where the maximum absolute value is negative
+    # this can be caused by funky projection of the PCA/ICA
     max = bn.nanmax(template, axis=0)
     min = bn.nanmin(template, axis=0)
 
