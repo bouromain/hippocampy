@@ -87,7 +87,7 @@ def cwt_spectrogram(data, freqs, Fs, *, wavelet="cmorl3-7", method="fft", axis=-
     freqs = np.array(freqs)
 
     if any(freqs <= 0):
-        freqs[freqs <= 0] = 10e-5
+        freqs[freqs <= 0] = 1e-5
 
     dt = 1 / Fs
     scales = freqs2scales(freqs, wavelet=wavelet, dt=dt)

@@ -179,7 +179,7 @@ def ccg(
 
 
 @jit(nopython=True)
-def ccg_heart(spikes1: np.ndarray, spikes2: np.ndarray, binsize=1e-3, max_lag=1000e-3):
+def ccg_heart(spikes1: np.ndarray, spikes2: np.ndarray, binsize=1, max_lag=100):
     """
     Fast cross-correlation code:
     Assume that the spike trains are sorted
@@ -212,7 +212,7 @@ def ccg_heart(spikes1: np.ndarray, spikes2: np.ndarray, binsize=1e-3, max_lag=10
     M. Zugaro CCGEngine.c
     """
     # create edges and ensure that they are odd
-    winsize_bins = 2 * int(max_lag / binsize)
+    winsize_bins = int((2 * max_lag) // binsize)
 
     if winsize_bins % 2 != 1:
         winsize_bins += 1
@@ -221,8 +221,8 @@ def ccg_heart(spikes1: np.ndarray, spikes2: np.ndarray, binsize=1e-3, max_lag=10
     halfbin = int(winsize_bins / 2) + 1
 
     # Make edges (seem faster than np.linspace)
-    E = np.zeros(winsize_bins + 1)
-    for i in range(winsize_bins + 1):
+    E = np.zeros(winsize_bins)
+    for i in range(winsize_bins):
         E[i] = -max_lag + i * binsize
 
     # initialise CCG
@@ -233,48 +233,26 @@ def ccg_heart(spikes1: np.ndarray, spikes2: np.ndarray, binsize=1e-3, max_lag=10
     sz1 = len(spikes1)
     sz2 = len(spikes2)
 
-    if sz1 <= sz2:
-        # if the first spike train is smaller we iterate over it
-        for idx1 in range(sz1):
-            # define the window around the spike of interest
-            l_bound = spikes1[idx1] - max_lag
-            H_bound = spikes1[idx1] + max_lag
+    # if the first spike train is smaller we iterate over it
+    for idx1 in range(sz1):
+        # define the window around the spike of interest
+        l_bound = spikes1[idx1] - max_lag
+        H_bound = spikes1[idx1] + max_lag
 
-            # search for the max index in spike 2 in window:
-            while idx2 < sz2 and spikes2[idx2] < l_bound:
-                idx2 += 1
-            while idx2 > 0 and spikes2[idx2 - 1] > l_bound:
-                idx2 -= 1
-            # now we have this index we can accumulate value
-            # in the ccg as long as we are in the window
-            idx2_H = idx2
-            while idx2_H < sz2 and spikes2[idx2_H] < H_bound:
-                idx_C = halfbin + int(0.5 + (spikes2[idx2_H] - spikes1[idx1]) / binsize)
-                idx_C = idx_C - 1  # to make it zero indexed
-                C[idx_C] += 1
-                idx2_H += 1
-    else:
-        # if the second spike train is smaller we iterate over it but CCG
-        # is flipped at the end to be consistent with the input
-        for idx1 in range(sz2):
-            # define the window around the spike of interest
-            l_bound = spikes2[idx1] - max_lag
-            H_bound = spikes2[idx1] + max_lag
+        # search for the max index in spike 2 in window:
+        while idx2 < sz2 and spikes2[idx2] < l_bound:
+            idx2 += 1
+        while idx2 > 0 and spikes2[idx2 - 1] > l_bound:
+            idx2 -= 1
+        # now we have this index we can accumulate value
+        # in the ccg as long as we are in the window
+        idx2_H = idx2
+        while idx2_H < sz2 and spikes2[idx2_H] < H_bound:
+            idx_C = halfbin + int((spikes2[idx2_H] - spikes1[idx1]) / binsize)
+            idx_C = idx_C - 1  # to make it zero indexed
+            C[idx_C] += 1
+            idx2_H += 1
 
-            # search for the max index in spike 2 in window:
-            while idx2 < sz1 and spikes1[idx2] < l_bound:
-                idx2 += 1
-            while idx2 > 0 and spikes1[idx2 - 1] > l_bound:
-                idx2 -= 1
-            # now we have this index we can accumulate value
-            # in the ccg as long as we are in the window
-            idx2_H = idx2
-            while idx2_H < sz1 and spikes1[idx2_H] < H_bound:
-                idx_C = halfbin + int(0.5 + (spikes1[idx2_H] - spikes2[idx1]) / binsize)
-                # instead of flipping the CCG take the "flipped" index here
-                idx_C = winsize_bins - (idx_C - 1) + 1
-                C[idx_C] += 1
-                idx2_H += 1
     return C, E
 
 
@@ -286,6 +264,9 @@ def psth(
     n_bins_aft: int = 20,
     method: str = "mean",
     kernel_half_width: int = 0,
+    norm_rows_method: str = "None",
+    norm_row_len: int = 10,
+    return_temp: bool = False,
     axis=1,
 ):
     """
@@ -305,6 +286,12 @@ def psth(
         method to perform in the psth ["mean", "median", "sum"], by default "mean"
     kernel_half_width : int, optional
         half width of the smoothing, by default 0
+    norm_rows_method : str, optional
+        normalization to perform before averaging the psth  
+    norm_row_len : int, optional
+        number of sample to consider to calculate the normalization
+    return_temp : bool, optional
+        specify if we return the intermediate matrix [n_bins_bef+n_bins_aft, n_events]
     axis : int, optional
         axis along which the function is performed, by default 1
 
@@ -312,7 +299,7 @@ def psth(
     -------
     out: np.ndarray
         output psth
-
+    temp_mat: optional, np.ndarray    
     """
     # check inputs
     if method not in ["mean", "median", "sum"]:
@@ -320,6 +307,13 @@ def psth(
 
     if mat.ndim > 2:
         raise ValueError("Input should have a maximum of two dimensions")
+
+    if norm_rows_method not in ["mean", "median", "none", None]:
+        raise NotImplementedError(f"Normalization method {method} not implemented")
+    if norm_row_len > n_bins_bef + n_bins_aft:
+        raise ValueError(
+            "norm_row_len should be smaller than the psth window (n_bins_bef + n_bins_aft)"
+        )
 
     # to be sure we have floats here, this can create problems with nan later
     mat = np.array(mat, dtype=float, ndmin=2)
@@ -370,6 +364,13 @@ def psth(
 
     temp_mat = np.reshape(temp_mat, new_shape)
 
+    if norm_rows_method == "mean":
+        norm_rows = np.take(temp_mat, np.arange(0, norm_row_len), axis=axis).squeeze()
+        temp_mat = temp_mat - bn.nanmean(norm_rows, axis=0)
+    elif norm_rows_method == "median":
+        norm_rows = np.take(temp_mat, np.arange(0, norm_row_len), axis=axis).squeeze()
+        temp_mat = temp_mat - bn.nanmedian(norm_rows, axis=0)
+
     # now we perform the average/median along the correct dimension
     if method == "mean":
         out = bn.nanmean(temp_mat, axis=axis)
@@ -381,7 +382,10 @@ def psth(
     if kernel_half_width > 0:
         out = smooth_2d(out, kernel_half_width=kernel_half_width)
 
-    return out.squeeze()
+    if return_temp:
+        return out.squeeze(), temp_mat.squeeze()
+    else:
+        return out.squeeze()
 
 
 def mua(
