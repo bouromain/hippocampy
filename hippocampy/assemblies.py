@@ -120,7 +120,7 @@ def calc_template(
         template = eigvecs[:, :n_assemblies]
 
     elif method == "ICA":
-        ica = FastICA(n_components=n_assemblies)
+        ica = FastICA(n_components=n_assemblies, max_iter=500)
         # ica take X with shape (n_samples, n_features)
         ica.fit_transform(spike_count_z.T)
         template = ica.mixing_

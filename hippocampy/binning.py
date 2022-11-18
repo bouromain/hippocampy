@@ -187,9 +187,9 @@ def ccg_heart(spikes1: np.ndarray, spikes2: np.ndarray, binsize=1, max_lag=100):
     Parameters
     ----------
     spikes1:
-        first time serie of spikes/indexes
+        first time series of spikes/indexes
     spikes2:
-        second time serie of spikes/indexes
+        second time series of spikes/indexes
     binsize:
         size of one bin
     max_lag:
