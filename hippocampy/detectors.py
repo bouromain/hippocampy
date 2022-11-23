@@ -119,11 +119,11 @@ def sce(
     fs : int, optional
         sampling frequency in Hz, by default 1
     restrict : np.ndarray, optional
-        vector to restrict the activity to particular ephoch (eg: quiet moment),
-        it is a convenience input and can be ommited if the data are masked 
+        vector to restrict the activity to particular epoch (eg: quiet moment),
+        it is a convenience input and can be omitted if the data are masked 
         before by default None
     window_len : float, optional
-        lenght of the sliding sum window (in sec) , by default 0.2
+        length of the sliding sum window (in sec) , by default 0.2
     min_n_cells : int, optional
         minimum number of cells that should be active in a SCE to be kept, 
         by default 5
@@ -135,13 +135,13 @@ def sce(
     max_shuff : int, optional
         the max allowed (circular) shift allowed, in second,  when performing 
         the shuffling. Setting it to a seconds/ tens of second allow to adapt 
-        the threshold in time to potential changees in basal activity. 
+        the threshold in time to potential changes in basal activity. 
         If None the shift will be performed on all the data (max = n_samples)
     
     Return
     ------
     SCE: Iv,
-        Interval array of detected SCE. It can be converted to a bollean vector 
+        Interval array of detected SCE. It can be converted to a boolean vector 
         with IV().to_bool()
 
     Reference
@@ -219,7 +219,7 @@ def sce(
     T_thresh = np.ones(n_samples) * np.nan
     T_thresh[restrict] = np.nanpercentile(avg_shuff, perc_threshold, axis=0)
 
-    # now SCE are defined as epoch of the summeed activity (in a temporal window)
+    # now SCE are defined as epoch of the summed activity (in a temporal window)
     # higher than chance and with more than a certain number of cells
     avg_full = np.zeros(n_samples)
     avg_full[restrict] = avg
