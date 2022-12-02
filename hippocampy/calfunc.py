@@ -1,10 +1,14 @@
+import os.path as op
+
 import bottleneck as bn
 import numpy as np
+import pandas as pd
 import tqdm as tqdm
 
 # from oasis.functions import deconvolve as _deconvolve
 from sklearn.linear_model import RANSACRegressor
 
+from hippocampy.io.matlab import loadmat
 from hippocampy.matrix_utils import (
     first_true,
     remove_small_objects,
@@ -12,7 +16,6 @@ from hippocampy.matrix_utils import (
     zscore,
 )
 from hippocampy.stats.stats import mad
-import pandas as pd
 
 
 def subtract_neuropil(Froi, Fneu, *, method="fixed", downsample_ratio=10):
@@ -71,7 +74,13 @@ def subtract_neuropil(Froi, Fneu, *, method="fixed", downsample_ratio=10):
         # outliers and will be assigned to the median
         # of the coefficients in range [0.5 < c < 1]
         c_valid = np.logical_and(c > 0.5, c < 1)
-        c[np.logical_not(c_valid)] = np.median(c[c_valid])
+
+        if bn.nansum(c_valid) > 3:
+            c[np.logical_not(c_valid)] = bn.nanmedian(c[c_valid])
+        else:
+            # this is quite rare but need to be taken care of. if we have less
+            # than 3 valid value, go back to 0.7
+            c[:] = 0.7
 
         # Calculate F
         F = Froi - c[:, None] * Fneu
@@ -363,3 +372,119 @@ def noise_level(F: np.ndarray, fs: int, axis=-1) -> np.ndarray:
 
     noise = mad(F, axis=axis) / np.sqrt(fs)
     return noise * 100
+
+
+def load_Fall_mat(Fall_path: str):
+    """
+    Load the Fall.mat file from suite2p to numpy format
+
+    Parameters
+    ----------
+    Fall_path : str
+        path of the Fall file
+
+    Returns
+    -------
+    F: np.array
+        Fluorescence (n_roi, n_sample)
+    Fneu: np.array
+        Neuropile fluorescence (n_roi, n_sample)
+    spks: np.array
+        deconvolved spike estimate (n_roi, n_sample)
+    iscell: np.array
+        output of suite2p classifier (n_roi, 2) 
+    ops: dict
+        ops dict from suite2p containing various infor
+
+    stat: list
+        list of dict containing information about each roi  
+
+    """
+
+    if not op.exists(Fall_path):
+        raise FileNotFoundError
+
+    tmps2p = loadmat(Fall_path)
+
+    # store suite2p data in npy format
+    F = np.array(tmps2p["F"], dtype=np.float32)
+    Fneu = np.array(tmps2p["Fneu"], dtype=np.float32)
+    spks = np.array(tmps2p["spks"], dtype=np.float32)
+    iscell = np.array(tmps2p["iscell"], dtype=np.float32)
+
+    # for ops and stat data, the loading of the matlab data in python is a bit weird
+    # it loads the keys of the values in a dtype fields and the values as items of an
+    # 'empty' np.array. For the stat variable, it does the same but in a list of
+    # "empty" np.arrays.
+    ops = tmps2p["ops"]
+    # reformat loaded data
+    k = eval(str(ops.dtype))
+    val = ops.item()
+    ops = {kk[0]: vv for kk, vv in zip(k, val)}
+
+    stat = tmps2p["stat"]
+    # do the same for stat
+    stat = [{kk[0]: vv for kk, vv in zip(eval(str(s.dtype)), s.item())} for s in stat]
+
+    return F, Fneu, spks, iscell, stat, ops
+
+
+def Fall_to_npy(Fall_path: str, overwrite: bool = False, return_data: bool = False):
+    """
+    Fall_to_npy read Fall.mat file, convert it to npy and save it
+
+    Parameters
+    ----------
+    Fall_path : str
+        path of the Fall data
+    overwrite : bool, optional
+        specify if it should overwrite existing data, by default False
+    return_data : bool, optional
+        specify if we want to output the data, by default False
+
+    Returns
+    -------
+    F: np.array
+        Fluorescence (n_roi, n_sample)
+    Fneu: np.array
+        Neuropile fluorescence (n_roi, n_sample)
+    spks: np.array
+        deconvolved spike estimate (n_roi, n_sample)
+    iscell: np.array
+        output of suite2p classifier (n_roi, 2) 
+    ops: dict
+        ops dict from suite2p containing various infor
+
+    stat: list
+        list of dict containing information about each roi  
+    """
+    F, Fneu, spks, iscell, stat, ops = load_Fall_mat(Fall_path)
+
+    F_path = Fall_path.replace("Fall.mat", "F.npy")
+    if not op.exists(F_path) or overwrite:
+        with open(F_path, "wb") as fio:
+            np.save(fio, F, allow_pickle=True)
+
+    Fneu_path = Fall_path.replace("Fall.mat", "Fneu.npy")
+    if not op.exists(Fneu_path) or overwrite:
+        with open(Fneu_path, "wb") as fio:
+            np.save(fio, Fneu, allow_pickle=True)
+
+    spks_path = Fall_path.replace("Fall.mat", "spks.npy")
+    if not op.exists(spks_path) or overwrite:
+        with open(spks_path, "wb") as fio:
+            np.save(fio, spks, allow_pickle=True)
+
+    ops_path = Fall_path.replace("Fall.mat", "ops.npy")
+    if not op.exists(ops_path) or overwrite:
+        with open(ops_path, "wb") as fio:
+            np.save(fio, ops, allow_pickle=True)
+
+    stat_path = Fall_path.replace("Fall.mat", "stat.npy")
+    if not op.exists(stat_path) or overwrite:
+        with open(stat_path, "wb") as fio:
+            np.save(fio, stat, allow_pickle=True)
+
+    if return_data:
+        return F, Fneu, spks, iscell, stat, ops
+
