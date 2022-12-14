@@ -195,7 +195,7 @@ def transient(
 
         This can be given as a float or a vector if you need different
         threshold for different epoch (activity, inactivity). Grosmark 2021 set
-        a treshold of 1.5 during active epoch and 1.25 during rest.
+        a threshold of 1.5 during active epoch and 1.25 during rest.
     min_len_event: int
         minimum number of frame crossing the threshold to be kept as a potential
         event
@@ -231,6 +231,7 @@ def transient(
     elif spike_norm == "zscore":
         S_b = zscore(S, axis=1)
     elif spike_norm == "sliding":
+        # calculate a sliding mad in a given window
         F_reconvolved = F * S
         noise = F_reconvolved - F
         for i, x in tqdm.tqdm(enumerate(noise), total=n_cells):
@@ -327,11 +328,11 @@ def detrend_F(F, win_size, quantile=0.08):
     ----------
     -F: fluorescence trace [n_cells, n_samples]
     -winsize: size of the window in samples
-    -quantile: quantile to substract [0-1] (default 8th)
+    -quantile: quantile to subtract [0-1] (default 8th)
 
     Return
     ------
-    np.array of Fluorescence with the baseline substracted
+    np.array of Fluorescence with the baseline subtracted
 
     Reference
     ---------
@@ -479,6 +480,11 @@ def Fall_to_npy(Fall_path: str, overwrite: bool = False, return_data: bool = Fal
     if not op.exists(ops_path) or overwrite:
         with open(ops_path, "wb") as fio:
             np.save(fio, ops, allow_pickle=True)
+
+    iscell_path = Fall_path.replace("Fall.mat", "iscell.npy")
+    if not op.exists(iscell_path) or overwrite:
+        with open(iscell_path, "wb") as fio:
+            np.save(fio, iscell, allow_pickle=True)
 
     stat_path = Fall_path.replace("Fall.mat", "stat.npy")
     if not op.exists(stat_path) or overwrite:

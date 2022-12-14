@@ -4,6 +4,7 @@ import bottleneck as bn
 from hippocampy.binning import mua
 from hippocampy.matrix_utils import remove_small_objects, zscore
 from hippocampy.core.Iv import Iv
+from tqdm import trange
 
 
 def mua_event(
@@ -13,7 +14,7 @@ def mua_event(
     threshold_low: float = 1,
     threshold_high: float = 3.5,
     sample_gap: float = 0.2,
-    min_len: int = 2,
+    min_len: float = 0.1,
     smooth_first: bool = True,
     kernel_half_width: float = 0.120,
 ):
@@ -170,20 +171,12 @@ def sce(
     if max_shuff_sample > n_samples - 1:
         max_shuff_sample = n_samples - 1
 
-    T_shuff = np.empty((n_cells, n_samples, n_shuffle))
-
-    for it_shuff in range(n_shuffle):
-        for it_cell in range(n_cells):
-            T_shuff[it_cell, :, it_shuff] = np.roll(
-                T[it_cell, :], np.random.randint(0, max_shuff)
-            )
-
-    # we should may be check the size of the restrict vector
-    if restrict.dtype.kind != "b":
-        raise ValueError("Restrict vector should be boolean")
-
     if restrict is None:
         restrict = np.ones((n_samples), dtype=bool)
+    else:
+        # we should may be check the size of the restrict vecto
+        if restrict.dtype.kind != "b":
+            raise ValueError("Restrict vector should be boolean")
 
     n_samples_restricted = bn.nansum(restrict)
 
@@ -206,7 +199,7 @@ def sce(
     avg = bn.nansum(T_sum, axis=0)
     avg_shuff = np.empty((n_shuffle, n_samples_restricted))
 
-    for it_shuff in range(n_shuffle):
+    for it_shuff in trange(n_shuffle):
         tmp = np.zeros((n_cells, n_samples_restricted))
         for it_cell in range(n_cells):
             tmp[it_cell, :] = np.roll(
@@ -248,4 +241,4 @@ def sce(
     cand_SCE = cand_SCE[m > min_n_cells]
     peak_times = peak_times[m > min_n_cells]
 
-    return cand_SCE, peak_times
+    return cand_SCE, peak_times, avg

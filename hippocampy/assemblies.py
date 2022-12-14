@@ -130,7 +130,9 @@ def calc_template(
     return template, correlation_matrix
 
 
-def calc_activity(spike_count, template, kernel_half_width=None):
+def calc_activity(
+    spike_count, template, kernel_half_width: int = None, normalize: str = "zscore"
+):
     """
     Calculate the activity in time of given assemblies (templates)
 
@@ -143,7 +145,12 @@ def calc_activity(spike_count, template, kernel_half_width=None):
     kernel_half_width
         size of the half window size of the gaussian kernel
         used to smooth the activity profile
-
+    normalize
+        method to use for the normalization of the spike trains before the 
+        projection
+            - "one": every rate is set to one and then smoothed
+            - "zscore": we do the normal zscore of the spike count
+            
     Returns
     -------
     activity
@@ -159,6 +166,9 @@ def calc_activity(spike_count, template, kernel_half_width=None):
 
     template = np.asarray(template)
     [_, n_components] = template.shape
+
+    if normalize == "one":
+        spike_count[spike_count > 0] = 1
 
     # here we could convolve the spike_count_z with a gaussian
     # cf ref [5]
@@ -188,7 +198,34 @@ def calc_activity(spike_count, template, kernel_half_width=None):
     return activity
 
 
-def cells_in_template(template: np.ndarray, n_std: float = 2.0):
+def flip_template(template: np.ndarray):
+    """
+    Flip the signs of the template where the maximum absolute value is negative
+    this can be caused by funky projection of the PCA/ICA
+
+    Parameters
+    ----------
+    template : np.ndarray
+        assembly template
+
+    Returns
+    -------
+    template: np.ndarray
+        flipped template
+    """
+    template_fixed = template.copy()
+
+    #
+    max = bn.nanmax(template, axis=0)
+    min = bn.nanmin(template, axis=0)
+
+    to_flip = np.abs(min) > max
+    template_fixed[:, to_flip] = -template[:, to_flip]
+
+    return template_fixed
+
+
+def cells_in_template(template: np.ndarray, n_std: float = 2.0, method: str = "std"):
     """
     cells_in_template 
     Find cells that are belonging to each template
@@ -203,27 +240,30 @@ def cells_in_template(template: np.ndarray, n_std: float = 2.0):
     n_std : float, optional
         number of std above the mean need to be crossed to be part of the 
         template assembly, by default 2.0
-
+    method : str, optional
+        method to define the threshold for a cell to be part of an assembly
+        either use:
+            - std: fixed threshold above a n times the std above the mean
+            - otsu: method maximizing inter groups variance 
     Returns
     -------
     output: np.ndarray
         logical matrix telling if a cell is part of a template
+
+    TODO 
+    implement the otsu method
     """
-    template_fixed = template.copy()
+    if method not in ["std", "otsu"]:
+        raise NotImplementedError
 
-    # Flip the signs of the template where the maximum absolute value is negative
-    # this can be caused by funky projection of the PCA/ICA
-    max = bn.nanmax(template, axis=0)
-    min = bn.nanmin(template, axis=0)
+    template_fixed = flip_template(template)
 
-    to_flip = np.abs(min) > max
-
-    template_fixed[:, to_flip] = -template[:, to_flip]
-
-    m = bn.nanmean(template_fixed, axis=0)
-    s = bn.nanstd(template_fixed, axis=0)
-
-    return template_fixed - m[None, :] > n_std * s[None, :]
+    if method == "std":
+        m = bn.nanmean(template_fixed, axis=0)
+        s = bn.nanstd(template_fixed, axis=0)
+        return template_fixed - m[None, :] > n_std * s[None, :]
+    elif method == "otsu":
+        raise NotImplementedError
 
 
 def sim_assemblies(

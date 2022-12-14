@@ -73,3 +73,18 @@ def _nan_mask(x, axis=0):
 
     return x_mask
 
+
+def interp_nan(var: np.ndarray):
+    """
+    interp_nan interpolater nanvalues
+    this function could be made more funky with scipy interp notably for the
+    kind of interpolation used
+
+    Parameters
+    ----------
+    var : _type_
+        interpolated vector
+    """
+    m_valid = ~np.isnan(var)
+    return np.interp(np.arange(len(var)), np.nonzero(m_valid)[0], var[m_valid])
+
