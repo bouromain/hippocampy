@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.fftpack import next_fast_len
-from scipy.signal import butter, cheby2, filtfilt
+from scipy.signal import butter, cheby2, filtfilt, sosfiltfilt
 from scipy.signal import decimate as _decimate, resample_poly
 from scipy.signal.signaltools import hilbert
 from hippocampy.utils.gen_utils import value_cross
@@ -142,7 +142,15 @@ def _limit_q(q: int, max_mult: int = 12) -> list:
 ########################################################################
 
 
-def band_filter(sig, fRange, fs, method="cheby2", order=4, axis=-1) -> np.ndarray:
+def band_filter(
+    sig: np.ndarray,
+    fRange: np.ndarray,
+    fs: int,
+    method: str = "cheby2",
+    order: int = 4,
+    output: str = "sos",
+    axis=-1,
+) -> np.ndarray:
     """
     Filter a signal in a certain frequency band and with a particular filter type
     
@@ -153,8 +161,8 @@ def band_filter(sig, fRange, fs, method="cheby2", order=4, axis=-1) -> np.ndarra
     fRange: 
         frequency band to filter with. 
         For example:
-            Theta [5 12]
-            Ripple []
+            Theta [5, 12]
+            Ripple [100,225]
     fs: 
         sampling frequency
     method: 
@@ -163,6 +171,10 @@ def band_filter(sig, fRange, fs, method="cheby2", order=4, axis=-1) -> np.ndarra
             - Butterworth (butter)
     order:
         order of the filter
+    output{‘ba’, ‘sos’}, optional
+        Type of output: numerator/denominator (‘ba’) or second-order sections (‘sos’). 
+        Default is ‘ba’ for backwards compatibility, but ‘sos’ should 
+        be used for general-purpose filtering.
     axis:
         axis along which the function is performed, by default -1
 
@@ -179,7 +191,11 @@ def band_filter(sig, fRange, fs, method="cheby2", order=4, axis=-1) -> np.ndarra
     """
 
     allMethods = ["butter", "cheby2"]
-    assert any(method == s for s in allMethods), "Invalid Method in bandpassSig"
+    assert any(method == s for s in allMethods), f"Method {method} not recognized"
+
+    all_output = ["ba", "sos"]
+    if output not in all_output:
+        raise ValueError(f"Output format should either be {all_output}")
 
     sig = np.asarray(sig)
     fRange = np.asarray(fRange)
@@ -188,15 +204,24 @@ def band_filter(sig, fRange, fs, method="cheby2", order=4, axis=-1) -> np.ndarra
     nyquist = 0.5 * fs
 
     if method == "butter":
-        b, a = butter(order, [fRange[0] / nyquist, fRange[1] / nyquist], btype="band")
-    elif method == "cheby2":
-        b, a = cheby2(
-            order, 20, [fRange[0] / nyquist, fRange[1] / nyquist], btype="band"
+        filter = butter(
+            order,
+            [fRange[0] / nyquist, fRange[1] / nyquist],
+            btype="band",
+            output=output,
         )
-    else:
-        raise NotImplementedError(f"Method {method} not implemented")
-
-    return filtfilt(b, a, sig, axis=axis)
+    elif method == "cheby2":
+        filter = cheby2(
+            order,
+            20,
+            [fRange[0] / nyquist, fRange[1] / nyquist],
+            btype="band",
+            output=output,
+        )
+    if output == "ba":
+        return filtfilt(filter[0], filter[1], sig, axis=axis)
+    elif output == "sos":
+        return sosfiltfilt(filter, sig, axis=axis)
 
 
 def phase(sig, method="hilbert", axis=-1) -> np.ndarray:
