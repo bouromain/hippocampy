@@ -264,7 +264,7 @@ def psth(
     n_bins_aft: int = 20,
     method: str = "mean",
     kernel_half_width: int = 0,
-    norm_rows_method: str = "None",
+    norm_rows_method: str = None,
     norm_row_len: int = 10,
     return_temp: bool = False,
     axis=1,
