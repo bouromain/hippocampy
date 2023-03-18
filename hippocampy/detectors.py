@@ -3,6 +3,7 @@ import bottleneck as bn
 
 from hippocampy.binning import mua
 from hippocampy.matrix_utils import remove_small_objects, zscore
+from hippocampy.utils.type_utils import float_to_int
 from hippocampy.core.Iv import Iv
 from tqdm import trange
 
@@ -241,4 +242,4 @@ def sce(
     cand_SCE = cand_SCE[m > min_n_cells]
     peak_times = peak_times[m > min_n_cells]
 
-    return cand_SCE, peak_times, avg
+    return cand_SCE, float_to_int(peak_times), avg
