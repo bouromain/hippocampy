@@ -363,12 +363,11 @@ def psth(
         ]
 
     temp_mat = np.reshape(temp_mat, new_shape)
+    norm_rows = np.take(temp_mat, np.arange(0, norm_row_len), axis=axis).squeeze()
 
     if norm_rows_method == "mean":
-        norm_rows = np.take(temp_mat, np.arange(0, norm_row_len), axis=axis).squeeze()
         temp_mat = temp_mat - bn.nanmean(norm_rows, axis=0)
     elif norm_rows_method == "median":
-        norm_rows = np.take(temp_mat, np.arange(0, norm_row_len), axis=axis).squeeze()
         temp_mat = temp_mat - bn.nanmedian(norm_rows, axis=0)
 
     # now we perform the average/median along the correct dimension
@@ -380,7 +379,7 @@ def psth(
         out = bn.nansum(temp_mat, axis=axis)
 
     if kernel_half_width > 0:
-        out = smooth_2d(out, kernel_half_width=kernel_half_width)
+        out = smooth_1d(out, kernel_half_width=kernel_half_width)
 
     if return_temp:
         return out.squeeze(), temp_mat.squeeze()

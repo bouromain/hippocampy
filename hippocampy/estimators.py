@@ -75,7 +75,6 @@ def spatial_info(rate: np.ndarray, occ: np.ndarray, method="bit_sec"):
     # turn occ in a probability
     p_occ = tmp_occ / bn.nansum(tmp_occ)
     rate_m = bn.nanmean(tmp_rate)
-
     mask = tmp_rate > 0
     SI = bn.nansum(
         p_occ[mask] * (tmp_rate[mask] / rate_m) * np.log2(tmp_rate[mask] / rate_m)
