@@ -393,12 +393,12 @@ def load_Fall_mat(Fall_path: str):
     spks: np.array
         deconvolved spike estimate (n_roi, n_sample)
     iscell: np.array
-        output of suite2p classifier (n_roi, 2) 
+        output of suite2p classifier (n_roi, 2)
     ops: dict
         ops dict from suite2p containing various infor
 
     stat: list
-        list of dict containing information about each roi  
+        list of dict containing information about each roi
 
     """
 
@@ -452,12 +452,12 @@ def Fall_to_npy(Fall_path: str, overwrite: bool = False, return_data: bool = Fal
     spks: np.array
         deconvolved spike estimate (n_roi, n_sample)
     iscell: np.array
-        output of suite2p classifier (n_roi, 2) 
+        output of suite2p classifier (n_roi, 2)
     ops: dict
         ops dict from suite2p containing various infor
 
     stat: list
-        list of dict containing information about each roi  
+        list of dict containing information about each roi
     """
     F, Fneu, spks, iscell, stat, ops = load_Fall_mat(Fall_path)
 
@@ -494,3 +494,34 @@ def Fall_to_npy(Fall_path: str, overwrite: bool = False, return_data: bool = Fal
     if return_data:
         return F, Fneu, spks, iscell, stat, ops
 
+
+def mask_roi_var(stat: dict, idx_cells: np.ndarray, ops: dict, var: np.ndarray):
+    """
+    mask_roi_var make a ROI mask from a suite2p stat structure. This code
+    will affect a value var[n] to each pixel of the ROI[n] in order to
+    investigate the anatomical distribution of a variable in a Field of
+    View.
+
+    Parameters
+    ----------
+    stat : dict
+        suite2p stat dictionary
+    idx_cells : np.ndarray
+        index of cells to plot
+    ops : dict
+        suite2p ops dictionary
+    var : np.ndarray
+        variable to use in order to fill the ROI.
+
+    Returns
+    -------
+    ROI mask
+    """
+    im = np.zeros((ops["Ly"], ops["Lx"]))
+    im[:] = np.nan
+    for n in idx_cells:
+        ypix = stat[n]["ypix"][~stat[n]["overlap"]]
+        xpix = stat[n]["xpix"][~stat[n]["overlap"]]
+        im[ypix, xpix] = var[n]
+
+    return im
