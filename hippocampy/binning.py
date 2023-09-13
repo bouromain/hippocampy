@@ -287,7 +287,7 @@ def psth(
     kernel_half_width : int, optional
         half width of the smoothing, by default 0
     norm_rows_method : str, optional
-        normalization to perform before averaging the psth  
+        normalization to perform before averaging the psth
     norm_row_len : int, optional
         number of sample to consider to calculate the normalization
     return_temp : bool, optional
@@ -299,7 +299,7 @@ def psth(
     -------
     out: np.ndarray
         output psth
-    temp_mat: optional, np.ndarray    
+    temp_mat: optional, np.ndarray
     """
     # check inputs
     if method not in ["mean", "median", "sum"]:
@@ -363,11 +363,12 @@ def psth(
         ]
 
     temp_mat = np.reshape(temp_mat, new_shape)
-    norm_rows = np.take(temp_mat, np.arange(0, norm_row_len), axis=axis).squeeze()
 
     if norm_rows_method == "mean":
+        norm_rows = np.take(temp_mat, np.arange(0, norm_row_len), axis=axis).squeeze()
         temp_mat = temp_mat - bn.nanmean(norm_rows, axis=0)
     elif norm_rows_method == "median":
+        norm_rows = np.take(temp_mat, np.arange(0, norm_row_len), axis=axis).squeeze()
         temp_mat = temp_mat - bn.nanmedian(norm_rows, axis=0)
 
     # now we perform the average/median along the correct dimension
@@ -395,16 +396,16 @@ def mua(
     kernel_half_width: int = 10,
 ):
     """
-    Compute "multi-unit" activity from a Transient matrix. 
-    The input matrix can be binary matrix of transient or spikes (True), or 
+    Compute "multi-unit" activity from a Transient matrix.
+    The input matrix can be binary matrix of transient or spikes (True), or
     rate vectors
-    Individual traces are first smoothed and then summed 
+    Individual traces are first smoothed and then summed
     to finally have the multi-unit activity.
 
     Parameters
     ----------
     mat : np.nd_array
-        input matrix, can be binary matrix of transient or spikes (True), or 
+        input matrix, can be binary matrix of transient or spikes (True), or
         rate vectors
     axis : int, optional
         axis along which the function is performed, by default -1
