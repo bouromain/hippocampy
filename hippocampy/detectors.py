@@ -108,54 +108,54 @@ def sce(
     max_shuff: int = 5,
 ):
     """
-    Detect Synchronous Calcium Events inspired form publication in ref [1-2]. 
-    It will look at the number of cell active in a given sliding time widow and 
-    detect synchronous event where more cells are active than in a shuffled 
+    Detect Synchronous Calcium Events inspired form publication in ref [1-2].
+    It will look at the number of cell active in a given sliding time widow and
+    detect synchronous event where more cells are active than in a shuffled
     distribution.
 
     Parameters
     ----------
     T : np.ndarray
-        Matrix of calcium events detected with the function (eg: detected with 
+        Matrix of calcium events detected with the function (eg: detected with
         calfunc.transient), [n_cells, n_samples]
     fs : int, optional
         sampling frequency in Hz, by default 1
     restrict : np.ndarray, optional
         vector to restrict the activity to particular epoch (eg: quiet moment),
-        it is a convenience input and can be omitted if the data are masked 
+        it is a convenience input and can be omitted if the data are masked
         before by default None
     window_len : float, optional
         length of the sliding sum window (in sec) , by default 0.2
     min_n_cells : int, optional
-        minimum number of cells that should be active in a SCE to be kept, 
+        minimum number of cells that should be active in a SCE to be kept,
         by default 5
     perc_threshold : int, optional
-        percentile of the shuffled distribution that should be exceeded to be 
+        percentile of the shuffled distribution that should be exceeded to be
         considered as a candidate SCE, by default 95
     n_shuffle : int, optional
         number of shuffle  to perform, by default 100
     max_shuff : int, optional
-        the max allowed (circular) shift allowed, in second,  when performing 
-        the shuffling. Setting it to a seconds/ tens of second allow to adapt 
-        the threshold in time to potential changes in basal activity. 
+        the max allowed (circular) shift allowed, in second,  when performing
+        the shuffling. Setting it to a seconds/ tens of second allow to adapt
+        the threshold in time to potential changes in basal activity.
         If None the shift will be performed on all the data (max = n_samples)
-    
+
     Return
     ------
     SCE: Iv,
-        Interval array of detected SCE. It can be converted to a boolean vector 
+        Interval array of detected SCE. It can be converted to a boolean vector
         with IV().to_bool()
 
     Reference
     ---------
-    [1] Malvache A, Reichinnek S, Villette V, Haimerl C, Cossart R. 
-        Awake hippocampal reactivations project onto orthogonal neuronal 
-        assemblies. Science. 2016 Sep 16 
+    [1] Malvache A, Reichinnek S, Villette V, Haimerl C, Cossart R.
+        Awake hippocampal reactivations project onto orthogonal neuronal
+        assemblies. Science. 2016 Sep 16
         doi: 10.1126/science.aaf3319
 
-    [2] Modol, L., Bollmann, Y., Tressard, T., Baude, A., Che, A., 
-        Duan, Z., Babij, R., De Marco García, N. V., & Cossart, R. (2020). 
-        Assemblies of Perisomatic GABAergic Neurons in the Developing Barrel 
+    [2] Modol, L., Bollmann, Y., Tressard, T., Baude, A., Che, A.,
+        Duan, Z., Babij, R., De Marco García, N. V., & Cossart, R. (2020).
+        Assemblies of Perisomatic GABAergic Neurons in the Developing Barrel
         Cortex. Neuron, https://doi.org/10.1016/j.neuron.2019.10.007
     """
 
@@ -175,6 +175,8 @@ def sce(
     if restrict is None:
         restrict = np.ones((n_samples), dtype=bool)
     else:
+        print("Not working")
+        return
         # we should may be check the size of the restrict vecto
         if restrict.dtype.kind != "b":
             raise ValueError("Restrict vector should be boolean")

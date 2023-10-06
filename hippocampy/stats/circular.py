@@ -30,6 +30,7 @@ from math import erf
 
 from typing import Union
 
+
 ########################################################################
 ## Helpers
 ########################################################################
@@ -111,7 +112,7 @@ def circ_r(
 
     Returns
     -------
-    circular_resultant vector lenght 
+    circular_resultant vector lenght
     """
 
     alpha = np.asarray(alpha)
@@ -205,7 +206,7 @@ def corr_cc(
     >>> r, pval = circ_stats.corr_cc(rTheta,rPhi)
     >>> print(round(r, 3), round(pval, 4))
     >>> 0.27 0.2247
-        
+
     """
 
     alpha = np.asarray(alpha)
@@ -219,8 +220,8 @@ def corr_cc(
     sin_alpha_z = np.sin(alpha - circ_mean(alpha))
     sin_beta_z = np.sin(beta - circ_mean(beta))
 
-    sin_alpha_z_2 = sin_alpha_z ** 2
-    sin_beta_z_2 = sin_beta_z ** 2
+    sin_alpha_z_2 = sin_alpha_z**2
+    sin_beta_z_2 = sin_beta_z**2
 
     if not uniformity_correction:
         # compute correlation coefficient from p 176 of Ref in description
@@ -267,10 +268,10 @@ def corr_cl(x, theta, tail="two-sided"):
     rxc = pearsonr(theta, np.cos(x))[0]
     rcs = pearsonr(np.sin(x), np.cos(x))[0]
 
-    r = np.sqrt((rxc ** 2 + rxs ** 2 - 2 * rxc * rxs * rcs) / (1 - rcs ** 2))
+    r = np.sqrt((rxc**2 + rxs**2 - 2 * rxc * rxs * rcs) / (1 - rcs**2))
 
     # Calculate p-value
-    pval = chi2.sf(n * r ** 2, 2)
+    pval = chi2.sf(n * r**2, 2)
     pval = pval / 2 if tail == "one-sided" else pval
     return r, pval
 
@@ -367,7 +368,7 @@ def _resultant_length(a, x, phi):
     D = (1 / n) * bn.nansum(np.sin(phi - a * x))
     # we will return -R as will will then search to minimise the function
     # minimizing -R == maximinsing R
-    return -np.sqrt(G ** 2 + D ** 2)
+    return -np.sqrt(G**2 + D**2)
 
 
 def rayleigh_test(
@@ -376,13 +377,13 @@ def rayleigh_test(
     d: Union[None, float] = None,
 ):
     """
-    rayleigh_test test the uniformity of a circular distribution 
+    rayleigh_test test the uniformity of a circular distribution
 
     Parameters
     ----------
     alpha : np.ndarray
         array of circular values
-    
+
     weight : np.ndarray
         weight to apply to the alpha vector (eg:in case of binned data)
     d : float, optional
@@ -392,18 +393,18 @@ def rayleigh_test(
     References
     ----------
     [1] Statistical analysis of circular data, N. I. Fisher
-        Topics in circular statistics, S. R. Jammalamadaka et al. 
+        Topics in circular statistics, S. R. Jammalamadaka et al.
         Biostatistical Analysis, J. H. Zar
 
     [2] Berens, Philipp. 2009. CircStat: A MATLAB Toolbox for Circular Statistics.
         Journal of Statistical Software, Articles 31 (10): 1–21.
 
-    [3] Topics in circular statistics, S. R. Jammalamadaka et al. 
+    [3] Topics in circular statistics, S. R. Jammalamadaka et al.
         Biostatistical Analysis, J. H. Zar
     adapted from cirsc_rtest
     """
     if weight is not None:
-        assert len(alpha) == len(weight), f"alpha and weight should have the same size"
+        assert len(alpha) == len(weight), "alpha and weight should have the same size"
     r = circ_r(alpha, weight=weight, d=d)
     if weight is None:
         n = len(alpha)
@@ -413,10 +414,10 @@ def rayleigh_test(
     # calculate Rayleigh's R (equ. 27.1 from ref [1]])
     R = n * r
     # calculate Rayleigh's z (equ. 27.2 from ref [1]] )
-    z = R ** 2 / n
+    z = R**2 / n
 
     # p value using approximation in ref [3], p. 617
-    p = np.exp(np.sqrt(1 + 4 * n + 4 * (n ** 2 - R ** 2)) - (1 + 2 * n))
+    p = np.exp(np.sqrt(1 + 4 * n + 4 * (n**2 - R**2)) - (1 + 2 * n))
 
     return p, z
 
@@ -476,4 +477,3 @@ def cemd(f, g, period=[0, 2 * pi]):
     D /= n * np.diff(period)
 
     return bn.nanmin(D)
-

@@ -12,7 +12,7 @@ from hippocampy.utils.nan import remove_nan
 from hippocampy.utils.type_utils import float_to_int
 
 
-#%% SMOOTH
+# %% SMOOTH
 def smooth_1d(
     data: np.ndarray,
     kernel_half_width: int = 2,
@@ -109,7 +109,7 @@ def smooth_1d(
         if kernel_type == "gauss":
             kernel = np.arange(0, kernel_half_width) - (kernel_half_width - 1.0) / 2.0
             kernel = np.exp(
-                -(kernel ** 2) / (2 * kernel_half_width * kernel_half_width)
+                -(kernel**2) / (2 * kernel_half_width * kernel_half_width)
             )
 
         elif kernel_type == "ramp":
@@ -182,7 +182,7 @@ def smooth_2d(
     elif kernel_type == "gauss":
         kernel_1D = np.arange(0, kernel_half_width) - (kernel_half_width - 1.0) / 2.0
         kernel_1D = np.exp(
-            -(kernel_1D ** 2) / (2 * kernel_half_width * kernel_half_width)
+            -(kernel_1D**2) / (2 * kernel_half_width * kernel_half_width)
         )
         kernel = np.outer(kernel_1D, kernel_1D)
 
@@ -197,11 +197,11 @@ def smooth_2d(
     ]
 
 
-#%% STATISTICS
+# %% STATISTICS
 def corr_mat(a: np.ndarray, b: Union[None, np.ndarray] = None, axis=-1) -> np.ndarray:
     """
-    Compute correlation between a two matrices in a particular dimension. If only 
-    one matrix is provided an autocorrelation will be returned. 
+    Compute correlation between a two matrices in a particular dimension. If only
+    one matrix is provided an autocorrelation will be returned.
 
     Parameters
     ----------
@@ -262,10 +262,10 @@ def zscore(matrix, axis=-1, safe: bool = True, fix_zero_div: str = "one"):
 
     safe: bool
         say if we should deal in case of zero division
-    
+
     fix_zero_div: str
         say how we should deal in case of zero division
-        
+
     Returns
     -------
     z: np.array()
@@ -308,7 +308,7 @@ def norm_axis(matrix: np.ndarray, method="max", axis=-1) -> np.ndarray:
             one: normalize such as the sum of the values per row/column
                 sums to one (eg: become a probability distribution)
             zscore: compute the row/column wise zscore
-            perc: normalize such that 0 = 5th percentile and 1 = 95th percentile 
+            perc: normalize such that 0 = 5th percentile and 1 = 95th percentile
             of the original distribution
     axis : int, optional
         axis along which the function is performed, by default -1
@@ -437,12 +437,15 @@ def circ_shift_idx(
         s_idx = np.atleast_2d(s_idx)
         tmp_idx = np.atleast_2d(np.nonzero(tmp_idx)[0]).squeeze()
         np.put_along_axis(
-            M_out, s_idx, np.take(M, tmp_idx, axis=axis), axis=axis,
+            M_out,
+            s_idx,
+            np.take(M, tmp_idx, axis=axis),
+            axis=axis,
         )
     return M_out
 
 
-#%% OTHER
+# %% OTHER
 def label(v, axis=-1, *, unique_label=False) -> np.array:
     """
     label continuous values in either a boolean or int/float vector
@@ -1003,33 +1006,33 @@ def find_peaks(M, min_amplitude=None):
 
 def fill_diag_slice(mat: np.array, val: float = np.nan):
     """
-    Fill the diagonal
+    Fill the diagonal of a stack of square matrices
 
     Parameters
     ----------
     mat : np.array
-        _description_
+        matrix of size [n, n, L]
     val : np.float, optional
         _description_, by default np.nan
     """
     mat = np.array(mat)
     sz = mat.shape
 
-    # mat = np.reshape(mat, [sz[0], -1])
-    # mat[:, :: sz[1] + 1] = np.nan
-    # mat = np.reshape(mat, sz)
-    mat.reshape([sz[0], -1])[:, :: sz[1] + 1] = val
+    mat = np.reshape(mat, [sz[0], -1])
+    mat[:, :: sz[1] + 1] = np.nan
+    mat = np.reshape(mat, sz)
+    # mat.reshape([sz[0], -1])[:, :: sz[1] + 1] = val
 
     return mat
 
 
 def diagonality(mat: np.ndarray) -> float:
     """
-    diagonality 
+    diagonality
     This function compute a diagonality coefficient. It will credit values being
-    concentrated on or around a diagonal. 
+    concentrated on or around a diagonal.
 
-    A value of 1 correspond to a clustering around the main diagonal, -1 around 
+    A value of 1 correspond to a clustering around the main diagonal, -1 around
     the other diagonal. 0 reflect no clustering of the values
 
     Parameters
@@ -1045,8 +1048,8 @@ def diagonality(mat: np.ndarray) -> float:
     Raises
     ------
     ValueError
-        if you have any nan in the input matrix. Setting them to 0 could lead 
-        to artificial "diagonality" (if you have a zero on the other side). 
+        if you have any nan in the input matrix. Setting them to 0 could lead
+        to artificial "diagonality" (if you have a zero on the other side).
         Do it if this is not problematic for you
     ValueError
         if the matrix is not square
@@ -1092,7 +1095,7 @@ def diagonality(mat: np.ndarray) -> float:
 
 def average_diag(mat: np.ndarray):
     """
-    average_diag calculate the average along all possible diagonals of a 
+    average_diag calculate the average along all possible diagonals of a
     squared matrix
 
     Parameters
@@ -1117,4 +1120,3 @@ def average_diag(mat: np.ndarray):
     n = -np.abs(np.arange(-l + 1, l)) + l
     # calculate the average
     return b / n
-

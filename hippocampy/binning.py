@@ -61,7 +61,7 @@ def rate_map(
     var = np.asarray(var)
     samples = np.asarray(samples)
 
-    if not method in ["point_process", "continuous"]:
+    if method not in ["point_process", "continuous"]:
         raise ValueError("Method should be either continuous or point_process")
     if method == "point_process" and samples.dtype.kind != "i":
         samples = float_to_int(samples)

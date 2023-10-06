@@ -5,6 +5,7 @@ from scipy.signal import decimate as _decimate, resample_poly
 from scipy.signal.signaltools import hilbert
 from hippocampy.utils.gen_utils import value_cross
 
+
 ########################################################################
 ## Down and resampling
 ########################################################################
@@ -17,8 +18,8 @@ def resample(
     axis=-1,
 ):
     """
-    Resample signal avoiding aliasing. This method is particularly 
-    usefull for noisy data. It should be preferred over taking every nth 
+    Resample signal avoiding aliasing. This method is particularly
+    usefull for noisy data. It should be preferred over taking every nth
     amples of a signal as it can cause aliasing, artefact in the resulting
     downsampled signal
 
@@ -28,12 +29,12 @@ def resample(
         signal to resample
     fs:
         sampling frequency or the input signal in Hz
-    fs_up: 
-        upsampling sampling frequency in Hz, only considered 
+    fs_up:
+        upsampling sampling frequency in Hz, only considered
         for the poly method
-    fs_down: 
+    fs_down:
         downsampling sampling frequency in Hz
-    method: 
+    method:
         decimate or poly
     axis:
         axis along which to downsample
@@ -42,14 +43,14 @@ def resample(
     sig_d
         downsampled signal
 
-    
+
     Reference
     ---------
     https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.resample_poly.html#scipy.signal.resample_poly
     https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.decimate.html#scipy.signal.decimate
     """
     # first check the downsampling factor, if it is an integer
-    if not method in ["decimate", "poly"]:
+    if method not in ["decimate", "poly"]:
         raise ValueError(f"method {method} not found, use 'poly\ or 'decimate' instead")
 
     if fs_up is None:
@@ -90,7 +91,7 @@ def resample(
 
 def _limit_q(q: int, max_mult: int = 12) -> list:
     """
-    _limit_q decompose a number as a suite of multiple 
+    _limit_q decompose a number as a suite of multiple
     smaller than a given number max_mult
 
     Parameters
@@ -108,7 +109,7 @@ def _limit_q(q: int, max_mult: int = 12) -> list:
     Raises
     ------
     ValueError
-        if no divisor smaller than max_mult are found 
+        if no divisor smaller than max_mult are found
 
     Example
     -------
@@ -118,16 +119,16 @@ def _limit_q(q: int, max_mult: int = 12) -> list:
     bigger_mult = []
     bigger_L = []
 
-    for l in np.arange(2, max_mult + 1)[::-1]:
-        d, rem = np.divmod(q, l)
+    for L in np.arange(2, max_mult + 1)[::-1]:
+        d, rem = np.divmod(q, L)
         if rem == 0:
             # if the remainder is zero and if the two numbers are smaller than
             # max_mult we can stop
             if d <= max_mult:
-                return [l, d]
+                return [L, d]
             if not bigger_mult:
                 bigger_mult = d
-                bigger_L = l
+                bigger_L = L
     # if we looped over all the number without going out of this function it
     # means that we either have a number too big or a prime number
     # print(f" mult {bigger_mult} and L {bigger_L}")
@@ -153,28 +154,28 @@ def band_filter(
 ) -> np.ndarray:
     """
     Filter a signal in a certain frequency band and with a particular filter type
-    
+
     Parameters
     ----------
-    sig: 
+    sig:
         signal to filter
-    fRange: 
-        frequency band to filter with. 
+    fRange:
+        frequency band to filter with.
         For example:
             Theta [5, 12]
             Ripple [100,225]
-    fs: 
+    fs:
         sampling frequency
-    method: 
+    method:
         filter method.
             - Chebyshev Type II (cheby2, default)
             - Butterworth (butter)
     order:
         order of the filter
-    output{‘ba’, ‘sos’}, optional
-        Type of output: numerator/denominator (‘ba’) or second-order sections (‘sos’). 
-        Default is ‘ba’ for backwards compatibility, but ‘sos’ should 
-        be used for general-purpose filtering.
+    output{"ba", "sos"}, optional
+        Type of output: numerator/denominator ("ba") or second-order sections ("sos").
+        Default"sos" should be used for general-purpose filtering "ba" for backwards
+        compatibility.
     axis:
         axis along which the function is performed, by default -1
 
@@ -185,7 +186,6 @@ def band_filter(
 
     TODO
     -----
-    implement sosfilter
     implement remez method:
     https://github.com/Eden-Kramer-Lab/ripple_detection/blob/4c3ae1cdf421f38db1c4dcd67cdd967c63989d4a/ripple_detection/core.py#L95
     """
@@ -235,9 +235,9 @@ def phase(sig, method="hilbert", axis=-1) -> np.ndarray:
     method : str, optional
         method to compute the phase, by default "hilbert"
             - hilbert: only use hilbert transform
-            - peak: perform linear interpolation between peaks 
-            - asymmetric: perform linear interpolation between peaks and through 
-                    can be useful to preserve an asymmetric oscillation 
+            - peak: perform linear interpolation between peaks
+            - asymmetric: perform linear interpolation between peaks and through
+                    can be useful to preserve an asymmetric oscillation
                     (eg: for theta oscillation )
     axis : int, optional
         axis along which the function is performed, by default -1
@@ -246,7 +246,7 @@ def phase(sig, method="hilbert", axis=-1) -> np.ndarray:
     -------
     np.ndarray
         [description]
-        
+
 
     TODO: implement shape preserving phase
     """
@@ -265,7 +265,6 @@ def phase(sig, method="hilbert", axis=-1) -> np.ndarray:
     sig_envelope = np.abs(analytic_signal)
 
     if method in ["peak", "asymmetric"]:
-
         up, down = value_cross(sig_phase, np.pi)
         phase_u = np.unwrap(sig_phase.squeeze())
 
