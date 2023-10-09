@@ -525,3 +525,37 @@ def mask_roi_var(stat: dict, idx_cells: np.ndarray, ops: dict, var: np.ndarray):
         im[ypix, xpix] = var[n]
 
     return im
+
+
+def cell_in_radius(
+    stat, cell_idx: np.ndarray, min_radius: int = 10, max_radius: int = 30
+):
+    """
+    cell_in_radius detect the neighbours of a given cell (cell_idx) in a stat
+    struct (suite2p)
+
+    Parameters
+    ----------
+    stat : _type_
+        suite2p struct
+    cell_idx : np.ndarray
+        seed cells
+    min_radius : int, optional
+        minimum internal position of the neighbours, by default 10
+    max_radius : int, optional
+        outer maximanl position of the neighbours, by default 30
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
+    xy = np.vstack([s["med"] for s in stat])
+    x_2 = (xy[:, 0][:, None] - xy[:, 0][None, :]) ** 2
+    y_2 = (xy[:, 1][:, None] - xy[:, 1][None, :]) ** 2
+    dis = np.sqrt(x_2 + y_2)
+    np.fill_diagonal(dis, np.nan)
+    dis[:, cell_idx] = np.nan
+    dis_m = np.logical_and(dis < max_radius, dis > min_radius)
+
+    return [np.nonzero(dis_m[idx_cell, :])[0] for idx_cell in cell_idx]
