@@ -440,7 +440,8 @@ def cemd(f, g, period=[0, 2 * pi]):
             - CEMD: circular Wassertein distance
 
     References:
-    Rabin et al 2011
+    Rabin, Julien, Julie Delon and Yann Gousseau. “Transportation Distances
+    on the Circle.” Journal of Mathematical Imaging and Vision 41 (2009)
     """
     f = np.asarray(f, dtype=float)
     g = np.asarray(g, dtype=float)

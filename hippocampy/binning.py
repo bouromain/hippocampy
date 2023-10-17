@@ -2,7 +2,7 @@ import bottleneck as bn
 import numpy as np
 from numba import jit
 
-from hippocampy.matrix_utils import zscore, smooth_1d, circ_shift_idx, smooth_2d
+from hippocampy.matrix_utils import zscore, smooth_1d, label
 from hippocampy.utils.type_utils import float_to_int
 
 
@@ -254,6 +254,54 @@ def ccg_heart(spikes1: np.ndarray, spikes2: np.ndarray, binsize=1, max_lag=100):
             idx2_H += 1
 
     return C, E
+
+
+def xcorr(x: np.ndarray, y: np.ndarray = None, scale: str = None):
+    """
+    This function computes the cross correlation between to 1-dimensional
+    sequences using np.correlate.
+    It then implement some correction biases in accordance with matlab
+    xcorr function
+
+    Parameters
+    ----------
+    x : np.ndarray
+        imput sequence
+    y : np.ndarray, optional
+        if None y is set to be equal to x and this function will
+        thus calculate the autocorrelation of x
+    scale : str, optional
+        {"biased", "unbiased","coeff",None}, by default None
+
+    TODO detail this biased correction.
+    TODO implement maxlag
+
+    Returns
+    -------
+    np.ndarray
+        Discrete cross-correlation of x and y
+    """
+
+    assert scale in ["biased", "unbiased", "coeff", None]
+
+    if y is None:
+        y = x
+    m = x.shape
+    c = np.correlate(x, y, mode="full")
+
+    if scale == "biased":
+        c = c / m
+    elif scale == "unbiased":
+        L = (c.shape[0] - 1) / 2
+        scale_unbiased = m - np.abs(np.arange(-L, L + 1))
+        scale_unbiased[scale_unbiased <= 0] = 1
+        c = c / scale_unbiased
+    elif scale == "coeff":
+        cxx0 = bn.nansum(np.abs(x) ** 2)
+        cyy0 = bn.nansum(np.abs(y) ** 2)
+        c = c / np.sqrt(cxx0 * cyy0)
+
+    return c
 
 
 def psth(
