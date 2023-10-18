@@ -1,4 +1,5 @@
 import numpy as np
+import bottleneck as bn
 from scipy.fftpack import next_fast_len
 from scipy.signal import butter, cheby2, filtfilt, sosfiltfilt
 from scipy.signal import decimate as _decimate, resample_poly
@@ -330,3 +331,35 @@ def instantaneousFreq(sig_p: np.ndarray, fs: int) -> np.ndarray:
 
     sig_p_u = np.unwrap(sig_p)
     return np.diff(sig_p_u) / (2.0 * np.pi) * fs
+
+
+def xcorr(x: np.ndarray, y: np.ndarray = None, scale: str = None, maxlag=None):
+    assert scale in ["biased", "unbiased", "coeff", None]
+
+    if y is None:
+        y = x
+    else:
+        assert np.equal(x.shape, y.shape), "Input x and y should have the same lenght"
+    m = x.shape[0]
+    c = np.correlate(x, y, mode="full")
+
+    if maxlag is not None:
+        if maxlag < 1 or maxlag > m:
+            raise ValueError(f"maxlags must be None or strictly positive < {m}")
+
+        half = int(np.floor(c.shape[0] / 2) + 1)
+        c = c[half - (maxlag + 1) : half + maxlag]
+
+    if scale == "biased":
+        c = c / m
+    elif scale == "unbiased":
+        L = (c.shape[0] - 1) / 2
+        scale_unbiased = m - np.abs(np.arange(-L, L + 1))
+        scale_unbiased[scale_unbiased <= 0] = 1
+        c = c / scale_unbiased
+    elif scale == "coeff":
+        cxx0 = bn.nansum(np.abs(x) ** 2)
+        cyy0 = bn.nansum(np.abs(y) ** 2)
+        c = c / np.sqrt(cxx0 * cyy0)
+
+    return c
