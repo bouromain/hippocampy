@@ -19,7 +19,7 @@ setup(
         "scanimage-tiff-reader",
         "h5py",
         "mat73",
-        "sklearn",
+        "scikit-learn",
         "tqdm",
         "pytest",
         "numba",

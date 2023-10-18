@@ -18,7 +18,7 @@ dependencies:
     - git+https://github.com/MouseLand/suite2p
     - scanimage-tiff-reader
     - mat73
-    - sklearn
+    - scikit-learn
     - tdqm
     - pytest
     - pandas
