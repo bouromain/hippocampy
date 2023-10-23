@@ -334,6 +334,43 @@ def instantaneousFreq(sig_p: np.ndarray, fs: int) -> np.ndarray:
 
 
 def xcorr(x: np.ndarray, y: np.ndarray = None, scale: str = None, maxlag=None):
+    """
+    Calculate the corelation between two sequences. It is a wrapper of
+    np.correlate and implement various corrections and a maximum lag.
+
+    TODO
+    properly deal with vector of different length
+    for now this function will return an error if x.shape != y.shape
+
+    Parameters
+    ----------
+    x : np.ndarray
+        vector with the first input sequence
+    y : np.ndarray, optional
+        vector with the second input sequence, if None, y is set to be x and this
+        function will thus return the autocorrelation of the signal.
+    scale : str, optional
+        'biased' - scales the raw cross-correlation by 1/M.
+        'unbiased' - scales the raw correlation by 1/(M-abs(lags)).
+        'normalized' or 'coeff' - normalizes the sequence so that the
+                                auto-correlations at zero lag are
+                                identically 1.0.
+        'none' - no scaling (this is the default).
+
+    maxlag : _type_, optional
+        _description_, by default None
+
+    Returns
+    -------
+    _type_
+        _description_
+
+    Raises
+    ------
+    ValueError
+        _description_
+    """
+
     assert scale in ["biased", "unbiased", "coeff", None]
 
     if y is None:
