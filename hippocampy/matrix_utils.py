@@ -967,7 +967,7 @@ def find_peak_row(M, zero_idx=None):
 
     """
     if zero_idx is None:
-        zero_idx = M.shape[1] / 2
+        zero_idx = int(M.shape[1] / 2)
 
     bef = np.hstack((np.atleast_2d(M[:, 0]).T, M[:, :-1]))
     aft = np.hstack((M[:, 1:], np.atleast_2d(M[:, -1]).T))
