@@ -1112,11 +1112,63 @@ def average_diag(mat: np.ndarray):
     if mat.shape[0] != mat.shape[1]:
         raise ValueError("This function only work for square matrices")
 
-    l = mat.shape[0]
+    L = mat.shape[0]
     # np trace calculate the sum over a diagonal with an offset k
     # we do it over all the possible diagonals
-    b = np.array([np.trace(mat, k) for k in np.arange(-l + 1, l)])
+    b = np.array([np.trace(mat, k) for k in np.arange(-L + 1, L)])
     # calculate the number of element in each diag
-    n = -np.abs(np.arange(-l + 1, l)) + l
+    n = -np.abs(np.arange(-L + 1, L)) + L
     # calculate the average
     return b / n
+
+
+def invert_indices(idx: int, size: int):
+    """
+    Inverts a list of indices within a given range.
+
+    This function takes a list or array of indices (`idx`) and the total number of elements (`size`),
+    and returns an array of indices that are not included in the input list within the specified range.
+    Essentially, it calculates the complement set of indices in the range [0, size).
+
+    Parameters:
+    idx (array-like): An array, list, or sequence of integer indices to be inverted.
+    size (int): The size of the array in which the indices are to be considered.
+                This is the upper bound of the range of indices to invert.
+
+    Returns:
+    numpy.ndarray: An array of indices that represent the complement of the input `idx` within the range [0, size).
+
+    Raises:
+    ValueError: If any index in `idx` is negative or greater than or equal to `size`.
+
+    Examples:
+    >>> invert_indices([1, 3, 5], 10)
+    array([0, 2, 4, 6, 7, 8, 9])
+
+    >>> invert_indices([0, 2, 4, 6, 8], 10)
+    array([1, 3, 5, 7, 9])
+
+    Note:
+    This function does not handle duplicate values in `idx`. If `idx` contains duplicates,
+    the returned array will simply ignore these without raising an error.
+    """
+    idx = np.asarray(idx)
+
+    # if idx is empty return a range
+    if idx.size == 0:
+        return np.arange(size)
+
+    # Check if any index is outside the allowed range [0, size)
+    if any(idx < 0) or any(idx >= size):
+        # If an index is out of bounds, raise a ValueError with an explanatory message
+        raise ValueError(f"Indices should be >= 0 and smaller than {size}")
+
+    # Create a dense boolean array ('d_mat') with 'size' elements initialized to False
+    d_mat = np.zeros(size, dtype=bool)
+
+    # Set the elements at the indices given by 'idx' to True
+    d_mat[idx] = True
+
+    # Invert the boolean array ('d_mat') and get the indices of the elements
+    # that are now True
+    return np.nonzero(~d_mat)[0]
