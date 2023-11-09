@@ -318,6 +318,8 @@ def psth(
     # to be sure we have floats here, this can create problems with nan later
     mat = np.array(mat, dtype=float, ndmin=2)
     events_idx = float_to_int(events_idx)
+    n_bins_aft = float_to_int(n_bins_aft)
+    n_bins_bef = float_to_int(n_bins_bef)
 
     # initialise values
     sz = mat.shape
@@ -340,7 +342,7 @@ def psth(
             mode="constant",
             constant_values=np.nan,
         )
-    else:
+    elif temp_mat.ndim == 2:
         npad = [[0, 0], [0, 0]]
         npad[axis] = [pad_before, pad_after]
         temp_mat = np.pad(
