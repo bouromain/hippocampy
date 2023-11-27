@@ -40,9 +40,9 @@ def smooth_1d(
                 - box: median box kernel
     padtype : str, optional
         type of padding, by default "reflect"
-        - ‘symmetric’ Pads with the reflection of the vector mirrored along the edge
+        - "symmetric" Pads with the reflection of the vector mirrored along the edge
             of the array.
-        - 'reflect’ Pads with the reflection of the vector mirrored on the first and
+        - "reflect" Pads with the reflection of the vector mirrored on the first and
             last values of the vector along each axis.
 
             NB: The difference between symmetric and reflect is that reflect mirror the
@@ -54,7 +54,7 @@ def smooth_1d(
                 a_p = np.pad(a , (0,2) , 'symmetric')
                 [1 2 3 4 4 3]
 
-        - ‘wrap’ : Pads with the wrap of the vector along the axis. The first values are
+        - "wrap" : Pads with the wrap of the vector along the axis. The first values are
             used to pad the end and the end values are used to pad the beginning.
 
     preserve_nan_opt : bool, optional
