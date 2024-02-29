@@ -1,7 +1,7 @@
 import bottleneck as bn
 import numpy as np
 from scipy.optimize import curve_fit
-from scipy.stats import binom_test
+from scipy.stats import binomtest
 
 ################################################################################
 #  NON PARMETRIC
@@ -67,7 +67,7 @@ def sign_test(arr, mu: float = 0, alternative: str = "two-sided", p: float = 0.5
     neg = bn.nansum(arr < 0)
     M = (pos - neg) / 2
 
-    p_value = binom_test(
+    p_value = binomtest(
         bn.nanmin([pos, neg]), pos + neg, p, alternative=alternative
     ).pvalue
 
