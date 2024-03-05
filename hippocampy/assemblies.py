@@ -116,6 +116,9 @@ def calc_template(
 
     n_assemblies = np.sum(significant_vals)
 
+    if n_assemblies ==0:
+        return [], correlation_matrix
+
     if method == "PCA":
         template = eigvecs[:, :n_assemblies]
 
